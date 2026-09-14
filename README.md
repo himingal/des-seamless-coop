@@ -1,57 +1,62 @@
-<p align="center"><img src="docs/banner.png" alt="DeS Seamless Co-op" width="720"></p>
+<p align="center"><img src="docs/banner.png" alt="DeS Seamless Co-op" width="760"></p>
 
-# DeS Seamless Co-op (RPCS3)
+<h1 align="center">DeS Seamless Co-op</h1>
+<p align="center"><b>Seamless co-op for Demon's Souls on RPCS3.</b><br>One of you hosts, the other pastes a code, and you play together for as long as you want.</p>
 
-Co-op "sem costura" de **Demon's Souls** no **RPCS3**: um cria a party, o outro cola o código, e vocês jogam juntos o tempo que quiserem.
+<p align="center"><a href="../../releases/latest"><b>⬇ Download the installer</b></a></p>
 
-## Instalar
+---
 
-1. Baixe o `DesSeamlessCoop-Setup.exe` em **[Releases](../../releases/latest)**, rode, escolha a pasta, pronto.
-2. Abra o app e siga a coluna **Preparação** (tudo tem botão):
-   - **RPCS3** → *Baixar* (baixa o RPCS3 oficial e o firmware oficial da Sony sozinho) ou *Já tenho…*
-   - **Demon's Souls** → *Escolher pasta…* (seu próprio dump, a pasta que tem `PS3_GAME`)
-   - **Conta RPCN** → *Criar / entrar* (abre o RPCS3: `Configuration › RPCN › Create Account`)
+## Setup (once)
 
-## Jogar
+1. Run **`DesSeamlessCoop-Setup.exe`** and point it at your Demon's Souls folder.
+   It downloads RPCS3 and the official PS3 firmware, patches the game and configures everything by itself.
+   <p align="center"><img src="docs/setup.png" alt="Automatic setup" width="460"></p>
+2. Open the app and create your free **RPCN** account (RPCS3's PlayStation Network). It's a small form, and a token arrives by email.
 
-| Host | Amigo |
+## Play
+
+| Host | Friend |
 |---|---|
-| **Criar party** → *Copiar* código → manda pro amigo | **Entrar na party** → cola o código → *Entrar* |
-| **JOGAR** | **JOGAR** |
+| **Host a Party**, then **Copy** the code and send it | **Join a Party**, then paste the code and click **Join** |
+| **PLAY** | **PLAY** |
 
-No jogo: quem ajuda usa a **Blue Eye Stone** em qualquer lugar. O sinal aparece **do lado do host, na área onde ele estiver**. Host toca no sinal → co-op. Depois do boss, Blue Eye Stone de novo.
+In game, the helper uses the **Blue Eye Stone** anywhere. Their sign shows up **right next to the host, in whatever area the host is in**. Touch it and you're together.
+After a boss, use the Blue Eye Stone again and keep going.
 
-Se o amigo não conseguir conectar: o roteador do host não tem UPnP ou é CGNAT. Instalem o **Radmin VPN** (grátis), entrem na mesma rede e o host cria a party de novo — o código passa a incluir o IP da VPN.
+> Friend can't connect? The host's router has no UPnP (or is behind CGNAT). Install **Radmin VPN** (free) on both PCs, join the same network, and create the party again.
 
-## O que ele faz
+## What it does
 
-- **Servidor de party embutido** (reimplementação do servidor de Demon's Souls): o host roda dentro do app, sem VPS.
-  - Sinais azuis de membros da party são **reposicionados ao lado do host em qualquer área** (usa a posição que o próprio jogo envia).
-  - Sem limite de nível, regiões US/EU/JP juntas, mensagens, manchas de sangue e fantasmas funcionando.
-  - Lista em tempo real de quem está online, em que área, com sinal ativo ou em co-op.
-- **Patch no jogo** (aplicado no seu dump, com backup e botão *Original*):
-  - Blue Eye Stone utilizável em **forma humana** → sem precisar morrer para voltar a ajudar.
-  - Stone of Ephemeral Eyes **infinita** → host sempre consegue voltar ao corpo para invocar.
-- **Configura o RPCS3 sozinho**: RPCN, redirecionamento dos servidores, UPnP, "Skip Intro", registro do jogo.
-- **Modo servidor dedicado**: `DesCoop.exe --server --name "Minha Party"` (VPS / PC ligado 24h).
-- **Servidor público**: um clique para jogar no *The Archstones* com o mundo todo.
+- **Built-in party server.** It reimplements the Demon's Souls online server and runs inside the host's app, so there's no VPS to rent.
+  - Blue signs from party members are **moved next to the host in any area**, using the positions the game itself reports.
+  - No level range. US, EU and JP copies share one world. Messages, bloodstains and wandering ghosts all work.
+  - A live list shows who is online, where they are, and who has a sign down or is in co-op.
+- **Co-op patch** for your own dump. The originals are backed up and can be restored with one click.
+  - The **Blue Eye Stone works in body form**, so nobody has to die to go back to helping.
+  - The **Stone of Ephemeral Eyes is never consumed**, so the host can always get their body back to summon.
+- **Automatic RPCS3 setup**: RPCN, server redirection, UPnP, skipping the intro videos and registering the game.
+- **RPCN account creation inside the app**, with no digging through RPCS3's menus.
+- **Dedicated server mode**: `DesCoop.exe --server --name "My Party"`, for a VPS or an always-on PC.
+- **Public server**: one click to play on *The Archstones* with everyone.
 
-## Limites (do jogo, não do app)
+## Limits
 
-O jogo ainda encerra a sessão ao matar um boss ou quando o host morre — é código do executável do PS3. O app reduz isso a 2 cliques (Blue Eye Stone em forma humana + sinal que aparece do lado do host), mas não impede a desconexão.
+The game still ends the session when a boss dies or the host dies. That logic lives in the PS3 executable. This project turns rejoining into two clicks (Blue Eye Stone in body form, plus a sign that appears next to the host), but it doesn't prevent the disconnect.
 
-## Compilar
+## Build
 
 ```powershell
 git clone --recursive https://github.com/himingal/des-seamless-coop
-powershell -File tools/build-release.ps1 -Version 1.0.0   # testes + exe single-file + instalador em dist/
+powershell -File tools/build-release.ps1 -Version 1.1.0   # tests + single-file exe + installer in dist/
 ```
 
-## Créditos
+## Credits
 
-- Protocolo do servidor: [DeSSE](https://github.com/ymgve/desse) (ymgve) e [dessego](https://github.com/danmrichards/dessego)
-- [RPCS3](https://rpcs3.net) e [RPCN](https://github.com/RipleyTom/rpcn)
-- [SoulsFormatsNEXT](https://github.com/soulsmods/SoulsFormatsNEXT) (GPL-3.0) e paramdefs do [Paramdex](https://github.com/soulsmods/Paramdex)
+- Server protocol: [DeSSE](https://github.com/ymgve/desse) by ymgve and [dessego](https://github.com/danmrichards/dessego)
+- [RPCS3](https://rpcs3.net) and [RPCN](https://github.com/RipleyTom/rpcn)
+- [SoulsFormatsNEXT](https://github.com/soulsmods/SoulsFormatsNEXT) (GPL-3.0) and paramdefs from [Paramdex](https://github.com/soulsmods/Paramdex)
 - [The Archstones](https://thearchstones.com)
+- [Cinzel](https://github.com/NDISCOVER/Cinzel-Font) typeface (SIL OFL 1.1)
 
-Licença GPL-3.0. Não inclui nenhum arquivo do jogo: use a sua cópia.
+Fan project, not affiliated with FromSoftware, Bluepoint, Sony or the RPCS3 team. It ships no game files: use your own copy. Licensed under GPL-3.0.

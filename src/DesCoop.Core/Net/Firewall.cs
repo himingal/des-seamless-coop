@@ -8,7 +8,7 @@ namespace DesCoop.Net;
 /// </summary>
 public static class Firewall
 {
-    const string ServerRule = "DeS Seamless Co-op (servidor)";
+    const string ServerRule = "DeS Seamless Co-op (server)";
     const string EmuRule = "DeS Seamless Co-op (RPCS3)";
 
     public static bool RuleExists(string name)

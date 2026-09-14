@@ -51,7 +51,7 @@ public sealed class Rpcs3Manager
 
     public async Task InstallLatestAsync(IProgress<DownloadProgress>? progress, CancellationToken ct = default)
     {
-        progress?.Report(new("Procurando a versao mais recente do RPCS3", 0));
+        progress?.Report(new("Looking for the latest RPCS3 build", 0));
         using var doc = JsonDocument.Parse(await Http.GetStringAsync("https://api.github.com/repos/RPCS3/rpcs3-binaries-win/releases/latest", ct));
         var asset = doc.RootElement.GetProperty("assets").EnumerateArray()
             .First(a => a.GetProperty("name").GetString()!.EndsWith("_win64_msvc.7z", StringComparison.OrdinalIgnoreCase)
@@ -60,9 +60,9 @@ public sealed class Rpcs3Manager
         var name = asset.GetProperty("name").GetString()!;
 
         var tmp = Path.Combine(Path.GetTempPath(), name);
-        await DownloadAsync(url, tmp, "Baixando RPCS3", progress, ct);
+        await DownloadAsync(url, tmp, "Downloading RPCS3", progress, ct);
 
-        progress?.Report(new("Extraindo RPCS3", 0));
+        progress?.Report(new("Extracting RPCS3", 0));
         Directory.CreateDirectory(Root);
         using (var archive = ArchiveFactory.OpenArchive(tmp))
         {
@@ -72,7 +72,7 @@ public sealed class Rpcs3Manager
             {
                 ct.ThrowIfCancellationRequested();
                 e.WriteToDirectory(Root, new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
-                progress?.Report(new("Extraindo RPCS3", ++i / (double)entries.Count));
+                progress?.Report(new("Extracting RPCS3", ++i / (double)entries.Count));
             }
         }
         try { File.Delete(tmp); } catch { }
@@ -81,16 +81,16 @@ public sealed class Rpcs3Manager
 
     public async Task InstallFirmwareAsync(IProgress<DownloadProgress>? progress, CancellationToken ct = default)
     {
-        progress?.Report(new("Consultando o firmware oficial da Sony", 0));
+        progress?.Report(new("Asking Sony for the official PS3 firmware", 0));
         var list = await Http.GetStringAsync("http://fus01.ps3.update.playstation.net/update/ps3/list/us/ps3-updatelist.txt", ct);
         var url = list.Split(';').Select(s => s.Trim())
             .Where(s => s.StartsWith("CDN=", StringComparison.Ordinal) && s.EndsWith("PS3UPDAT.PUP", StringComparison.OrdinalIgnoreCase))
-            .Select(s => s[4..]).FirstOrDefault() ?? throw new InvalidOperationException("Nao encontrei o firmware no servidor da Sony.");
+            .Select(s => s[4..]).FirstOrDefault() ?? throw new InvalidOperationException("Could not find the firmware on Sony's update server.");
 
         var pup = Path.Combine(Path.GetTempPath(), "PS3UPDAT.PUP");
-        await DownloadAsync(url, pup, "Baixando firmware PS3 (Sony)", progress, ct);
+        await DownloadAsync(url, pup, "Downloading PS3 firmware (Sony)", progress, ct);
 
-        progress?.Report(new("Instalando firmware no RPCS3", 0));
+        progress?.Report(new("Installing firmware into RPCS3", 0));
         // Headless mode installs without the "Install firmware?" dialog and exits when done.
         using var proc = Process.Start(new ProcessStartInfo(Exe, $"{CommonArgs} --headless --installfw \"{pup}\"")
         { WorkingDirectory = Root, UseShellExecute = false, CreateNoWindow = true })!;
@@ -101,12 +101,12 @@ public sealed class Rpcs3Manager
         {
             await Task.Delay(1000, ct);
             int count = Directory.Exists(flash) ? Directory.EnumerateFiles(flash, "*", SearchOption.AllDirectories).Count() : 0;
-            progress?.Report(new($"Instalando firmware ({count} arquivos)", Math.Min(0.99, count / 1900.0)));
+            progress?.Report(new($"Installing firmware ({count} files)", Math.Min(0.99, count / 1900.0)));
             if (count == 0 && sw.Elapsed > TimeSpan.FromSeconds(120)) break; // stuck (e.g. an error dialog)
         }
         if (!proc.HasExited) try { proc.Kill(true); } catch { }
         try { File.Delete(pup); } catch { }
-        if (!FirmwareInstalled) throw new InvalidOperationException("O firmware nao foi instalado. Tente de novo ou instale pelo RPCS3 (File > Install Firmware).");
+        if (!FirmwareInstalled) throw new InvalidOperationException("The firmware was not installed. Try again, or install it from RPCS3 (File > Install Firmware).");
         progress?.Report(new("Firmware instalado", 1));
     }
 
@@ -128,7 +128,7 @@ public sealed class Rpcs3Manager
             if (DateTime.UtcNow - last > TimeSpan.FromMilliseconds(150))
             {
                 last = DateTime.UtcNow;
-                progress?.Report(new($"{stage} ({done / 1048576.0:0.0} MB{(total > 0 ? $" de {total / 1048576.0:0.0} MB" : "")})", total > 0 ? done / (double)total : 0));
+                progress?.Report(new($"{stage} ({done / 1048576.0:0.0} MB{(total > 0 ? $" of {total / 1048576.0:0.0} MB" : "")})", total > 0 ? done / (double)total : 0));
             }
         }
     }
@@ -175,6 +175,24 @@ public sealed class Rpcs3Manager
         var npid = YamlFile.Get(cfg.Root, "NPID");
         var pass = YamlFile.Get(cfg.Root, "Password");
         return !string.IsNullOrWhiteSpace(npid) && !string.IsNullOrWhiteSpace(pass) ? npid : null;
+    }
+
+    public (string? npid, string? password, string? token) RpcnAccount()
+    {
+        var cfg = new YamlFile(Path.Combine(ConfigDir, "rpcn.yml"));
+        return (YamlFile.Get(cfg.Root, "NPID"), YamlFile.Get(cfg.Root, "Password"), YamlFile.Get(cfg.Root, "Token"));
+    }
+
+    /// <summary>Writes rpcn.yml exactly like RPCS3's own account dialog (password already derived).</summary>
+    public void SaveRpcnAccount(string npid, string derivedPassword, string token)
+    {
+        var cfg = new YamlFile(Path.Combine(ConfigDir, "rpcn.yml"));
+        YamlFile.Set(cfg.Root, "Version", "2");
+        if (YamlFile.Get(cfg.Root, "Host") is not { Length: > 0 }) YamlFile.Set(cfg.Root, "Host", Net.RpcnClient.DefaultHost);
+        YamlFile.Set(cfg.Root, "NPID", npid);
+        YamlFile.Set(cfg.Root, "Password", derivedPassword);
+        YamlFile.Set(cfg.Root, "Token", token);
+        cfg.Save();
     }
 
     public void RegisterGame(GameInfo game)

@@ -13,7 +13,7 @@ public sealed class AppSettings
     public string? JoinCode { get; set; }
     /// <summary>Address that worked last time we joined (what RPCS3 is pointed at).</summary>
     public string? JoinedAddress { get; set; }
-    public string PartyName { get; set; } = "Party do " + Environment.UserName;
+    public string PartyName { get; set; } = Environment.UserName + "'s Party";
     public PatchOptions Patch { get; set; } = new();
     public bool Fullscreen { get; set; }
     public bool UseUpnp { get; set; } = true;

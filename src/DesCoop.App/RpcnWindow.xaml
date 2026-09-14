@@ -1,0 +1,52 @@
+<Window x:Class="DesCoop.App.RpcnWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="RPCN Account" Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        Background="{StaticResource Backdrop}" WindowStartupLocation="CenterOwner" Icon="app.ico" FontFamily="Segoe UI">
+    <StackPanel Margin="30,22,30,26">
+        <TextBlock Text="RPCN ACCOUNT" FontFamily="{StaticResource Serif}" FontSize="22" Foreground="#E6DCC6" HorizontalAlignment="Center"/>
+        <Border Height="1" Background="{StaticResource Rule}" Width="300" Margin="0,6,0,8"/>
+        <TextBlock Style="{StaticResource Small}" TextAlignment="Center" Margin="0,0,0,14"
+                   Text="RPCN is RPCS3's free PlayStation Network. You and your friend each need one to play online."/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,14">
+            <RadioButton x:Name="RbCreate" Content="CREATE" GroupName="r" IsChecked="True" Checked="Tab_Changed"/>
+            <RadioButton x:Name="RbSignIn" Content="I HAVE ONE" GroupName="r" Checked="Tab_Changed"/>
+        </StackPanel>
+
+        <!-- Step 1: credentials -->
+        <StackPanel x:Name="StepForm">
+            <TextBlock Text="Username (3-16 letters, numbers, - or _)" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+            <TextBox x:Name="TxtUser" Margin="0,0,0,10"/>
+            <StackPanel x:Name="EmailRow">
+                <TextBlock Text="Email (a 16-letter token is sent there)" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                <TextBox x:Name="TxtEmail" Margin="0,0,0,10"/>
+            </StackPanel>
+            <TextBlock Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+            <PasswordBox x:Name="TxtPass" Margin="0,0,0,10"/>
+            <StackPanel x:Name="ConfirmRow">
+                <TextBlock Text="Password again" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                <PasswordBox x:Name="TxtPass2" Margin="0,0,0,10"/>
+            </StackPanel>
+            <StackPanel x:Name="TokenRowSignIn" Visibility="Collapsed">
+                <TextBlock Text="Token from the RPCN email" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                <TextBox x:Name="TxtTokenSignIn" CharacterCasing="Upper" MaxLength="16" FontFamily="Consolas" Margin="0,0,0,10"/>
+            </StackPanel>
+            <Button x:Name="BtnGo" Content="Create Account" HorizontalAlignment="Center" Click="BtnGo_Click" Margin="0,6,0,0" FontSize="15"/>
+        </StackPanel>
+
+        <!-- Step 2: token -->
+        <StackPanel x:Name="StepToken" Visibility="Collapsed">
+            <TextBlock TextAlignment="Center" Margin="0,0,0,10" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" Text="Account created"/>
+            <TextBlock Style="{StaticResource Small}" TextAlignment="Center" Margin="0,0,0,12"
+                       Text="Open your email (check spam too) and paste the 16-letter token from RPCN here."/>
+            <TextBox x:Name="TxtToken" CharacterCasing="Upper" MaxLength="16" FontFamily="Consolas" FontSize="16" HorizontalContentAlignment="Center" Foreground="{StaticResource Soul}"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                <Button x:Name="BtnResend" Content="Resend Email" Click="BtnResend_Click"/>
+                <Button x:Name="BtnConfirm" Content="Confirm" Click="BtnConfirm_Click" FontSize="15"/>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock x:Name="TxtMsg" Style="{StaticResource Small}" TextAlignment="Center" Margin="0,14,0,0"/>
+    </StackPanel>
+</Window>

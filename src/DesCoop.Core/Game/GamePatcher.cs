@@ -79,16 +79,16 @@ public static class GamePatcher
     {
         var log = new List<string>();
         var (blue, eph) = FindItemIds(game.UsrDir);
-        if (opt.BlueEyeStoneInBodyForm && blue.Count == 0) log.Add("Aviso: nome 'Blue Eye Stone' nao encontrado nos textos do jogo.");
-        if (opt.InfiniteEphemeralEyes && eph.Count == 0) log.Add("Aviso: nome 'Stone of Ephemeral Eyes' nao encontrado nos textos do jogo.");
+        if (opt.BlueEyeStoneInBodyForm && blue.Count == 0) log.Add("Warning: 'Blue Eye Stone' not found in the game's text files.");
+        if (opt.InfiniteEphemeralEyes && eph.Count == 0) log.Add("Warning: 'Stone of Ephemeral Eyes' not found in the game's text files.");
 
         var edits = new List<(int id, int offset, byte value, string what)>();
-        if (opt.BlueEyeStoneInBodyForm) foreach (var id in blue) edits.Add((id, OffEnableLive, 1, "Blue Eye Stone utilizavel em forma humana"));
-        if (opt.InfiniteEphemeralEyes) foreach (var id in eph) edits.Add((id, OffIsConsume, 0, "Stone of Ephemeral Eyes infinita"));
+        if (opt.BlueEyeStoneInBodyForm) foreach (var id in blue) edits.Add((id, OffEnableLive, 1, "Blue Eye Stone usable in body form"));
+        if (opt.InfiniteEphemeralEyes) foreach (var id in eph) edits.Add((id, OffIsConsume, 0, "Stone of Ephemeral Eyes is never consumed"));
 
         bool changed = false;
         var bnds = FindParamBnds(game.UsrDir).ToList();
-        if (bnds.Count == 0) log.Add("Erro: param/gameparam/gameparam*.parambnd nao encontrado.");
+        if (bnds.Count == 0) log.Add("Error: param/gameparam/gameparam*.parambnd not found.");
         foreach (var path in bnds)
         {
             // Always patch from the pristine file so toggling options off really reverts them.
@@ -102,7 +102,7 @@ public static class GamePatcher
                 File.WriteAllBytes(path, fresh);
                 changed = true;
             }
-            log.Add($"{Path.GetFileName(path)}: {n} alteracao(oes)");
+            log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
         return new PatchReport(changed, log);
     }
@@ -112,7 +112,7 @@ public static class GamePatcher
         var goodsFile = bnd.Files.FirstOrDefault(f => (f.Name ?? "").EndsWith("EquipParamGoods.param", StringComparison.OrdinalIgnoreCase));
         if (goodsFile == null)
         {
-            log.Add($"{label}: EquipParamGoods.param nao encontrado");
+            log.Add($"{label}: EquipParamGoods.param not found");
             return 0;
         }
         var bytes = goodsFile.Bytes.ToArray();

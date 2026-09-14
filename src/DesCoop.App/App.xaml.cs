@@ -19,6 +19,7 @@ public partial class App : Application
             RunHeadless(e.Args).ContinueWith(_ => Dispatcher.Invoke(Shutdown));
             return;
         }
+
         base.OnStartup(e);
         DispatcherUnhandledException += (_, ev) =>
         {
@@ -28,7 +29,24 @@ public partial class App : Application
         };
         AppDomain.CurrentDomain.UnhandledException += (_, ev) => WriteCrash(ev.ExceptionObject as Exception);
         TaskScheduler.UnobservedTaskException += (_, ev) => { WriteCrash(ev.Exception); ev.SetObserved(); };
-        new MainWindow().Show();
+
+        // Installer hook: DesCoop.exe --setup [--game "<folder>"] prepares everything, then exits.
+        if (e.Args.Contains("--setup", StringComparer.OrdinalIgnoreCase))
+        {
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            MainWindow = new SetupWindow(Arg(e.Args, "--game"));
+            MainWindow.Show();
+            return;
+        }
+        MainWindow = new MainWindow();
+        MainWindow.Show();
+    }
+
+    static string? Arg(string[] args, string name)
+    {
+        int i = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+        var v = i >= 0 && i + 1 < args.Length ? args[i + 1].Trim().Trim('"') : null;
+        return string.IsNullOrWhiteSpace(v) ? null : v;
     }
 
     static void WriteCrash(Exception? ex)
@@ -39,9 +57,7 @@ public partial class App : Application
     /// <summary>Dedicated server mode (for a VPS or an always-on PC): DesCoop.exe --server [--name "X"] [--no-upnp]</summary>
     static async Task RunHeadless(string[] args)
     {
-        string name = "DeS Seamless Co-op";
-        int i = Array.FindIndex(args, a => a.Equals("--name", StringComparison.OrdinalIgnoreCase));
-        if (i >= 0 && i + 1 < args.Length) name = args[i + 1];
+        string name = Arg(args, "--name") ?? "DeS Seamless Co-op";
         bool upnp = !args.Contains("--no-upnp", StringComparer.OrdinalIgnoreCase);
 
         var opts = new DesServerOptions { ServerName = name, DataDir = Path.Combine(AppSettings.DataDir, "server-data") };
@@ -49,8 +65,8 @@ public partial class App : Application
         host.Log += Console.WriteLine;
         await host.StartAsync(upnp);
         Console.WriteLine();
-        Console.WriteLine("Codigo da party: " + host.Code);
-        Console.WriteLine("Ctrl+C para encerrar.");
+        Console.WriteLine("Party code: " + host.Code);
+        Console.WriteLine("Press Ctrl+C to stop.");
         var done = new TaskCompletionSource();
         Console.CancelKeyPress += (_, ev) => { ev.Cancel = true; done.TrySetResult(); };
         await done.Task;

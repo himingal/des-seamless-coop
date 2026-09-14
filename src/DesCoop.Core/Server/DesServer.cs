@@ -32,7 +32,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.0.0";
+    public const string Version = "1.1.0";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -80,7 +80,7 @@ public sealed class DesServer : IDisposable
             _ = AcceptLoop(l, port);
         }
         Running = true;
-        Write($"Servidor iniciado nas portas TCP {_o.BootstrapPort}, {_o.PortUS}-{_o.PortJP}");
+        Write($"Server listening on TCP ports {_o.BootstrapPort}, {_o.PortUS}-{_o.PortJP}");
     }
 
     public void Dispose()
@@ -147,7 +147,7 @@ public sealed class DesServer : IDisposable
             await stream.WriteAsync(response, timeout.Token);
         }
         catch (Exception ex) when (ex is IOException or OperationCanceledException or SocketException) { }
-        catch (Exception ex) { Write("Erro: " + ex.Message); }
+        catch (Exception ex) { Write("Error: " + ex.Message); }
     }
 
     static async Task<(string, Dictionary<string, string>, byte[])> ReadRequestAsync(NetworkStream s, CancellationToken ct)
@@ -256,7 +256,7 @@ public sealed class DesServer : IDisposable
                 if (q.TryGetValue("via", out var via) && (IPAddress.TryParse(via, out _) || Uri.CheckHostName(via) == UriHostNameType.Dns))
                 {
                     lock (_lock) _via[remote.ToString()] = via;
-                    Write($"Cliente {remote} vai usar o endereco {via}" + (q.TryGetValue("name", out var n) ? $" ({n})" : ""));
+                    Write($"Client {remote} will use address {via}" + (q.TryGetValue("name", out var n) ? $" ({n})" : ""));
                 }
                 result = new { ok = true, app = "descoop", version = Version, name = _o.ServerName, yourIp = remote.ToString() };
                 break;
@@ -331,7 +331,7 @@ public sealed class DesServer : IDisposable
                     "updateOtherPlayerGrade.spd" => UpdateOtherPlayerGrade(p, me),
                     _ => ((byte, byte[])?)null,
                 };
-                if (r == null) Write($"Comando desconhecido do jogo: {cmd}");
+                if (r == null) Write($"Unknown game command: {cmd}");
                 return r;
             }
             finally
@@ -370,13 +370,13 @@ public sealed class DesServer : IDisposable
         var motd = new StringBuilder();
         motd.Append($"{Ascii(_o.ServerName)}\r\n");
         motd.Append("DeS Seamless Co-op v" + Version + "\r\n\r\n");
-        motd.Append("Party: use a Blue Eye Stone em qualquer\r\n");
-        motd.Append("lugar. Seu sinal aparece ao lado do host,\r\n");
-        motd.Append("em qualquer area do mundo.\r\n");
+        motd.Append("Party: use the Blue Eye Stone anywhere.\r\n");
+        motd.Append("Your sign appears right next to the host,\r\n");
+        motd.Append("in any area of the world.\r\n");
         var motd2 = new StringBuilder();
-        motd2.Append($"Jogadores online: {st.Players.Length}\r\n");
+        motd2.Append($"Players online: {st.Players.Length}\r\n");
         foreach (var pl in st.Players.Take(8))
-            motd2.Append($"{Ascii(pl.Name)} - {pl.Area}{(pl.HasSign ? " [sinal]" : "")}\r\n");
+            motd2.Append($"{Ascii(pl.Name)} - {pl.Area}{(pl.HasSign ? " [sign]" : "")}\r\n");
         return (0x02, new Payload().U8(1).U8(2).CStr(motd.ToString()).CStr(motd2.ToString()).ToArray());
     }
 
@@ -389,7 +389,7 @@ public sealed class DesServer : IDisposable
         _store.Stats(id);
         _store.MarkDirty();
         Touch(id, ip, port);
-        Write($"{id} entrou no servidor");
+        Write($"{id} joined the server");
         return (0x17, new Payload().CStr(id).ToArray());
     }
 
@@ -571,7 +571,7 @@ public sealed class DesServer : IDisposable
         if (last != null)
         {
             if (_ghosts.TryGetValue(me, out var prev) && prev.BlockId != block)
-                Write($"{me} foi para {BlockNames.Get(block)}");
+                Write($"{me} moved to {BlockNames.Get(block)}");
             _ghosts[me] = new Ghost { CharacterId = me, BlockId = block, ReplayData = raw };
             if (last.Length == 6) UpdatePosition(me, block, last[0], last[1], last[2], last[3], last[4], last[5]);
         }
@@ -586,7 +586,7 @@ public sealed class DesServer : IDisposable
         foreach (var k in _sos.Where(s => now - s.Value.UpdatedAt > SignTtl).Select(s => s.Key).ToList())
         {
             _sos.Remove(k);
-            Write($"Sinal de {k} expirou");
+            Write($"Sign of {k} expired");
         }
     }
 
@@ -639,7 +639,7 @@ public sealed class DesServer : IDisposable
                 float z = anchor.Z + (float)(Math.Cos(yaw) * 1.2);
                 fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ));
                 slot++;
-                Write($"Sinal de {s.CharacterId} mostrado para {me} em {BlockNames.Get(block)}");
+                Write($"Sign of {s.CharacterId} shown to {me} in {BlockNames.Get(block)}");
             }
         }
 
@@ -659,7 +659,7 @@ public sealed class DesServer : IDisposable
         _sos[s.CharacterId] = s;
         _pendingSummon.Remove(s.CharacterId);
         UpdatePosition(s.CharacterId, s.BlockId, s.PosX, s.PosY, s.PosZ, s.AngX, s.AngY, s.AngZ);
-        Write($"{s.CharacterId} colocou um sinal ({(s.IsCoopSign ? "azul" : "vermelho")}) em {BlockNames.Get(s.BlockId)}");
+        Write($"{s.CharacterId} placed a {(s.IsCoopSign ? "blue" : "red")} sign in {BlockNames.Get(s.BlockId)}");
         return (0x0a, [1]);
     }
 
@@ -669,12 +669,12 @@ public sealed class DesServer : IDisposable
         if (_sos.TryGetValue(id, out var s)) s.UpdatedAt = DateTime.UtcNow;
         if (_pendingMonk.Remove(id, out var monkRoom))
         {
-            Write($"{id} invocado como Old Monk");
+            Write($"{id} summoned as the Old Monk");
             return (0x0b, Protocol.Raw.GetBytes(monkRoom));
         }
         if (_pendingSummon.Remove(id, out var room))
         {
-            Write($"{id} esta sendo invocado");
+            Write($"{id} is being summoned");
             return (0x0b, Protocol.Raw.GetBytes(room));
         }
         return (0x0b, [0]);
@@ -693,11 +693,11 @@ public sealed class DesServer : IDisposable
         var s = _sos.Values.FirstOrDefault(x => x.SosId == ghostId);
         if (s == null)
         {
-            Write($"{me} tentou invocar um sinal que ja sumiu (#{ghostId})");
+            Write($"{me} tried to summon a sign that is gone (#{ghostId})");
             return (0x0a, [0]);
         }
         _pendingSummon[s.CharacterId] = room;
-        Write($"{me} esta invocando {s.CharacterId}");
+        Write($"{me} is summoning {s.CharacterId}");
         return (0x0a, [1]);
     }
 
@@ -715,7 +715,7 @@ public sealed class DesServer : IDisposable
         _store.Stats(id).Sessions++;
         _store.MarkDirty();
         if (_live.TryGetValue(id, out var l)) l.InSession = true;
-        Write($"{id} iniciou uma sessao co-op");
+        Write($"{id} started a co-op session");
         return (0x15, [1]);
     }
 
@@ -730,7 +730,7 @@ public sealed class DesServer : IDisposable
         else if (p.GetValueOrDefault("gradeD") == "1") st.GradeD++;
         _store.MarkDirty();
         if (_live.TryGetValue(id, out var l)) l.InSession = false;
-        Write($"{id} terminou a sessao co-op");
+        Write($"{id} finished a co-op session");
         return (0x21, [1]);
     }
 

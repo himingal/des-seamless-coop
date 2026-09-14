@@ -1,203 +1,214 @@
 <Window x:Class="DesCoop.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="DeS Seamless Co-op" Width="1080" Height="760" MinWidth="900" MinHeight="640"
-        Background="{StaticResource Bg}" WindowStartupLocation="CenterScreen"
-        Icon="app.ico" FontFamily="Segoe UI">
-    <Grid Margin="20">
+        Title="DeS Seamless Co-op" Width="1140" Height="800" MinWidth="960" MinHeight="700"
+        Background="{StaticResource Backdrop}" WindowStartupLocation="CenterScreen"
+        Icon="app.ico" FontFamily="Segoe UI" TextOptions.TextFormattingMode="Display">
+    <Grid Margin="28,18,28,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <DockPanel Margin="0,0,0,16">
-            <Image Source="app.ico" Width="46" Height="46" Margin="0,0,14,0" DockPanel.Dock="Left"/>
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="DEMON'S SOULS" FontSize="26" FontFamily="Georgia" Foreground="{StaticResource Gold}" FontWeight="SemiBold"/>
-                <TextBlock Text="Seamless Co-op para RPCS3  ·  entre na party do seu amigo e joguem juntos o tempo que quiserem" Style="{StaticResource Small}"/>
-            </StackPanel>
-        </DockPanel>
+        <!-- Title -->
+        <StackPanel HorizontalAlignment="Center" Margin="0,0,0,18">
+            <TextBlock Text="DEMON'S SOULS" FontFamily="{StaticResource Serif}" FontSize="44" Foreground="#E6DCC6" HorizontalAlignment="Center">
+                <TextBlock.Effect><DropShadowEffect Color="#C4A468" BlurRadius="24" ShadowDepth="0" Opacity="0.35"/></TextBlock.Effect>
+            </TextBlock>
+            <Grid Width="520" Margin="0,4,0,6">
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Border Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="SEAMLESS  CO-OP" FontFamily="{StaticResource Serif}" FontSize="14" Foreground="{StaticResource Gold}" Margin="16,0"/>
+                <Border Grid.Column="2" Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
+            </Grid>
+            <TextBlock Text="Join your friend's world on RPCS3 and stay together for as long as you want." Style="{StaticResource Small}" HorizontalAlignment="Center"/>
+        </StackPanel>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="1.1*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Setup -->
+            <!-- The Nexus: setup -->
             <Border Style="{StaticResource Card}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="1 · Preparação" Style="{StaticResource H}"/>
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <Border Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="THE NEXUS" Style="{StaticResource H}" Margin="14,0"/>
+                        <Border Grid.Column="2" Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Rectangle x:Name="DotRpcs3" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="RPCS3 Emulator" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="TxtRpcs3" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                    <Button x:Name="BtnRpcs3Install" Content="Download" Click="BtnRpcs3Install_Click"/>
+                                    <Button x:Name="BtnRpcs3Pick" Content="Browse" Click="BtnRpcs3Pick_Click"/>
+                                </StackPanel>
+                            </Grid>
 
-                        <!-- RPCS3 -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Ellipse x:Name="DotRpcs3" Width="10" Height="10" VerticalAlignment="Top" Margin="0,5,0,0" Fill="{StaticResource Bad}"/>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Emulador RPCS3" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="TxtRpcs3" Style="{StaticResource Small}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
-                                <Button x:Name="BtnRpcs3Install" Content="Baixar" Click="BtnRpcs3Install_Click" Margin="6,0,0,0"/>
-                                <Button x:Name="BtnRpcs3Pick" Content="Já tenho…" Click="BtnRpcs3Pick_Click" Margin="6,0,0,0"/>
-                            </StackPanel>
-                        </Grid>
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Rectangle x:Name="DotFw" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="PS3 Firmware" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="TxtFw" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                                <Button x:Name="BtnFw" Grid.Column="2" Content="Install" Click="BtnFw_Click" VerticalAlignment="Top"/>
+                            </Grid>
 
-                        <!-- Firmware -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Ellipse x:Name="DotFw" Width="10" Height="10" VerticalAlignment="Top" Margin="0,5,0,0" Fill="{StaticResource Bad}"/>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Firmware do PS3" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="TxtFw" Style="{StaticResource Small}"/>
-                            </StackPanel>
-                            <Button x:Name="BtnFw" Grid.Column="2" Content="Instalar" Click="BtnFw_Click" VerticalAlignment="Top"/>
-                        </Grid>
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Rectangle x:Name="DotGame" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Demon's Souls" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="TxtGame" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                                <Button x:Name="BtnGame" Grid.Column="2" Content="Browse" Click="BtnGame_Click" VerticalAlignment="Top"/>
+                            </Grid>
 
-                        <!-- Game -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Ellipse x:Name="DotGame" Width="10" Height="10" VerticalAlignment="Top" Margin="0,5,0,0" Fill="{StaticResource Bad}"/>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Demon's Souls (seu dump)" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="TxtGame" Style="{StaticResource Small}"/>
-                            </StackPanel>
-                            <Button x:Name="BtnGame" Grid.Column="2" Content="Escolher pasta…" Click="BtnGame_Click" VerticalAlignment="Top"/>
-                        </Grid>
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Rectangle x:Name="DotPatch" Style="{StaticResource Dot}" Fill="{StaticResource Warn}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Co-op Patch" Style="{StaticResource Label}" Margin="0,0,0,4"/>
+                                    <CheckBox x:Name="ChkBlue" Content="Blue Eye Stone works in body form" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <TextBlock Text="after a boss, your friend places the sign again without dying" Style="{StaticResource Small}" Margin="21,-1,0,5"/>
+                                    <CheckBox x:Name="ChkEph" Content="Endless Stone of Ephemeral Eyes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <TextBlock Text="the host can always return to body form to summon" Style="{StaticResource Small}" Margin="21,-1,0,5"/>
+                                    <TextBlock x:Name="TxtPatch" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                                    <Button x:Name="BtnPatch" Content="Apply" Click="BtnPatch_Click"/>
+                                    <Button x:Name="BtnUnpatch" Content="Restore" Click="BtnUnpatch_Click" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Grid>
 
-                        <!-- Patch -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Ellipse x:Name="DotPatch" Width="10" Height="10" VerticalAlignment="Top" Margin="0,5,0,0" Fill="{StaticResource Warn}"/>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Patch co-op no jogo" FontWeight="SemiBold"/>
-                                <CheckBox x:Name="ChkBlue" Content="Blue Eye Stone funciona em forma humana" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                <TextBlock Text="depois do boss o amigo já coloca o sinal de novo, sem precisar morrer" Style="{StaticResource Small}" Margin="20,-2,0,4"/>
-                                <CheckBox x:Name="ChkEph" Content="Stone of Ephemeral Eyes infinita" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                <TextBlock Text="o host sempre consegue voltar ao corpo para invocar" Style="{StaticResource Small}" Margin="20,-2,0,4"/>
-                                <TextBlock x:Name="TxtPatch" Style="{StaticResource Small}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" VerticalAlignment="Top">
-                                <Button x:Name="BtnPatch" Content="Aplicar" Click="BtnPatch_Click"/>
-                                <Button x:Name="BtnUnpatch" Content="Original" Click="BtnUnpatch_Click" Margin="0,6,0,0"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- RPCN -->
-                        <Grid Margin="0,0,0,4">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Ellipse x:Name="DotRpcn" Width="10" Height="10" VerticalAlignment="Top" Margin="0,5,0,0" Fill="{StaticResource Bad}"/>
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Conta RPCN (a &quot;PSN&quot; do RPCS3)" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="TxtRpcn" Style="{StaticResource Small}"/>
-                            </StackPanel>
-                            <Button x:Name="BtnRpcn" Grid.Column="2" Content="Criar / entrar" Click="BtnRpcn_Click" VerticalAlignment="Top"/>
-                        </Grid>
-                    </StackPanel>
-                </ScrollViewer>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Rectangle x:Name="DotRpcn" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="RPCN Account" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="TxtRpcn" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                                <Button x:Name="BtnRpcn" Grid.Column="2" Content="Create / Sign in" Click="BtnRpcn_Click" VerticalAlignment="Top"/>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
             </Border>
 
             <!-- Party -->
             <Border Grid.Column="2" Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="2 · Party" Style="{StaticResource H}"/>
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
-                        <RadioButton x:Name="RbHost" Content="Criar party (host)" GroupName="mode" Checked="Mode_Changed"/>
-                        <RadioButton x:Name="RbJoin" Content="Entrar na party" GroupName="mode" Checked="Mode_Changed"/>
-                        <RadioButton x:Name="RbPublic" Content="Servidor público" GroupName="mode" Checked="Mode_Changed"/>
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <Border Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="YOUR PARTY" Style="{StaticResource H}" Margin="14,0"/>
+                        <Border Grid.Column="2" Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                        <RadioButton x:Name="RbHost" Content="HOST A PARTY" GroupName="mode" Checked="Mode_Changed"/>
+                        <RadioButton x:Name="RbJoin" Content="JOIN A PARTY" GroupName="mode" Checked="Mode_Changed"/>
+                        <RadioButton x:Name="RbPublic" Content="PUBLIC SERVER" GroupName="mode" Checked="Mode_Changed"/>
                     </StackPanel>
 
-                    <Grid Grid.Row="2">
-                        <!-- Host -->
+                    <Grid DockPanel.Dock="Top">
+                        <StackPanel x:Name="PanelNone">
+                            <TextBlock Style="{StaticResource Small}" HorizontalAlignment="Center" TextAlignment="Center"
+                                       Text="One of you hosts, the other joins with the host's code."/>
+                        </StackPanel>
+
                         <StackPanel x:Name="PanelHost" Visibility="Collapsed">
                             <DockPanel Margin="0,0,0,8">
-                                <TextBlock Text="Nome" VerticalAlignment="Center" Width="46"/>
-                                <Button x:Name="BtnHost" Content="Criar party" DockPanel.Dock="Right" Click="BtnHost_Click" Margin="8,0,0,0"/>
-                                <TextBox x:Name="TxtPartyName"/>
+                                <Button x:Name="BtnHost" Content="Create Party" DockPanel.Dock="Right" Click="BtnHost_Click" Margin="10,0,0,0"/>
+                                <TextBox x:Name="TxtPartyName" VerticalContentAlignment="Center"/>
                             </DockPanel>
-                            <CheckBox x:Name="ChkUpnp" Content="Abrir portas no roteador automaticamente (UPnP)"/>
-                            <Border x:Name="CodeBox" Visibility="Collapsed" Background="#0F0E0B" BorderBrush="{StaticResource GoldDim}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,8,0,0">
+                            <CheckBox x:Name="ChkUpnp" Content="Open router ports automatically (UPnP)"/>
+                            <Border x:Name="CodeBox" Visibility="Collapsed" BorderBrush="{StaticResource GoldDim}" BorderThickness="1" Background="#80050506" Padding="12" Margin="0,10,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Mande este código para o seu amigo:" Style="{StaticResource Small}"/>
+                                    <TextBlock Text="Send this code to your friend:" Style="{StaticResource Small}"/>
                                     <DockPanel Margin="0,6,0,0">
-                                        <Button x:Name="BtnCopy" Content="Copiar" DockPanel.Dock="Right" Click="BtnCopy_Click" Margin="8,0,0,0"/>
-                                        <TextBox x:Name="TxtCode" IsReadOnly="True" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                                        <Button x:Name="BtnCopy" Content="Copy" DockPanel.Dock="Right" Click="BtnCopy_Click" Margin="10,0,0,0"/>
+                                        <TextBox x:Name="TxtCode" IsReadOnly="True" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource Soul}"/>
                                     </DockPanel>
-                                    <TextBlock x:Name="TxtHostInfo" Style="{StaticResource Small}" Margin="0,6,0,0"/>
+                                    <TextBlock x:Name="TxtHostInfo" Style="{StaticResource Small}" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Join -->
                         <StackPanel x:Name="PanelJoin" Visibility="Collapsed">
-                            <TextBlock Text="Cole o código que o host te mandou (ou o IP dele):" Style="{StaticResource Small}" Margin="0,0,0,6"/>
+                            <TextBlock Text="Paste the code your host sent you (or just their IP):" Style="{StaticResource Small}" Margin="0,0,0,6"/>
                             <DockPanel>
-                                <Button x:Name="BtnJoin" Content="Entrar" DockPanel.Dock="Right" Click="BtnJoin_Click" Margin="8,0,0,0"/>
-                                <TextBox x:Name="TxtJoinCode" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" MaxHeight="60"/>
+                                <Button x:Name="BtnJoin" Content="Join" DockPanel.Dock="Right" Click="BtnJoin_Click" Margin="10,0,0,0"/>
+                                <TextBox x:Name="TxtJoinCode" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" MaxHeight="64" Foreground="{StaticResource Soul}"/>
                             </DockPanel>
                             <TextBlock x:Name="TxtJoinInfo" Style="{StaticResource Small}" Margin="0,8,0,0"/>
                         </StackPanel>
 
-                        <!-- Public -->
                         <StackPanel x:Name="PanelPublic" Visibility="Collapsed">
-                            <TextBlock Style="{StaticResource Small}" Text="Usa o servidor da comunidade The Archstones: mensagens, fantasmas e sinais de jogadores do mundo todo. Co-op normal do jogo (sem os sinais de party que seguem o host)."/>
+                            <TextBlock Style="{StaticResource Small}" TextAlignment="Center"
+                                       Text="Play on The Archstones community server: messages, ghosts and summon signs from players all over the world. Regular co-op, without party signs that follow the host."/>
                         </StackPanel>
                     </Grid>
 
-                    <DockPanel Grid.Row="3" Margin="0,14,0,0">
-                        <TextBlock Text="Na party agora" DockPanel.Dock="Top" Foreground="{StaticResource Gold}" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <Border DockPanel.Dock="Top" Background="#0F0E0B" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="4" MinHeight="70" Padding="8">
+                    <TextBlock DockPanel.Dock="Top" Text="PHANTOMS IN THIS WORLD" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="12" Margin="0,16,0,6"/>
+                    <Border DockPanel.Dock="Top" BorderBrush="{StaticResource Line}" BorderThickness="1" Background="#80050506" MinHeight="64" Padding="10,6">
+                        <Grid>
                             <ItemsControl x:Name="ListPlayers">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <DockPanel Margin="0,2">
-                                            <TextBlock Text="{Binding Badge}" DockPanel.Dock="Right" Foreground="{StaticResource Gold}" FontSize="12"/>
+                                        <DockPanel Margin="0,3">
+                                            <TextBlock Text="{Binding Badge}" DockPanel.Dock="Right" Foreground="{StaticResource Soul}" FontSize="12"/>
+                                            <Rectangle Width="6" Height="6" Fill="{StaticResource Soul}" Margin="0,0,10,0" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                                <Rectangle.RenderTransform><RotateTransform Angle="45"/></Rectangle.RenderTransform>
+                                            </Rectangle>
                                             <TextBlock>
-                                                <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
-                                                <Run Text="  ·  " Foreground="{StaticResource Muted}"/>
-                                                <Run Text="{Binding Area, Mode=OneWay}" Foreground="{StaticResource Muted}"/>
+                                                <Run Text="{Binding Name, Mode=OneWay}" FontFamily="{StaticResource Serif}"/>
+                                                <Run Text="   " />
+                                                <Run Text="{Binding Area, Mode=OneWay}" Foreground="{StaticResource Muted}" FontSize="12"/>
                                             </TextBlock>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </Border>
-                        <TextBlock x:Name="TxtNoPlayers" DockPanel.Dock="Top" Style="{StaticResource Small}" Margin="0,4,0,0"
-                                   Text="Ninguém conectado ainda. Os jogadores aparecem aqui quando o jogo entra online."/>
-                        <TextBlock Text="Como jogar juntos" DockPanel.Dock="Top" Foreground="{StaticResource Gold}" FontWeight="SemiBold" Margin="0,12,0,4"/>
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Small}" LineHeight="18">
-                            <Run Text="1. Os dois clicam JOGAR (o online liga sozinho)."/><LineBreak/>
-                            <Run Text="2. Quem vai ajudar usa a Blue Eye Stone em qualquer lugar do mundo."/><LineBreak/>
-                            <Run Text="3. O sinal aparece do lado do host em segundos, onde ele estiver. Host toca no sinal, pronto."/><LineBreak/>
-                            <Run Text="4. Depois do boss: Blue Eye Stone de novo e seguem juntos."/>
-                        </TextBlock>
-                        <TextBox x:Name="TxtLog" Margin="0,12,0,0" IsReadOnly="True" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource Muted}"
-                                 VerticalScrollBarVisibility="Auto" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" MinHeight="60"/>
-                    </DockPanel>
-                </Grid>
+                            <TextBlock x:Name="TxtNoPlayers" Style="{StaticResource Small}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                       Text="No one yet. Players show up here once the game goes online."/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock DockPanel.Dock="Top" Text="HOW TO PLAY TOGETHER" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="12" Margin="0,14,0,4"/>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Small}" LineHeight="19">
+                        <Run Text="I.   Both press PLAY. Online turns on by itself."/><LineBreak/>
+                        <Run Text="II.  The helper uses the Blue Eye Stone anywhere in the world."/><LineBreak/>
+                        <Run Text="III. The sign appears right next to the host, wherever they are. Touch it."/><LineBreak/>
+                        <Run Text="IV.  Boss down? Blue Eye Stone again and keep going."/>
+                    </TextBlock>
+
+                    <TextBox x:Name="TxtLog" Margin="0,12,0,0" IsReadOnly="True" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource Muted}"
+                             VerticalScrollBarVisibility="Auto" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" MinHeight="50"/>
+                </DockPanel>
             </Border>
         </Grid>
 
         <!-- Footer -->
-        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="16,12">
-            <DockPanel>
-                <Button x:Name="BtnPlay" Content="JOGAR" DockPanel.Dock="Right" Style="{StaticResource PlayBtn}" Click="BtnPlay_Click"/>
-                <CheckBox x:Name="ChkFullscreen" Content="Tela cheia" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock x:Name="TxtStatus" Text="Pronto." FontSize="13"/>
-                    <ProgressBar x:Name="Progress" Height="4" Margin="0,6,0,0" Background="#221F17" Foreground="{StaticResource Gold}" BorderThickness="0" Visibility="Hidden" Maximum="1"/>
-                </StackPanel>
-            </DockPanel>
-        </Border>
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                <TextBlock x:Name="TxtStatus" Text="Ready." FontSize="12.5" Foreground="{StaticResource Muted}"/>
+                <ProgressBar x:Name="Progress" Margin="0,6,0,0" Visibility="Hidden" Maximum="1"/>
+            </StackPanel>
+            <Button x:Name="BtnPlay" Grid.Column="1" Content="PLAY" Style="{StaticResource PlayBtn}" Click="BtnPlay_Click"/>
+            <CheckBox x:Name="ChkFullscreen" Grid.Column="2" Content="Fullscreen" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+        </Grid>
     </Grid>
 </Window>

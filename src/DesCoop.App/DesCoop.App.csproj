@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Resource Include="app.ico" />
+    <Resource Include="Fonts\Cinzel.ttf" />
   </ItemGroup>
 
   <ItemGroup>

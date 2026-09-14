@@ -28,7 +28,7 @@ public sealed class PartyHost : IAsyncDisposable
 
         if (useUpnp)
         {
-            Log?.Invoke("Procurando roteador (UPnP) para abrir as portas...");
+            Log?.Invoke("Looking for the router (UPnP) to open the ports...");
             _upnp = await Upnp.DiscoverAsync(TimeSpan.FromSeconds(3), ct);
             if (_upnp != null)
             {
@@ -37,16 +37,16 @@ public sealed class PartyHost : IAsyncDisposable
                     foreach (var p in NetUtil.AllPorts) await _upnp.AddTcpMappingAsync(p, "DeS Seamless Coop");
                     UpnpOk = true;
                     PublicIp = await _upnp.GetExternalIpAsync();
-                    Log?.Invoke($"Portas abertas no roteador via UPnP ({_upnp.LocalAddress}).");
+                    Log?.Invoke($"Router ports opened via UPnP ({_upnp.LocalAddress}).");
                 }
-                catch (Exception ex) { Log?.Invoke("UPnP recusou abrir as portas: " + ex.Message); }
+                catch (Exception ex) { Log?.Invoke("UPnP refused to open the ports: " + ex.Message); }
             }
-            else Log?.Invoke("Roteador sem UPnP. Se o amigo nao conectar, use Radmin VPN/ZeroTier ou abra as portas TCP 18000 e 18666-18668.");
+            else Log?.Invoke("Router has no UPnP. If your friend can't connect, use Radmin VPN/ZeroTier or forward TCP 18000 and 18666-18668.");
         }
 
         var web = await NetUtil.GetPublicIpAsync(ct);
         if (PublicIp != null && web != null && PublicIp != web)
-            Log?.Invoke($"Aviso: seu roteador tem IP {PublicIp} mas a internet te ve como {web} (CGNAT). Use Radmin VPN/ZeroTier/Tailscale.");
+            Log?.Invoke($"Warning: your router says {PublicIp} but the internet sees {web} (CGNAT). Use Radmin VPN/ZeroTier/Tailscale.");
         PublicIp = web ?? PublicIp;
         if (PublicIp != null) Server.Options.PublicAddress = PublicIp;
 
