@@ -70,8 +70,8 @@ public sealed class RelayForwarder : IDisposable
             await rs.WriteAsync(first.ToArray(), _cts.Token);
             await rs.WriteAsync(Encoding.ASCII.GetBytes($"{ClientHeader}: {_clientId}\r\n"), _cts.Token);
 
-            var up = ls.CopyToAsync(rs, _cts.Token);
-            var down = rs.CopyToAsync(ls, _cts.Token);
+            var up = ls.CopyToAsync(rs, _cts.Token).Observe();
+            var down = rs.CopyToAsync(ls, _cts.Token).Observe();
             await Task.WhenAny(up, down);
             await Task.WhenAny(down, Task.Delay(3000));
         }

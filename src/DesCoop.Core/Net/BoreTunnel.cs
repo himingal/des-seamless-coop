@@ -116,8 +116,8 @@ public sealed class BoreTunnel : IAsyncDisposable
             await SendAsync(rs, $"{{\"Accept\":\"{id}\"}}", timeout.Token);
             await local.ConnectAsync("127.0.0.1", LocalPort, timeout.Token);
             var ls = local.GetStream();
-            var up = rs.CopyToAsync(ls, _cts.Token);
-            var down = ls.CopyToAsync(rs, _cts.Token);
+            var up = rs.CopyToAsync(ls, _cts.Token).Observe();
+            var down = ls.CopyToAsync(rs, _cts.Token).Observe();
             await Task.WhenAny(up, down);
             await Task.WhenAny(Task.WhenAll(up, down), Task.Delay(3000));
         }
