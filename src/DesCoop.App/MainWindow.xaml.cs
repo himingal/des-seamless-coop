@@ -442,7 +442,7 @@ public partial class MainWindow : Window
         Status(_host != null ? "Game running. Keep this app open: it is the party server." : "Game running. Good hunting, Slayer of Demons.");
     }
 
-    protected override async void OnClosing(CancelEventArgs e)
+    protected override void OnClosing(CancelEventArgs e)
     {
         SaveSettings();
         if (_client != null && !_closingConfirmed && _client.ViaRelay && _emu.IsRunning() &&
@@ -457,9 +457,16 @@ public partial class MainWindow : Window
             e.Cancel = true;
             return;
         }
+        // Stop the party first, then close again once this Closing event has fully returned
+        // (WPF throws if Close() is called while the window is still closing).
         e.Cancel = true;
         _closingConfirmed = true;
-        await StopHostAsync();
-        Close();
+        _ = CloseAfterStoppingAsync();
+    }
+
+    async Task CloseAfterStoppingAsync()
+    {
+        try { await StopHostAsync(); } catch { }
+        await Dispatcher.InvokeAsync(Close, DispatcherPriority.Background);
     }
 }

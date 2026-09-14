@@ -32,7 +32,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.2.1";
+    public const string Version = "1.2.2";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);

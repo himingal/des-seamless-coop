@@ -3,7 +3,7 @@
 ; registers and patches the game, and configures RPCS3. After this the player only needs an RPCN account.
 #define AppName "DeS Seamless Co-op"
 #ifndef AppVersion
-  #define AppVersion "1.2.1"
+  #define AppVersion "1.2.2"
 #endif
 #define AppExe "DesCoop.exe"
 
