@@ -1,0 +1,58 @@
+using System.Runtime.InteropServices;
+using System.Windows;
+using DesCoop.Party;
+using DesCoop.Server;
+
+namespace DesCoop.App;
+
+public partial class App : Application
+{
+    [DllImport("kernel32.dll")] static extern bool AttachConsole(int pid);
+    [DllImport("kernel32.dll")] static extern bool AllocConsole();
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        if (e.Args.Contains("--server", StringComparer.OrdinalIgnoreCase))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            if (!AttachConsole(-1)) AllocConsole();
+            RunHeadless(e.Args).ContinueWith(_ => Dispatcher.Invoke(Shutdown));
+            return;
+        }
+        base.OnStartup(e);
+        DispatcherUnhandledException += (_, ev) =>
+        {
+            ev.Handled = true;
+            WriteCrash(ev.Exception);
+            MessageBox.Show(ev.Exception.Message, "DeS Seamless Co-op", MessageBoxButton.OK, MessageBoxImage.Warning);
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, ev) => WriteCrash(ev.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, ev) => { WriteCrash(ev.Exception); ev.SetObserved(); };
+        new MainWindow().Show();
+    }
+
+    static void WriteCrash(Exception? ex)
+    {
+        try { File.AppendAllText(Path.Combine(AppSettings.DataDir, "crash.log"), $"[{DateTime.Now:s}] {ex}\n\n"); } catch { }
+    }
+
+    /// <summary>Dedicated server mode (for a VPS or an always-on PC): DesCoop.exe --server [--name "X"] [--no-upnp]</summary>
+    static async Task RunHeadless(string[] args)
+    {
+        string name = "DeS Seamless Co-op";
+        int i = Array.FindIndex(args, a => a.Equals("--name", StringComparison.OrdinalIgnoreCase));
+        if (i >= 0 && i + 1 < args.Length) name = args[i + 1];
+        bool upnp = !args.Contains("--no-upnp", StringComparer.OrdinalIgnoreCase);
+
+        var opts = new DesServerOptions { ServerName = name, DataDir = Path.Combine(AppSettings.DataDir, "server-data") };
+        await using var host = new PartyHost(opts);
+        host.Log += Console.WriteLine;
+        await host.StartAsync(upnp);
+        Console.WriteLine();
+        Console.WriteLine("Codigo da party: " + host.Code);
+        Console.WriteLine("Ctrl+C para encerrar.");
+        var done = new TaskCompletionSource();
+        Console.CancelKeyPress += (_, ev) => { ev.Cancel = true; done.TrySetResult(); };
+        await done.Task;
+    }
+}

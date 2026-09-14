@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/external/" />
+  <Folder Name="/external/SoulsFormatsNEXT/">
+    <Project Path="external/SoulsFormatsNEXT/SoulsFormats/SoulsFormats.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/DesCoop.App/DesCoop.App.csproj" />
+    <Project Path="src/DesCoop.Core/DesCoop.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DesCoop.Tests/DesCoop.Tests.csproj" />
+  </Folder>
+</Solution>

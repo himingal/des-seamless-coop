@@ -1,0 +1,9 @@
+<Project>
+  <!-- Vendored third-party code: keep the build output quiet. -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <WarningLevel>0</WarningLevel>
+    <NoWarn>$(NoWarn);CS0108;CS0114;CS0162;CS0168;CS0169;CS0219;CS0414;CS0618;CS0649;CS1570;CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS8632;SYSLIB0021;SYSLIB0014;CA2022</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
