@@ -147,7 +147,7 @@ public static class BlockNames
     }
 
     public static string Get(int blockId) =>
-        blockId == int.MinValue ? "-" : Names.TryGetValue(blockId, out var n) ? n : $"Area {blockId}";
+        blockId == int.MinValue ? "loading…" : Names.TryGetValue(blockId, out var n) ? n : $"Area {blockId}";
 
     /// <summary>World number (1..5) from a block id, 0 for the Nexus/unknown.</summary>
     public static int World(int blockId)

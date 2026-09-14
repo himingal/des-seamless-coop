@@ -1,4 +1,4 @@
-﻿using System.Buffers.Binary;
+using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
@@ -32,7 +32,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.2.0";
+    public const string Version = "1.2.1";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -279,8 +279,9 @@ public sealed class DesServer : IDisposable
         lock (_lock)
         {
             var now = DateTime.UtcNow;
+            // "[ip]" entries are connections seen before the game said who it is (login happens first).
             var players = _live.Values
-                .Where(p => now - p.LastSeen < OnlineTtl)
+                .Where(p => now - p.LastSeen < OnlineTtl && !p.CharacterId.StartsWith('['))
                 .OrderBy(p => p.DisplayName)
                 .Select(p => new PartyPlayerStatus(p.DisplayName, BlockNames.Get(p.LastBlock), p.LastBlock,
                     _sos.TryGetValue(p.CharacterId, out var s) && now - s.UpdatedAt < SignTtl, p.InSession,
@@ -296,7 +297,8 @@ public sealed class DesServer : IDisposable
     {
         lock (_lock)
         {
-            if (p.TryGetValue("characterID", out var cid) && cmd != "updateOtherPlayerGrade.spd")
+            // initializeCharacter carries the bare NPID; the real id (NPID + save slot) is assigned in the handler.
+            if (p.TryGetValue("characterID", out var cid) && cmd is not ("updateOtherPlayerGrade.spd" or "initializeCharacter.spd"))
                 _ipToChar[ip] = cid;
             string me = _ipToChar.TryGetValue(ip, out var known) ? known : $"[{ip}]";
             var live = Touch(me, ip, port);
@@ -390,6 +392,7 @@ public sealed class DesServer : IDisposable
     {
         string id = p["characterID"] + (p.TryGetValue("index", out var idx) && idx.Length > 0 ? idx[..1] : "0");
         _ipToChar[ip] = id;
+        _live.Remove($"[{ip}]");
         _store.Stats(id);
         _store.MarkDirty();
         Touch(id, ip, port);

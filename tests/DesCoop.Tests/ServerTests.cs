@@ -118,6 +118,17 @@ public class ServerTests : IDisposable
     }
 
     [Fact]
+    public void Login_before_character_is_not_listed_as_a_player()
+    {
+        // Real game order (seen on RPCS3): login.spd arrives before any characterID.
+        var motd = _server.Dispatch("login.spd", P(("ver", "100")), "10.0.0.9", 18666)!.Value;
+        Assert.DoesNotContain("[10.0.0.9]", Encoding.Latin1.GetString(motd.data));
+        Assert.Empty(_server.GetStatus().Players);
+        _server.Dispatch("initializeCharacter.spd", P(("characterID", "Real"), ("index", "0")), "10.0.0.9", 18666);
+        Assert.Equal("Real", Assert.Single(_server.GetStatus().Players).Name);
+    }
+
+    [Fact]
     public void Red_signs_and_own_signs_are_not_relocated()
     {
         _server.Dispatch("addSosData.spd", Sign("Red0", -10079, 1, isBlack: 1), "10.0.0.3", 18667);
