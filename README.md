@@ -18,13 +18,13 @@
 
 | Host | Friend |
 |---|---|
-| **Host a Party**, then **Copy** the code and send it | **Join a Party**, then paste the code and click **Join** |
+| **Host a Party**, then tell your friend the **party name + password** it shows | **Join a Party**, type that name + password and click **Join** |
 | **PLAY** | **PLAY** |
 
 In game, the helper uses the **Blue Eye Stone** anywhere. Their sign shows up **right next to the host, in whatever area the host is in**. Touch it and you're together.
 After a boss, use the Blue Eye Stone again and keep going.
 
-> Friend can't connect? The host's router has no UPnP (or is behind CGNAT). Install **Radmin VPN** (free) on both PCs, join the same network, and create the party again.
+No VPN, no port forwarding and no router setup. The app connects directly when it can (LAN, VPN, UPnP). If it can't, it goes through a free public relay by itself. The party name defaults to your RPCN name, and the next time you open the app it hosts or rejoins automatically.
 
 ## What it does
 

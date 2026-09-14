@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     GameInfo? _game;
     PartyHost? _host;
     string? _joinedAddress;
+    PartyClient? _client;
     bool _busy, _loading = true, _closingConfirmed, _refreshing;
 
     public MainWindow()
@@ -35,15 +36,18 @@ public partial class MainWindow : Window
         ChkEph.IsChecked = _s.Patch.InfiniteEphemeralEyes;
         ChkUpnp.IsChecked = _s.UseUpnp;
         ChkFullscreen.IsChecked = _s.Fullscreen;
-        TxtPartyName.Text = _s.PartyName;
-        TxtJoinCode.Text = _s.JoinCode ?? "";
+        // Default party name = your RPCN name, so the friend already knows it.
+        var rpcnName = _emu.IsInstalled ? _emu.RpcnUser() : null;
+        TxtPartyName.Text = rpcnName != null && _s.PartyName.EndsWith("'s Party") ? rpcnName : _s.PartyName;
+        TxtPartyPass.Text = _s.PartyPassword;
+        TxtJoinName.Text = _s.JoinName ?? "";
+        TxtJoinPass.Text = _s.JoinPassword ?? "";
         switch (_s.Mode)
         {
             case PartyMode.Host: RbHost.IsChecked = true; break;
             case PartyMode.Join: RbJoin.IsChecked = true; break;
             case PartyMode.Public: RbPublic.IsChecked = true; break;
         }
-        if (_joinedAddress != null) TxtJoinInfo.Text = $"Last server used: {_joinedAddress}";
 
         _loading = false;
         _timer.Tick += async (_, _) =>
@@ -55,10 +59,19 @@ public partial class MainWindow : Window
         RefreshAll();
 
         // First run: offer the RPCN account right away (the only thing the installer can't do for you).
-        Loaded += (_, _) =>
+        Loaded += (_, _) => Dispatcher.BeginInvoke(async () =>
         {
-            if (_emu.IsInstalled && _emu.RpcnUser() == null) Dispatcher.BeginInvoke(OpenRpcn, DispatcherPriority.ApplicationIdle);
-        };
+            if (_emu.IsInstalled && _emu.RpcnUser() == null) OpenRpcn();
+            // Fully automatic: reopen the party (or rejoin it) the way it was last time.
+            try
+            {
+                if (_s.Mode == PartyMode.Host && _emu.IsInstalled && _game != null)
+                    await RunBusy("Opening your party…", async _ => await StartHostAsync());
+                else if (_s.Mode == PartyMode.Join && !string.IsNullOrWhiteSpace(_s.JoinName))
+                    await RunBusy("Rejoining the party…", async _ => await JoinAsync());
+            }
+            catch { }
+        }, DispatcherPriority.ApplicationIdle);
     }
 
     // ------------------------------------------------------------------ helpers
@@ -87,7 +100,9 @@ public partial class MainWindow : Window
         _s.UseUpnp = ChkUpnp.IsChecked == true;
         _s.Fullscreen = ChkFullscreen.IsChecked == true;
         _s.PartyName = string.IsNullOrWhiteSpace(TxtPartyName.Text) ? _s.PartyName : TxtPartyName.Text.Trim();
-        _s.JoinCode = TxtJoinCode.Text.Trim();
+        if (!string.IsNullOrWhiteSpace(TxtPartyPass.Text)) _s.PartyPassword = TxtPartyPass.Text.Trim();
+        _s.JoinName = TxtJoinName.Text.Trim();
+        _s.JoinPassword = TxtJoinPass.Text.Trim();
         _s.JoinedAddress = _joinedAddress;
         _s.Save();
     }
@@ -275,8 +290,11 @@ public partial class MainWindow : Window
     {
         EnsureFirewall();
         var opts = new DesServerOptions { ServerName = _s.PartyName, DataDir = Path.Combine(AppSettings.DataDir, "server-data") };
-        var host = new PartyHost(opts);
+        if (string.IsNullOrWhiteSpace(_s.PartyPassword)) _s.PartyPassword = Rendezvous.NewPassword();
+        TxtPartyPass.Text = _s.PartyPassword;
+        var host = new PartyHost(opts, _s.PartyPassword);
         host.Log += Log;
+        host.StateChanged += () => Dispatcher.BeginInvoke(UpdateHostInfo);
         try { await host.StartAsync(_s.UseUpnp); }
         catch (System.Net.Sockets.SocketException)
         {
@@ -284,15 +302,24 @@ public partial class MainWindow : Window
             throw new InvalidOperationException("Ports 18000/18666-18668 are already in use. Is another Demon's Souls server (or another copy of this app) running?");
         }
         _host = host;
-        TxtCode.Text = host.Code;
+        TxtInvite.Text = $"Party: {host.Name}     Password: {host.Password}";
         CodeBox.Visibility = Visibility.Visible;
         BtnHost.Content = "Close Party";
-        var lines = new List<string>();
-        foreach (var a in host.LocalAddresses.Where(a => a.Kind != "LAN")) lines.Add($"{a.Kind}: {a.Address}");
-        if (host.PublicIp != null) lines.Add($"Internet: {host.PublicIp}" + (host.UpnpOk ? " (ports opened via UPnP)" : " (no UPnP: forward TCP 18000, 18666-18668 or use Radmin VPN)"));
-        foreach (var a in host.LocalAddresses.Where(a => a.Kind == "LAN")) lines.Add($"Local network: {a.Address}");
-        TxtHostInfo.Text = string.Join("\n", lines) + "\nKeep this app open while you play: it is the party server.";
-        Log("Party created. Code: " + host.Code);
+        UpdateHostInfo();
+    }
+
+    void UpdateHostInfo()
+    {
+        if (_host == null) return;
+        var lines = new List<string>
+        {
+            _host.RelayOk ? "Relay online: your friend can join from anywhere, no VPN needed." : "Relay offline: only LAN/VPN/open-port connections will work.",
+            _host.Published ? "Party listed: your friend types the name and password in \"Join a Party\"." : "Party not listed online yet.",
+        };
+        if (_host.UpnpOk) lines.Add($"Router ports opened via UPnP ({_host.PublicIp}).");
+        foreach (var a in _host.LocalAddresses.Where(a => a.Kind != "LAN")) lines.Add($"{a.Kind}: {a.Address}");
+        lines.Add("Keep this app open while you play: it is the party server.");
+        TxtHostInfo.Text = string.Join("\n", lines);
     }
 
     async Task StopHostAsync()
@@ -308,7 +335,13 @@ public partial class MainWindow : Window
 
     void BtnCopy_Click(object sender, RoutedEventArgs e)
     {
-        try { Clipboard.SetText(TxtCode.Text); Status("Code copied. Send it to your friend (Discord, WhatsApp…)."); } catch { }
+        if (_host == null) return;
+        try
+        {
+            Clipboard.SetText($"Demon's Souls party: {_host.Name}\nPassword: {_host.Password}\n(DeS Seamless Co-op > Join a Party)");
+            Status("Copied. Send it to your friend (Discord, WhatsApp…).");
+        }
+        catch { }
     }
 
     async void BtnJoin_Click(object sender, RoutedEventArgs e)
@@ -319,20 +352,25 @@ public partial class MainWindow : Window
 
     async Task JoinAsync()
     {
-        if (!PartyCode.TryDecode(TxtJoinCode.Text, out _, out var addrs))
-            throw new InvalidOperationException("Invalid code. Paste the whole DES-… code your host sent you (or just their IP).");
-        TxtJoinInfo.Text = "Trying " + string.Join(", ", addrs) + "…";
-        var found = await NetUtil.FindReachableAsync(addrs, _emu.IsInstalled ? _emu.RpcnUser() : null);
-        if (found == null)
+        var name = TxtJoinName.Text.Trim();
+        var pass = TxtJoinPass.Text.Trim();
+        if (name.Length == 0) throw new InvalidOperationException("Type the host's party name and password.");
+        _client?.Dispose();
+        _client = null;
+        TxtJoinInfo.Text = "Looking for the party…";
+        try
         {
-            TxtJoinInfo.Text = "Could not reach the host.";
-            throw new InvalidOperationException(
-                "The host's server did not answer.\n\n• Did the host press \"Create Party\" and keep the app open?\n• If the host's router has no UPnP, install Radmin VPN (free), join the same network and have the host create the party again (the code will include the 26.x VPN address).\n• Host's Windows Firewall: allow DesCoop.");
+            _client = await PartyClient.ConnectAsync(name, pass, _emu.IsInstalled ? _emu.RpcnUser() : null, Log);
         }
-        _joinedAddress = found.Address;
+        catch
+        {
+            TxtJoinInfo.Text = "Could not join.";
+            throw;
+        }
+        _joinedAddress = _client.Address;
         SaveSettings();
-        TxtJoinInfo.Text = $"Connected to \"{found.Name}\" via {found.Address}. Now just press PLAY.";
-        Log($"Party found: {found.Name} ({found.Address})");
+        TxtJoinInfo.Text = $"Connected to \"{_client.PartyName}\"" + (_client.ViaRelay ? " through the relay" : $" via {_client.Address}") +
+                           ". Now press PLAY and keep this app open.";
     }
 
     async Task RefreshPartyAsync()
@@ -343,7 +381,7 @@ public partial class MainWindow : Window
         {
             ServerStatus? st = null;
             if (_host != null) st = _host.Server.GetStatus();
-            else if (RbJoin.IsChecked == true && _joinedAddress != null) st = await NetUtil.GetStatusAsync(_joinedAddress);
+            else if (RbJoin.IsChecked == true && _client != null) st = await NetUtil.GetStatusAsync(_client.Address);
 
             var rows = st?.Players.Select(p => new PlayerRow(p.Name, p.Area,
                 p.InSession ? "in co-op" : p.HasSign ? "blue sign ready" : "")).ToList() ?? [];
@@ -380,8 +418,8 @@ public partial class MainWindow : Window
                     target = "127.0.0.1";
                     break;
                 case PartyMode.Join:
-                    if (_joinedAddress == null || await NetUtil.HelloAsync(_joinedAddress, _emu.RpcnUser()) == null) await JoinAsync();
-                    target = _joinedAddress!;
+                    if (_client == null || await NetUtil.HelloAsync(_client.Address, _emu.RpcnUser()) == null) await JoinAsync();
+                    target = _client!.Address;
                     break;
                 default:
                     target = Rpcs3Manager.ArchstonesIp;
@@ -407,7 +445,13 @@ public partial class MainWindow : Window
     protected override async void OnClosing(CancelEventArgs e)
     {
         SaveSettings();
-        if (_host == null || _closingConfirmed) { base.OnClosing(e); return; }
+        if (_client != null && !_closingConfirmed && _client.ViaRelay && _emu.IsRunning() &&
+            !Ui.Ask(this, "You are connected through the relay. Closing the app disconnects you from the party.\n\nClose anyway?"))
+        {
+            e.Cancel = true;
+            return;
+        }
+        if (_host == null || _closingConfirmed) { _client?.Dispose(); base.OnClosing(e); return; }
         if (!Ui.Ask(this, "You are the host. Closing the app ends the party for your friend.\n\nClose anyway?"))
         {
             e.Cancel = true;

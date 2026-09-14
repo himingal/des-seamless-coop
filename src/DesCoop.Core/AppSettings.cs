@@ -14,6 +14,9 @@ public sealed class AppSettings
     /// <summary>Address that worked last time we joined (what RPCS3 is pointed at).</summary>
     public string? JoinedAddress { get; set; }
     public string PartyName { get; set; } = Environment.UserName + "'s Party";
+    public string PartyPassword { get; set; } = Net.Rendezvous.NewPassword();
+    public string? JoinName { get; set; }
+    public string? JoinPassword { get; set; }
     public PatchOptions Patch { get; set; } = new();
     public bool Fullscreen { get; set; }
     public bool UseUpnp { get; set; } = true;
@@ -22,33 +25,39 @@ public sealed class AppSettings
 
     public static string BaseDir => AppContext.BaseDirectory;
 
-    /// <summary>Portable next to the exe when writable (default install is per-user), else %APPDATA%.</summary>
+    /// <summary>
+    /// Always %APPDATA%\DeSSeamlessCoop: the same folder no matter where (or how, elevated or not) the
+    /// app was installed, and it survives reinstalls. v1.0/1.1 portable data next to the exe is migrated.
+    /// </summary>
     public static string DataDir { get; } = ResolveDataDir();
 
     static string ResolveDataDir()
     {
-        try
-        {
-            var probe = Path.Combine(BaseDir, ".write-test");
-            File.WriteAllText(probe, "");
-            File.Delete(probe);
-            return BaseDir;
-        }
-        catch
-        {
-            var d = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DeSSeamlessCoop");
-            Directory.CreateDirectory(d);
-            return d;
-        }
+        var d = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DeSSeamlessCoop");
+        Directory.CreateDirectory(d);
+        return d;
     }
 
     static string FilePath => Path.Combine(DataDir, "descoop-settings.json");
+    static string LegacyFilePath => Path.Combine(BaseDir, "descoop-settings.json");
+    static string LegacyRpcs3 => Path.Combine(BaseDir, "rpcs3");
 
     public static AppSettings Load()
     {
-        try { if (File.Exists(FilePath)) return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Json) ?? new(); }
+        AppSettings s = new();
+        try
+        {
+            if (File.Exists(FilePath)) s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Json) ?? new();
+            else if (File.Exists(LegacyFilePath)) s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(LegacyFilePath), Json) ?? new();
+        }
         catch { }
-        return new();
+
+        // An RPCS3 that an older version (or the installer) put next to the exe keeps being used,
+        // so firmware, saves and the RPCN account are not lost.
+        if (string.IsNullOrWhiteSpace(s.Rpcs3Dir) && !File.Exists(Path.Combine(DataDir, "rpcs3", "rpcs3.exe"))
+            && File.Exists(Path.Combine(LegacyRpcs3, "rpcs3.exe")))
+            s.Rpcs3Dir = LegacyRpcs3;
+        return s;
     }
 
     public void Save()

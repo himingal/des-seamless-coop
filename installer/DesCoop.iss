@@ -1,9 +1,9 @@
-; DeS Seamless Co-op installer (Inno Setup 6). Built by tools/build-release.ps1.
+﻿; DeS Seamless Co-op installer (Inno Setup 6). Built by tools/build-release.ps1.
 ; Installs the app, then runs "DesCoop.exe --setup" which downloads RPCS3 + the official PS3 firmware,
 ; registers and patches the game, and configures RPCS3. After this the player only needs an RPCN account.
 #define AppName "DeS Seamless Co-op"
 #ifndef AppVersion
-  #define AppVersion "1.1.0"
+  #define AppVersion "1.2.0"
 #endif
 #define AppExe "DesCoop.exe"
 
@@ -17,7 +17,7 @@ AppPublisherURL=https://github.com/himingal/des-seamless-coop
 DefaultDirName={autopf}\DeS Seamless Coop
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+PrivilegesRequiredOverridesAllowed=commandline
 OutputDir=..\dist
 OutputBaseFilename=DesSeamlessCoop-Setup-{#AppVersion}
 SetupIconFile=..\src\DesCoop.App\app.ico

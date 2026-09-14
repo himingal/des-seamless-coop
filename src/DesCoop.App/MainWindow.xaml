@@ -129,17 +129,25 @@
                         </StackPanel>
 
                         <StackPanel x:Name="PanelHost" Visibility="Collapsed">
-                            <DockPanel Margin="0,0,0,8">
-                                <Button x:Name="BtnHost" Content="Create Party" DockPanel.Dock="Right" Click="BtnHost_Click" Margin="10,0,0,0"/>
-                                <TextBox x:Name="TxtPartyName" VerticalContentAlignment="Center"/>
-                            </DockPanel>
-                            <CheckBox x:Name="ChkUpnp" Content="Open router ports automatically (UPnP)"/>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Party name" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="TxtPartyName"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="TxtPartyPass" FontFamily="Consolas"/>
+                                </StackPanel>
+                                <Button x:Name="BtnHost" Grid.Column="3" Content="Create Party" Click="BtnHost_Click" Margin="10,0,0,0" VerticalAlignment="Bottom"/>
+                            </Grid>
+                            <CheckBox x:Name="ChkUpnp" Content="Also try to open router ports (UPnP)"/>
                             <Border x:Name="CodeBox" Visibility="Collapsed" BorderBrush="{StaticResource GoldDim}" BorderThickness="1" Background="#80050506" Padding="12" Margin="0,10,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Send this code to your friend:" Style="{StaticResource Small}"/>
-                                    <DockPanel Margin="0,6,0,0">
-                                        <Button x:Name="BtnCopy" Content="Copy" DockPanel.Dock="Right" Click="BtnCopy_Click" Margin="10,0,0,0"/>
-                                        <TextBox x:Name="TxtCode" IsReadOnly="True" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource Soul}"/>
+                                    <TextBlock Text="Tell your friend:" Style="{StaticResource Small}"/>
+                                    <DockPanel Margin="0,4,0,0">
+                                        <Button x:Name="BtnCopy" Content="Copy" DockPanel.Dock="Right" Click="BtnCopy_Click" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtInvite" FontFamily="{StaticResource Serif}" FontSize="16" Foreground="{StaticResource Soul}"/>
                                     </DockPanel>
                                     <TextBlock x:Name="TxtHostInfo" Style="{StaticResource Small}" Margin="0,8,0,0"/>
                                 </StackPanel>
@@ -147,12 +155,20 @@
                         </StackPanel>
 
                         <StackPanel x:Name="PanelJoin" Visibility="Collapsed">
-                            <TextBlock Text="Paste the code your host sent you (or just their IP):" Style="{StaticResource Small}" Margin="0,0,0,6"/>
-                            <DockPanel>
-                                <Button x:Name="BtnJoin" Content="Join" DockPanel.Dock="Right" Click="BtnJoin_Click" Margin="10,0,0,0"/>
-                                <TextBox x:Name="TxtJoinCode" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" MaxHeight="64" Foreground="{StaticResource Soul}"/>
-                            </DockPanel>
-                            <TextBlock x:Name="TxtJoinInfo" Style="{StaticResource Small}" Margin="0,8,0,0"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Host's party name" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="TxtJoinName"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="TxtJoinPass" FontFamily="Consolas"/>
+                                </StackPanel>
+                                <Button x:Name="BtnJoin" Grid.Column="3" Content="Join" Click="BtnJoin_Click" Margin="10,0,0,0" VerticalAlignment="Bottom"/>
+                            </Grid>
+                            <TextBlock x:Name="TxtJoinInfo" Style="{StaticResource Small}" Margin="0,8,0,0"
+                                       Text="No VPN or port forwarding needed: the app finds the host and connects by itself."/>
                         </StackPanel>
 
                         <StackPanel x:Name="PanelPublic" Visibility="Collapsed">

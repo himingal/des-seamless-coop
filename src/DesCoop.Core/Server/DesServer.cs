@@ -1,4 +1,4 @@
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
@@ -32,7 +32,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.1.0";
+    public const string Version = "1.2.0";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -132,6 +132,10 @@ public sealed class DesServer : IDisposable
             string path = parts.Length > 1 ? parts[1] : "/";
             byte[] response;
 
+            // Relayed players all arrive from loopback; the friend's forwarder tags them.
+            string clientKey = IPAddress.IsLoopback(remote) && headers.TryGetValue(Net.RelayForwarder.ClientHeader, out var relayId)
+                ? "relay:" + relayId : remote.ToString();
+
             if (path.StartsWith("/descoop/", StringComparison.OrdinalIgnoreCase))
                 response = HandleCustom(path, remote);
             else if (port == _o.BootstrapPort)
@@ -140,7 +144,7 @@ public sealed class DesServer : IDisposable
             {
                 string cmdName = path.Split('?')[0].Split('/')[^1];
                 var p = Protocol.ParseParams(Protocol.Decrypt(body));
-                var result = Dispatch(cmdName, p, remote.ToString(), port);
+                var result = Dispatch(cmdName, p, clientKey, port);
                 if (result == null) return;
                 response = Protocol.BuildResponse(result.Value.cmd, result.Value.data);
             }

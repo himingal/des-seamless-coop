@@ -61,11 +61,13 @@ public partial class App : Application
         bool upnp = !args.Contains("--no-upnp", StringComparer.OrdinalIgnoreCase);
 
         var opts = new DesServerOptions { ServerName = name, DataDir = Path.Combine(AppSettings.DataDir, "server-data") };
-        await using var host = new PartyHost(opts);
+        string password = Arg(args, "--password") ?? Net.Rendezvous.NewPassword();
+        await using var host = new PartyHost(opts, password);
         host.Log += Console.WriteLine;
         await host.StartAsync(upnp);
         Console.WriteLine();
-        Console.WriteLine("Party code: " + host.Code);
+        Console.WriteLine($"Party: {host.Name}   Password: {host.Password}");
+        Console.WriteLine("Direct code: " + host.Code);
         Console.WriteLine("Press Ctrl+C to stop.");
         var done = new TaskCompletionSource();
         Console.CancelKeyPress += (_, ev) => { ev.Cancel = true; done.TrySetResult(); };
