@@ -35,9 +35,10 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
 - **Game tweaks** for your own dump. Each one is a checkbox, the originals are backed up, and **Restore** undoes everything.
   - The **Blue Eye Stone works in body form**, so nobody has to die to go back to helping.
   - The **Stone of Ephemeral Eyes is never consumed**, so the host can always get their body back to summon.
-  - **Start with a Blue Eye Stone**: every new character has one from the first second.
-  - **Revamped starting classes**: new stats and gear for all 10 classes, each keeping its original Soul Level. Hover the option in the app to see them:
-    Vanguard, Oathsworn, Ranger, Battle Cleric, Arcanist, Duelist, Berserker, Shadow, Paladin and Exiled Heir.
+  - **Soul form keeps full HP**: dying no longer halves your max HP, so soul form plays like body form.
+  - **Start with both co-op stones**: every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes.
+  - **10 new starting classes** replace the vanilla ones, with new names, stats and full kits. Every weapon is usable one-handed from the start and Soul Levels stay between 1 and 9:
+    Sellsword, Sentinel, Tracker, Friar, Sorcerer, Blade Dancer, Juggernaut, Nightblade, Crusader and Exiled Heir. Hover the option in the app to see each kit.
   - **Half-price merchants**: everything sold for souls costs 50% (items bought with boss souls are unchanged).
   - **Pure Bladestone** drops from the Shrine of Storms skeletons **15%** of the time instead of 0.5%.
   - **+50% equip load and item burden**: weapons, armor, rings and items weigh a third less.

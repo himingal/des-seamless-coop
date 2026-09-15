@@ -34,13 +34,14 @@ public partial class MainWindow : Window
 
         ChkBlue.IsChecked = _s.Patch.BlueEyeStoneInBodyForm;
         ChkEph.IsChecked = _s.Patch.InfiniteEphemeralEyes;
+        ChkSoul.IsChecked = _s.Patch.FullHpSoulForm;
         ChkStartBlue.IsChecked = _s.Patch.StartWithBlueEyeStone;
         ChkClasses.IsChecked = _s.Patch.RevampedClasses;
         ChkShops.IsChecked = _s.Patch.CheaperShops;
         ChkBlade.IsChecked = _s.Patch.EasierPureBladestone;
         ChkLoad.IsChecked = _s.Patch.HeavierLoads;
         TxtClasses.ToolTip = string.Join("\n\n", ClassRevamp.Kits.Select(k =>
-            $"{k.Title}\n{k.Pitch}\nVIT {k.Vit}  INT {k.Int}  END {k.End}  STR {k.Str}  DEX {k.Dex}  MAG {k.Mag}  FAI {k.Fai}  LCK {k.Luc}"));
+            $"{k.Title}  ·  Soul Level {k.SoulLevel}\n{k.Pitch}\nVIT {k.Vit}  INT {k.Int}  END {k.End}  STR {k.Str}  DEX {k.Dex}  MAG {k.Mag}  FAI {k.Fai}  LCK {k.Luc}"));
         (_s.WorldTendency switch
         {
             >= 200 => RbWtPureWhite,
@@ -112,6 +113,7 @@ public partial class MainWindow : Window
         if (_loading) return;
         _s.Patch.BlueEyeStoneInBodyForm = ChkBlue.IsChecked == true;
         _s.Patch.InfiniteEphemeralEyes = ChkEph.IsChecked == true;
+        _s.Patch.FullHpSoulForm = ChkSoul.IsChecked == true;
         _s.Patch.StartWithBlueEyeStone = ChkStartBlue.IsChecked == true;
         _s.Patch.RevampedClasses = ChkClasses.IsChecked == true;
         _s.Patch.CheaperShops = ChkShops.IsChecked == true;
@@ -294,7 +296,7 @@ public partial class MainWindow : Window
             if (_emu.IsInstalled) _emu.ClearGameCache();
             Log("Original game files restored.");
         }));
-        ChkBlue.IsChecked = ChkEph.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
+        ChkBlue.IsChecked = ChkEph.IsChecked = ChkSoul.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
             ChkShops.IsChecked = ChkBlade.IsChecked = ChkLoad.IsChecked = false;
     }
 
@@ -480,7 +482,9 @@ public partial class MainWindow : Window
             _emu.ConfigureNetwork(target);
             _emu.RegisterGame(_game);
             await _emu.EnableQualityPatchesAsync();
-            if (_s.Patch.BlueEyeStoneInBodyForm || _s.Patch.InfiniteEphemeralEyes || GamePatcher.IsPatched(_game))
+            var o = _s.Patch;
+            if (o.BlueEyeStoneInBodyForm || o.InfiniteEphemeralEyes || o.FullHpSoulForm || o.StartWithBlueEyeStone || o.RevampedClasses
+                || o.CheaperShops || o.EasierPureBladestone || o.HeavierLoads || GamePatcher.IsPatched(_game))
             {
                 Status("Checking the co-op patch…");
                 await Task.Run(ApplyPatch);

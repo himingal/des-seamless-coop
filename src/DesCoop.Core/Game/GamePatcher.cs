@@ -9,9 +9,11 @@ public sealed class PatchOptions
     public bool BlueEyeStoneInBodyForm { get; set; } = true;
     /// <summary>Stone of Ephemeral Eyes is not consumed: the host can always get body form back to summon.</summary>
     public bool InfiniteEphemeralEyes { get; set; } = true;
-    /// <summary>Every starting class carries a Blue Eye Stone from the first second.</summary>
+    /// <summary>Soul form keeps 100% max HP instead of 50%: dying costs nothing, it plays like body form.</summary>
+    public bool FullHpSoulForm { get; set; } = true;
+    /// <summary>Every starting class carries a Blue Eye Stone and a Stone of Ephemeral Eyes from the first second.</summary>
     public bool StartWithBlueEyeStone { get; set; } = true;
-    /// <summary>New stat spreads and kits for the ten starting classes.</summary>
+    /// <summary>Ten new starting classes (names, stats and kits) replace the vanilla ones.</summary>
     public bool RevampedClasses { get; set; } = true;
     /// <summary>Everything sold by NPCs costs half.</summary>
     public bool CheaperShops { get; set; } = true;
@@ -34,6 +36,8 @@ public static class GamePatcher
     public const int ShopPricePercent = 50;
     public const double LoadMultiplier = 1.5;
     public const int PureBladestoneChance = 150; // out of 1000
+    /// <summary>SpEffectParam row "[System] parameter change while a ghost" (soul form and blue phantoms): maxHpRate 0.5.</summary>
+    public const int SoulFormEffect = 8;
 
     static readonly string[] BlueEyeNames = ["Blue Eye Stone"];
     static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes"];
@@ -117,6 +121,7 @@ public static class GamePatcher
             case "EQUIP_PARAM_WEAPON_ST": return new() { ["weight"] = (36, DefType.f32) };
             case "EQUIP_PARAM_PROTECTOR_ST": return new() { ["weight"] = (20, DefType.f32) };
             case "EQUIP_PARAM_ACCESSORY_ST": return new() { ["weight"] = (12, DefType.f32) };
+            case "SP_EFFECT_PARAM_ST": return new() { ["maxHpRate"] = (32, DefType.f32) };
             case "SHOP_LINEUP_PARAM":
                 return new() { ["shopType"] = (0, DefType.u8), ["equipType"] = (1, DefType.u8), ["equipId"] = (4, DefType.s32), ["value"] = (8, DefType.s32), ["mtrlId"] = (12, DefType.s32) };
             case "ITEMLOT_PARAM_ST":
@@ -180,6 +185,7 @@ public static class GamePatcher
             }
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
+        if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, log)) changed = true;
         return new PatchReport(changed, log);
     }
 
@@ -235,6 +241,13 @@ public static class GamePatcher
         if (goods != null && opt.InfiniteEphemeralEyes)
             foreach (var id in ids.Ephemeral.Where(goods.Has)) { c.Set(goods, id, "isConsume", 0); log.Add($"{label}: item {id} -> Stone of Ephemeral Eyes is never consumed"); }
 
+        if (opt.FullHpSoulForm && c.Param("SpEffectParam") is { } sp && sp.Has(SoulFormEffect) && sp.HasField("maxHpRate")
+            && Math.Abs(sp.Get(SoulFormEffect, "maxHpRate") - 0.5) < 0.01)
+        {
+            c.Set(sp, SoulFormEffect, "maxHpRate", 1.0);
+            log.Add($"{label}: soul form keeps full HP");
+        }
+
         if (opt.HeavierLoads) ScaleWeights(c);
         if (opt.CheaperShops) CheaperShops(c);
         if (opt.EasierPureBladestone) BoostDrop(c, ids.PureBladestone.Count > 0 ? ids.PureBladestone : [2023]);
@@ -244,8 +257,10 @@ public static class GamePatcher
         {
             if (opt.RevampedClasses) ClassRevamp.Apply(chara, c.Set, Exists(c), log, label);
             if (opt.StartWithBlueEyeStone && goods != null)
-                foreach (var blue in ids.Blue.Where(goods.Has).Take(1))
-                    GiveToClasses(c, chara, blue);
+            {
+                foreach (var blue in ids.Blue.Where(goods.Has).Take(1)) GiveToClasses(c, chara, blue, "Blue Eye Stone");
+                foreach (var eph in ids.Ephemeral.Where(goods.Has).Take(1)) GiveToClasses(c, chara, eph, "Stone of Ephemeral Eyes");
+            }
         }
 
         c.Commit();
@@ -327,7 +342,7 @@ public static class GamePatcher
         }
     }
 
-    static void GiveToClasses(Ctx c, RawParam chara, int itemId)
+    static void GiveToClasses(Ctx c, RawParam chara, int itemId, string itemName)
     {
         foreach (var cls in ClassRevamp.ClassIds.Where(chara.Has))
         {
@@ -343,11 +358,12 @@ public static class GamePatcher
             c.Set(chara, cls, $"item_{free:00}", itemId);
             c.Set(chara, cls, $"itemNum_{free:00}", 1);
         }
-        c.Log.Add($"{c.Label}: every starting class carries a Blue Eye Stone");
+        c.Log.Add($"{c.Label}: every starting class carries a {itemName}");
     }
 
     public static bool IsPatched(GameInfo game) =>
-        FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix));
+        FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix))
+        || MsgPatcher.IsPatched(game.UsrDir);
 
     public static void Restore(GameInfo game)
     {
@@ -356,6 +372,7 @@ public static class GamePatcher
             var b = p + BackupSuffix;
             if (File.Exists(b)) File.Copy(b, p, true);
         }
+        MsgPatcher.Restore(game.UsrDir);
     }
 
     static bool FilesEqual(string a, string b) => File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));

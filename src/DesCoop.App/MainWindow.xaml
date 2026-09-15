@@ -94,11 +94,13 @@
                                     <TextBlock Text="after a boss, your friend places the sign again without dying" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
                                     <CheckBox x:Name="ChkEph" Content="Endless Stone of Ephemeral Eyes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <TextBlock Text="the host can always return to body form to summon" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkStartBlue" Content="Start with a Blue Eye Stone" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="every new character has it in the inventory from the start" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkClasses" Content="Revamped starting classes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <CheckBox x:Name="ChkSoul" Content="Soul form keeps full HP" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <TextBlock Text="dying no longer halves your HP: soul form plays like body form" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
+                                    <CheckBox x:Name="ChkStartBlue" Content="Start with both co-op stones" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <TextBlock Text="every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
+                                    <CheckBox x:Name="ChkClasses" Content="10 new starting classes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <TextBlock x:Name="TxtClasses" Style="{StaticResource Small}" Margin="21,-1,0,4" Cursor="Help"
-                                               Text="new stats and gear for all 10 classes (hover to see them)"/>
+                                               Text="new names, stats and gear, every weapon usable from the start (hover to see them)"/>
                                     <CheckBox x:Name="ChkShops" Content="Merchants sell everything at half price" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <CheckBox x:Name="ChkBlade" Content="Pure Bladestone: 15% drop from Shrine skeletons" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <TextBlock Text="instead of 0.5%" Style="{StaticResource Small}" Margin="21,-1,0,4"/>

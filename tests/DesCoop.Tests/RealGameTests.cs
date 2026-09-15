@@ -49,7 +49,7 @@ public class RealGameTests(ITestOutputHelper output)
         }
 
         // Only the touched params differ, and each has the same size as before.
-        string[] touched = ["EquipParamGoods", "EquipParamWeapon", "EquipParamProtector", "EquipParamAccessory", "ShopLineupParam", "ItemLotParam", "CharaInitParam"];
+        string[] touched = ["EquipParamGoods", "EquipParamWeapon", "EquipParamProtector", "EquipParamAccessory", "ShopLineupParam", "ItemLotParam", "CharaInitParam", "SpEffectParam"];
         foreach (var f in bnd.Files)
         {
             var o = original.Files.First(x => x.Name == f.Name);
@@ -83,17 +83,104 @@ public class RealGameTests(ITestOutputHelper output)
         int Sum(RawParam p) => Enumerable.Range(1, 8).Sum(i => p.GetInt(320120, $"lotItemBasePoint{i:00}"));
         Assert.Equal(Sum(lots0), Sum(lots));
 
+        var sp = Open(bnd, "SpEffectParam");
+        Assert.Equal(1.0, sp.Get(GamePatcher.SoulFormEffect, "maxHpRate"), 3);
+        Assert.Equal(0.5, sp.Get(9, "maxHpRate"), 3); // black phantoms (invaders) keep the penalty
+
         var chara = Open(bnd, "CharaInitParam");
         var chara0 = Open(original, "CharaInitParam");
         string[] stats = ["baseVit", "baseWil", "baseEnd", "baseStr", "baseDex", "baseMag", "baseFai", "baseLuc"];
         foreach (var k in ClassRevamp.Kits)
         {
-            Assert.Equal(stats.Sum(s => chara0.GetInt(k.Id, s)), stats.Sum(s => chara.GetInt(k.Id, s))); // same Soul Level
+            Assert.Equal(k.SoulLevel, stats.Sum(s => chara.GetInt(k.Id, s)) - 80);
+            Assert.InRange(k.SoulLevel, 1, 9);
             Assert.Equal(k.Right, chara.GetInt(k.Id, "equip_Wep_Right"));
             Assert.Contains(Enumerable.Range(1, 10), i => chara.GetInt(k.Id, $"item_{i:00}") == 9997);
+            Assert.Contains(Enumerable.Range(1, 10), i => chara.GetInt(k.Id, $"item_{i:00}") == 1021);
             Assert.Contains(Enumerable.Range(1, 10), i => chara.GetInt(k.Id, $"item_{i:00}") == 99); // Augite lantern kept
         }
         Assert.DoesNotContain(log, l => l.Contains("not in this game"));
         Assert.Equal(chara0.GetInt(9999, "baseVit"), chara.GetInt(9999, "baseVit")); // debug/NPC rows untouched
+    }
+
+    [Fact]
+    public void Every_new_class_can_use_its_whole_kit()
+    {
+        var usr = Usr();
+        if (usr == null) return;
+        var defs = GamePatcher.LoadParamdefs(usr)!;
+        var bnd = BND3.Read(Pristine(usr));
+        RawParam Open(string name)
+        {
+            var f = bnd.Files.First(x => x.Name.EndsWith(name + ".param", StringComparison.OrdinalIgnoreCase));
+            return new RawParam(f.Bytes, defs[PARAM.Read(f.Bytes).ParamType]);
+        }
+        var wep = Open("EquipParamWeapon");
+        var armor = Open("EquipParamProtector");
+        var rings = Open("EquipParamAccessory");
+        var goods = Open("EquipParamGoods");
+        var magic = Open("Magic");
+        var names = new HashSet<string>();
+
+        foreach (var k in ClassRevamp.Kits)
+        {
+            Assert.True(names.Add(k.Name), "duplicate class name " + k.Name);
+            // Every weapon one-handed with the class's own stats (no two-handing needed).
+            foreach (var w in new[] { k.Right, k.Right2, k.Left, k.Left2 }.Where(w => w > 0))
+            {
+                Assert.True(wep.Has(w), $"{k.Name}: weapon {w} missing");
+                string why = $"{k.Name}: weapon {w} needs {wep.GetInt(w, "properStrength")}/{wep.GetInt(w, "properAgility")}/{wep.GetInt(w, "properMagic")}/{wep.GetInt(w, "properFaith")}";
+                Assert.True(wep.GetInt(w, "properStrength") <= k.Str, why);
+                Assert.True(wep.GetInt(w, "properAgility") <= k.Dex, why);
+                Assert.True(wep.GetInt(w, "properMagic") <= k.Mag, why);
+                Assert.True(wep.GetInt(w, "properFaith") <= k.Fai, why);
+            }
+            var hands = new[] { k.Right, k.Right2, k.Left, k.Left2 }.Where(w => w > 0).ToList();
+            // Spells need a catalyst, miracles a talisman; at most two one-slot spells (like the vanilla casters).
+            Assert.True(k.Spells.Length <= 2);
+            foreach (var s in k.Spells)
+            {
+                Assert.True(magic.Has(s), $"{k.Name}: spell {s} missing");
+                Assert.Equal(1, magic.GetInt(s, "slotLength"));
+                string flag = magic.GetInt(s, "ezStateBehaviorType") == 1 ? "enableMiracle" : "enableMagic";
+                Assert.Contains(hands, w => wep.GetInt(w, flag) == 1);
+            }
+            if (k.Spells.Length > 0) Assert.True(k.Int >= 8 && Math.Max(k.Mag, k.Fai) >= 13, k.Name);
+            if (k.Arrow > 0) Assert.Contains(hands, w => wep.GetInt(w, "weaponCategory") == 10);
+            if (k.Bolt > 0) Assert.Contains(hands, w => wep.GetInt(w, "weaponCategory") == 11);
+            foreach (var a in new[] { k.Helm, k.Armor, k.Gloves, k.Legs }) Assert.True(armor.Has(a), $"{k.Name}: armor {a} missing");
+            if (k.Ring1 > 0) Assert.True(rings.Has(k.Ring1));
+            foreach (var (id, _) in k.Items) Assert.True(goods.Has(id), $"{k.Name}: item {id} missing");
+            // Total starting weight stays near the vanilla Knight's (36.4).
+            double weight = hands.Sum(w => wep.Get(w, "weight")) + new[] { k.Helm, k.Armor, k.Gloves, k.Legs }.Sum(a => armor.Get(a, "weight"));
+            Assert.True(weight <= 40, $"{k.Name} carries {weight:0.0}");
+            output.WriteLine($"{k.Name,-13} SL{k.SoulLevel,2}  weight {weight,4:0.0}");
+        }
+    }
+
+    [Fact]
+    public void Class_names_are_replaced_in_the_menu_text_only()
+    {
+        var usr = Usr();
+        if (usr == null) return;
+        var path = Path.Combine(usr, "msg", "na_english", "menu.msgbnd.dcx");
+        var pristine = File.Exists(path + GamePatcher.BackupSuffix) ? path + GamePatcher.BackupSuffix : path;
+        var bnd = BND3.Read(pristine);
+        var before = bnd.Files.Select(f => f.Bytes.ToArray()).ToList();
+
+        // An untouched FMG round-trips byte for byte.
+        var tag = bnd.Files.First(f => f.Name.EndsWith("テキスト表示用タグ一覧.fmg"));
+        Assert.True(MsgPatcher.WriteLikeOriginal(FMG.Read(tag.Bytes), tag.Bytes.Length).AsSpan().SequenceEqual(tag.Bytes));
+
+        Assert.Equal(10, MsgPatcher.RenameIn(bnd, ClassRevamp.Renames));
+        var again = BND3.Read(bnd.Write());
+        var fmg = FMG.Read(again.Files.First(f => f.Name.EndsWith("テキスト表示用タグ一覧.fmg")).Bytes);
+        var classNames = fmg.Entries.Where(e => e.ID is >= MsgPatcher.FirstClassTag and <= MsgPatcher.LastClassTag).Select(e => e.Text).ToHashSet();
+        Assert.True(classNames.SetEquals(ClassRevamp.Kits.Select(k => k.Name)));
+        Assert.Equal("The Nexus", fmg[200101]);
+        // Every other file in the binder is untouched (blood-message words keep "Soldier", "Knight"...).
+        for (int i = 0; i < before.Count; i++)
+            if (!again.Files[i].Name.EndsWith("テキスト表示用タグ一覧.fmg"))
+                Assert.True(before[i].AsSpan().SequenceEqual(again.Files[i].Bytes), again.Files[i].Name);
     }
 }
