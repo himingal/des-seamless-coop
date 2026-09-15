@@ -25,6 +25,11 @@ public sealed class DesServerOptions
     public int PortEU { get; set; } = 18667;
     public int PortJP { get; set; } = 18668;
     public IPAddress Bind { get; set; } = IPAddress.Any;
+    /// <summary>
+    /// Server world tendency sent to every player for all worlds (-200 pure black .. +200 pure white).
+    /// The game pulls its world tendency toward this value whenever it syncs with the server.
+    /// </summary>
+    public int WorldTendency { get; set; }
 }
 
 public sealed record PartyPlayerStatus(string Name, string Area, int BlockId, bool HasSign, bool InSession, int SecondsAgo);
@@ -32,7 +37,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.2.2";
+    public const string Version = "1.3.0";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -400,10 +405,12 @@ public sealed class DesServer : IDisposable
         return (0x17, new Payload().CStr(id).ToArray());
     }
 
-    static (byte, byte[]) GetQwcData()
+    /// <summary>7 worlds × (white/black, light/dark) tendency, as the retail server sent them.</summary>
+    (byte, byte[]) GetQwcData()
     {
+        int wb = Math.Clamp(_o.WorldTendency, -200, 200);
         var w = new Payload();
-        for (int i = 0; i < 7; i++) w.I32(0).I32(0);
+        for (int i = 0; i < 7; i++) w.I32(wb).I32(0);
         return (0x0e, w.ToArray());
     }
 

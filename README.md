@@ -32,9 +32,17 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
   - Blue signs from party members are **moved next to the host in any area**, using the positions the game itself reports.
   - No level range. US, EU and JP copies share one world. Messages, bloodstains and wandering ghosts all work.
   - A live list shows who is online, where they are, and who has a sign down or is in co-op.
-- **Co-op patch** for your own dump. The originals are backed up and can be restored with one click.
+- **Game tweaks** for your own dump. Each one is a checkbox, the originals are backed up, and **Restore** undoes everything.
   - The **Blue Eye Stone works in body form**, so nobody has to die to go back to helping.
   - The **Stone of Ephemeral Eyes is never consumed**, so the host can always get their body back to summon.
+  - **Start with a Blue Eye Stone**: every new character has one from the first second.
+  - **Revamped starting classes**: new stats and gear for all 10 classes, each keeping its original Soul Level. Hover the option in the app to see them:
+    Vanguard, Oathsworn, Ranger, Battle Cleric, Arcanist, Duelist, Berserker, Shadow, Paladin and Exiled Heir.
+  - **Half-price merchants**: everything sold for souls costs 50% (items bought with boss souls are unchanged).
+  - **Pure Bladestone** drops from the Shrine of Storms skeletons **15%** of the time instead of 0.5%.
+  - **+50% equip load and item burden**: weapons, armor, rings and items weigh a third less.
+- **World tendency selector** for the host: Pure White, White, Normal, Black or Pure Black. The party server pushes every world toward it.
+- **Game status badge** that shows whether Demon's Souls is running.
 - **Automatic RPCS3 setup**: RPCN, server redirection, UPnP, skipping the intro videos and registering the game.
 - **RPCN account creation inside the app**, with no digging through RPCS3's menus.
 - **Dedicated server mode**: `DesCoop.exe --server --name "My Party"`, for a VPS or an always-on PC.

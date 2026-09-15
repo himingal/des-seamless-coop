@@ -34,6 +34,21 @@ public partial class MainWindow : Window
 
         ChkBlue.IsChecked = _s.Patch.BlueEyeStoneInBodyForm;
         ChkEph.IsChecked = _s.Patch.InfiniteEphemeralEyes;
+        ChkStartBlue.IsChecked = _s.Patch.StartWithBlueEyeStone;
+        ChkClasses.IsChecked = _s.Patch.RevampedClasses;
+        ChkShops.IsChecked = _s.Patch.CheaperShops;
+        ChkBlade.IsChecked = _s.Patch.EasierPureBladestone;
+        ChkLoad.IsChecked = _s.Patch.HeavierLoads;
+        TxtClasses.ToolTip = string.Join("\n\n", ClassRevamp.Kits.Select(k =>
+            $"{k.Title}\n{k.Pitch}\nVIT {k.Vit}  INT {k.Int}  END {k.End}  STR {k.Str}  DEX {k.Dex}  MAG {k.Mag}  FAI {k.Fai}  LCK {k.Luc}"));
+        (_s.WorldTendency switch
+        {
+            >= 200 => RbWtPureWhite,
+            >= 100 => RbWtWhite,
+            <= -200 => RbWtPureBlack,
+            <= -100 => RbWtBlack,
+            _ => RbWtNormal,
+        }).IsChecked = true;
         ChkUpnp.IsChecked = _s.UseUpnp;
         ChkFullscreen.IsChecked = _s.Fullscreen;
         // Default party name = your RPCN name, so the friend already knows it.
@@ -52,7 +67,7 @@ public partial class MainWindow : Window
         _loading = false;
         _timer.Tick += async (_, _) =>
         {
-            try { await RefreshPartyAsync(); }
+            try { UpdateGameIndicator(); await RefreshPartyAsync(); }
             catch (Exception ex) { Log("Warning: " + ex.Message); }
         };
         _timer.Start();
@@ -97,6 +112,11 @@ public partial class MainWindow : Window
         if (_loading) return;
         _s.Patch.BlueEyeStoneInBodyForm = ChkBlue.IsChecked == true;
         _s.Patch.InfiniteEphemeralEyes = ChkEph.IsChecked == true;
+        _s.Patch.StartWithBlueEyeStone = ChkStartBlue.IsChecked == true;
+        _s.Patch.RevampedClasses = ChkClasses.IsChecked == true;
+        _s.Patch.CheaperShops = ChkShops.IsChecked == true;
+        _s.Patch.EasierPureBladestone = ChkBlade.IsChecked == true;
+        _s.Patch.HeavierLoads = ChkLoad.IsChecked == true;
         _s.UseUpnp = ChkUpnp.IsChecked == true;
         _s.Fullscreen = ChkFullscreen.IsChecked == true;
         _s.PartyName = string.IsNullOrWhiteSpace(TxtPartyName.Text) ? _s.PartyName : TxtPartyName.Text.Trim();
@@ -223,6 +243,34 @@ public partial class MainWindow : Window
 
     void PatchOption_Changed(object sender, RoutedEventArgs e) => SaveSettings();
 
+    void Tendency_Changed(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.RadioButton rb || !int.TryParse(rb.Tag?.ToString(), out int v)) return;
+        _s.WorldTendency = v;
+        if (_host != null)
+        {
+            _host.Server.Options.WorldTendency = v;
+            Log($"World tendency set to {rb.Content} (applies when the game syncs with the server).");
+        }
+        SaveSettings();
+    }
+
+    bool? _gameShown;
+
+    /// <summary>Header badge + footer line showing whether Demon's Souls is running.</summary>
+    void UpdateGameIndicator()
+    {
+        bool running = _emu.IsInstalled && _emu.IsRunning();
+        if (_gameShown == running) return;
+        _gameShown = running;
+        var brush = B(running ? "Ok" : "Muted");
+        DotGameTop.Fill = DotGame2.Fill = brush;
+        TxtGameTop.Text = running ? "GAME RUNNING" : "GAME CLOSED";
+        TxtGameTop.Foreground = running ? B("Ok") : B("Muted");
+        TxtGame2.Text = running ? "Demon's Souls is running" : "Demon's Souls is closed";
+        TxtGame2.Foreground = TxtGameTop.Foreground;
+    }
+
     async void BtnPatch_Click(object sender, RoutedEventArgs e)
     {
         if (_game == null) return;
@@ -246,7 +294,8 @@ public partial class MainWindow : Window
             if (_emu.IsInstalled) _emu.ClearGameCache();
             Log("Original game files restored.");
         }));
-        ChkBlue.IsChecked = ChkEph.IsChecked = false;
+        ChkBlue.IsChecked = ChkEph.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
+            ChkShops.IsChecked = ChkBlade.IsChecked = ChkLoad.IsChecked = false;
     }
 
     void BtnRpcn_Click(object sender, RoutedEventArgs e) => OpenRpcn();
@@ -289,7 +338,7 @@ public partial class MainWindow : Window
     async Task StartHostAsync()
     {
         EnsureFirewall();
-        var opts = new DesServerOptions { ServerName = _s.PartyName, DataDir = Path.Combine(AppSettings.DataDir, "server-data") };
+        var opts = new DesServerOptions { ServerName = _s.PartyName, DataDir = Path.Combine(AppSettings.DataDir, "server-data"), WorldTendency = _s.WorldTendency };
         if (string.IsNullOrWhiteSpace(_s.PartyPassword)) _s.PartyPassword = Rendezvous.NewPassword();
         TxtPartyPass.Text = _s.PartyPassword;
         var host = new PartyHost(opts, _s.PartyPassword);
@@ -438,6 +487,7 @@ public partial class MainWindow : Window
             }
             Log($"Launching the game. Server: {target}");
             _emu.Launch(_game, _s.Fullscreen);
+            Dispatcher.InvokeAsync(async () => { await Task.Delay(4000); UpdateGameIndicator(); });
         });
         Status(_host != null ? "Game running. Keep this app open: it is the party server." : "Game running. Good hunting, Slayer of Demons.");
     }

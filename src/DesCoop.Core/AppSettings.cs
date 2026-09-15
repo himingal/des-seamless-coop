@@ -20,6 +20,8 @@ public sealed class AppSettings
     public PatchOptions Patch { get; set; } = new();
     public bool Fullscreen { get; set; }
     public bool UseUpnp { get; set; } = true;
+    /// <summary>Host's world tendency for the party: -200 pure black, 0 normal, +200 pure white.</summary>
+    public int WorldTendency { get; set; }
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true, Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } };
 
