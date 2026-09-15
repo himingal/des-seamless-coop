@@ -41,6 +41,11 @@ public partial class MainWindow : Window
         ChkShops.IsChecked = _s.Patch.CheaperShops;
         ChkBlade.IsChecked = _s.Patch.EasierPureBladestone;
         ChkLoad.IsChecked = _s.Patch.HeavierLoads;
+        ChkMats.IsChecked = _s.Patch.EasierUpgradeMaterials;
+        ChkLizard.IsChecked = _s.Patch.OneHitCrystalLizards;
+        ChkDragon.IsChecked = _s.Patch.WeakerDragons;
+        ChkSouls.IsChecked = _s.Patch.MoreSouls;
+        ChkMana.IsChecked = _s.Patch.ManaRegen;
         TxtClasses.ToolTip = string.Join("\n\n", ClassRevamp.Kits.Select(k =>
             $"{k.Title}  ·  Soul Level {k.SoulLevel}\n{k.Pitch}\nVIT {k.Vit}  INT {k.Int}  END {k.End}  STR {k.Str}  DEX {k.Dex}  MAG {k.Mag}  FAI {k.Fai}  LCK {k.Luc}"));
         (_s.WorldTendency switch
@@ -121,6 +126,11 @@ public partial class MainWindow : Window
         _s.Patch.CheaperShops = ChkShops.IsChecked == true;
         _s.Patch.EasierPureBladestone = ChkBlade.IsChecked == true;
         _s.Patch.HeavierLoads = ChkLoad.IsChecked == true;
+        _s.Patch.EasierUpgradeMaterials = ChkMats.IsChecked == true;
+        _s.Patch.OneHitCrystalLizards = ChkLizard.IsChecked == true;
+        _s.Patch.WeakerDragons = ChkDragon.IsChecked == true;
+        _s.Patch.MoreSouls = ChkSouls.IsChecked == true;
+        _s.Patch.ManaRegen = ChkMana.IsChecked == true;
         _s.UseUpnp = ChkUpnp.IsChecked == true;
         _s.Fullscreen = ChkFullscreen.IsChecked == true;
         _s.PartyName = string.IsNullOrWhiteSpace(TxtPartyName.Text) ? _s.PartyName : TxtPartyName.Text.Trim();
@@ -299,7 +309,8 @@ public partial class MainWindow : Window
             Log("Original game files restored.");
         }));
         ChkBlue.IsChecked = ChkEph.IsChecked = ChkSoul.IsChecked = ChkStaySoul.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
-            ChkShops.IsChecked = ChkBlade.IsChecked = ChkLoad.IsChecked = false;
+            ChkShops.IsChecked = ChkBlade.IsChecked = ChkLoad.IsChecked = ChkMats.IsChecked = ChkLizard.IsChecked =
+            ChkDragon.IsChecked = ChkSouls.IsChecked = ChkMana.IsChecked = false;
     }
 
     void BtnRpcn_Click(object sender, RoutedEventArgs e) => OpenRpcn();
@@ -486,7 +497,8 @@ public partial class MainWindow : Window
             await _emu.EnableQualityPatchesAsync();
             var o = _s.Patch;
             if (o.BlueEyeStoneInBodyForm || o.InfiniteEphemeralEyes || o.FullHpSoulForm || o.StayInSoulForm || o.StartWithBlueEyeStone || o.RevampedClasses
-                || o.CheaperShops || o.EasierPureBladestone || o.HeavierLoads || GamePatcher.IsPatched(_game))
+                || o.CheaperShops || o.EasierPureBladestone || o.HeavierLoads || o.EasierUpgradeMaterials
+                || o.OneHitCrystalLizards || o.WeakerDragons || o.MoreSouls || o.ManaRegen || GamePatcher.IsPatched(_game))
             {
                 Status("Checking the co-op patch…");
                 await Task.Run(ApplyPatch);

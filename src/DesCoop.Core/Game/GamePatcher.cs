@@ -23,6 +23,16 @@ public sealed class PatchOptions
     public bool EasierPureBladestone { get; set; } = true;
     /// <summary>Weapons, armor, rings and items weigh 1/3 less: +50% equip load and item burden.</summary>
     public bool HeavierLoads { get; set; } = true;
+    /// <summary>Upgrade stones (hardstone, sharpstone, bladestone…) drop far more often from enemies.</summary>
+    public bool EasierUpgradeMaterials { get; set; } = true;
+    /// <summary>Every Crystal Lizard has 1 HP: one hit and it drops its stones.</summary>
+    public bool OneHitCrystalLizards { get; set; } = true;
+    /// <summary>The Red and Blue dragons (and their kin) have half the HP.</summary>
+    public bool WeakerDragons { get; set; } = true;
+    /// <summary>Enemies give 25% more souls.</summary>
+    public bool MoreSouls { get; set; } = true;
+    /// <summary>Passive MP regeneration (about 1 MP per second) while any chest armor is worn.</summary>
+    public bool ManaRegen { get; set; } = true;
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);
@@ -38,8 +48,17 @@ public static class GamePatcher
     public const int ShopPricePercent = 50;
     public const double LoadMultiplier = 1.5;
     public const int PureBladestoneChance = 150; // out of 1000
+    public const int UpgradeMaterialChance = 250; // out of 1000 (25%)
+    public const int SoulBonusPercent = 125;
     /// <summary>SpEffectParam row "[System] parameter change while a ghost" (soul form and blue phantoms): maxHpRate 0.5.</summary>
     public const int SoulFormEffect = 8;
+    /// <summary>Goods ids of every upgrade stone (shard/chunk/pure of each material), incl. large shards.</summary>
+    public static readonly int[] UpgradeStones = [.. Enumerable.Range(2000, 58)];
+    /// <summary>NpcParam ids of the Crystal Lizards (one per area) and of the bridge dragons + kin.</summary>
+    public static readonly int[] CrystalLizards = [.. Enumerable.Range(311000, 20)];
+    public static readonly int[] Dragons = [512000, 513000, 513001];
+    /// <summary>MP-regen SpEffect used by equipment (changeMpPoint -1) and the Behavior that applies it.</summary>
+    public const int MpRegenEffect = 6030, MpRegenBehavior = 4200;
 
     static readonly string[] BlueEyeNames = ["Blue Eye Stone"];
     static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes"];
@@ -220,9 +239,11 @@ public static class GamePatcher
             }
         }
 
-        public void Set(RawParam p, int id, string field, double v)
+        public bool Set(RawParam p, int id, string field, double v)
         {
-            if (p.Set(id, field, v)) Changes++;
+            bool changed = p.Set(id, field, v);
+            if (changed) Changes++;
+            return changed;
         }
 
         public void Commit()
@@ -253,7 +274,10 @@ public static class GamePatcher
 
         if (opt.HeavierLoads) ScaleWeights(c);
         if (opt.CheaperShops) CheaperShops(c);
-        if (opt.EasierPureBladestone) BoostDrop(c, ids.PureBladestone.Count > 0 ? ids.PureBladestone : [2023]);
+        if (opt.EasierPureBladestone) BoostDrop(c, ids.PureBladestone.Count > 0 ? ids.PureBladestone : [2023], PureBladestoneChance, "Pure Bladestone");
+        if (opt.EasierUpgradeMaterials) BoostDrop(c, [.. UpgradeStones], UpgradeMaterialChance, "upgrade stones");
+        if (opt.OneHitCrystalLizards || opt.WeakerDragons || opt.MoreSouls) TweakEnemies(c, opt);
+        if (opt.ManaRegen) ManaRegen(c);
 
         var chara = c.Param("CharaInitParam");
         if (chara != null)
@@ -315,19 +339,20 @@ public static class GamePatcher
         c.Log.Add($"{c.Label}: {n} shop prices cut to {ShopPricePercent}%");
     }
 
-    /// <summary>Raises the chance of an item in every lot that can drop it, taking the weight from the most common entry.</summary>
-    static void BoostDrop(Ctx c, HashSet<int> itemIds)
+    /// <summary>Raises the chance of an item in every lot that can drop it, taking the weight from the other entries.</summary>
+    static void BoostDrop(Ctx c, HashSet<int> itemIds, int chance, string what)
     {
         var lots = c.Param("ItemLotParam");
         if (lots == null) return;
+        int n = 0;
         foreach (var lot in lots.RowIds)
         {
             for (int i = 1; i <= 8; i++)
             {
                 if (lots.GetInt(lot, $"lotItemCategory{i:00}") != GoodsCategory || !itemIds.Contains(lots.GetInt(lot, $"lotItemId{i:00}"))) continue;
                 int pts = lots.GetInt(lot, $"lotItemBasePoint{i:00}");
-                if (pts >= PureBladestoneChance) continue;
-                int need = PureBladestoneChance - pts;
+                if (pts >= chance) continue;
+                int need = chance - pts;
                 // Take the points from the other entries, biggest first, never below 1.
                 var others = Enumerable.Range(1, 8).Where(j => j != i)
                     .Select(j => (j, pts: lots.GetInt(lot, $"lotItemBasePoint{j:00}"))).Where(x => x.pts > 1)
@@ -339,10 +364,49 @@ public static class GamePatcher
                     c.Set(lots, lot, $"lotItemBasePoint{j:00}", p - take);
                     need -= take;
                 }
-                c.Set(lots, lot, $"lotItemBasePoint{i:00}", PureBladestoneChance - need);
-                c.Log.Add($"{c.Label}: drop lot {lot}: Pure Bladestone {pts / 10.0:0.#}% -> {(PureBladestoneChance - need) / 10.0:0.#}%");
+                if (c.Set(lots, lot, $"lotItemBasePoint{i:00}", chance - need)) n++;
             }
         }
+        c.Log.Add($"{c.Label}: {n} drop lot(s) boosted for {what}");
+    }
+
+    static void TweakEnemies(Ctx c, PatchOptions opt)
+    {
+        var npc = c.Param("NpcParam");
+        if (npc == null || !npc.HasField("hp") || !npc.HasField("getSoul")) { c.Log.Add($"{c.Label}: NpcParam has no hp/getSoul layout"); return; }
+        int lizards = 0, dragons = 0, souls = 0;
+        foreach (var id in npc.RowIds)
+        {
+            if (opt.MoreSouls)
+            {
+                int s = npc.GetInt(id, "getSoul");
+                if (s > 0 && c.Set(npc, id, "getSoul", (int)Math.Round(s * SoulBonusPercent / 100.0))) souls++;
+            }
+            if (opt.OneHitCrystalLizards && CrystalLizards.Contains(id) && c.Set(npc, id, "hp", 1)) lizards++;
+            if (opt.WeakerDragons && Dragons.Contains(id))
+            {
+                int hp = npc.GetInt(id, "hp");
+                if (hp > 1 && c.Set(npc, id, "hp", Math.Max(1, hp / 2))) dragons++;
+            }
+        }
+        if (opt.MoreSouls) c.Log.Add($"{c.Label}: +{SoulBonusPercent - 100}% souls on {souls} enemies");
+        if (opt.OneHitCrystalLizards) c.Log.Add($"{c.Label}: {lizards} Crystal Lizards set to 1 HP");
+        if (opt.WeakerDragons) c.Log.Add($"{c.Label}: {dragons} dragon(s) at half HP");
+    }
+
+    /// <summary>Makes the equipment MP-regen tick every second and attaches it to every chest-armor row.</summary>
+    static void ManaRegen(Ctx c)
+    {
+        var sp = c.Param("SpEffectParam");
+        if (sp != null && sp.Has(MpRegenEffect) && sp.HasField("motionInterval"))
+            c.Set(sp, MpRegenEffect, "motionInterval", 1);
+        var prot = c.Param("EquipParamProtector");
+        if (prot == null || !prot.HasField("residentSpEffectBehaviorId")) { c.Log.Add($"{c.Label}: no protector resident-effect layout, MP regen skipped"); return; }
+        int n = 0;
+        // Chest armor ("Armer" slot) ids are 200000-202999; one effect per body avoids stacking.
+        foreach (var id in prot.RowIds.Where(id => id is >= 200000 and < 203000))
+            if (prot.GetInt(id, "residentSpEffectBehaviorId") <= 0 && c.Set(prot, id, "residentSpEffectBehaviorId", MpRegenBehavior)) n++;
+        c.Log.Add($"{c.Label}: MP regen on {n} chest armor(s)");
     }
 
     static void GiveToClasses(Ctx c, RawParam chara, int itemId, string itemName)

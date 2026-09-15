@@ -38,8 +38,13 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
   - **Soul form keeps full HP**: dying no longer halves your max HP, so soul form plays like body form.
   - **Stay in soul form**: no automatic revival after a boss (as host or as a blue phantom going home), so the Blue Eye Stone is always ready. The Stone of Ephemeral Eyes still revives you when you want to summon.
   - **Start with both co-op stones**: every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes.
-  - **10 new starting classes** replace the vanilla ones, with new names, stats and full kits. Every weapon is usable one-handed from the start and Soul Levels stay between 1 and 9:
-    Sellsword, Sentinel, Tracker, Friar, Sorcerer, Blade Dancer, Juggernaut, Nightblade, Crusader and Exiled Heir. Hover the option in the app to see each kit.
+  - **10 new starting classes** replace the vanilla ones, two per focus, every weapon usable one-handed and Soul Level 1–9:
+    Strength (Berserker, Warrior), Dexterity (Samurai, Swordsman), Strength/Dexterity (Knight, Squire), Faith (Cleric, Battle Priest) and Intelligence (Mage, Battle Mage). Hover the option in the app to see each kit.
+  - **Upgrade stones drop far more often** from enemies (about 25%).
+  - **Crystal Lizards die in one hit** (1 HP), so you never lose the chase.
+  - **Red and Blue dragons have half the HP.**
+  - **+25% souls** from every enemy.
+  - **Passive MP regeneration** (about 1 MP/second) while any chest armor is worn.
   - **Half-price merchants**: everything sold for souls costs 50% (items bought with boss souls are unchanged).
   - **Pure Bladestone** drops from the Shrine of Storms skeletons **15%** of the time instead of 0.5%.
   - **+50% equip load and item burden**: weapons, armor, rings and items weigh a third less.

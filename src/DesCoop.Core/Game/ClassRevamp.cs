@@ -1,10 +1,11 @@
 namespace DesCoop.Game;
 
 /// <summary>
-/// Ten brand-new starting classes that replace the vanilla ones (CharaInitParam rows 1000-1009):
-/// new name, stats and full kit. Every weapon is usable one-handed with the class's own stats
-/// (checked against the retail requirements by the tests) and Soul Levels stay between 1 and 9.
-/// Only item ids that exist in the retail game are used; anything missing is skipped with a log line.
+/// Ten brand-new starting classes that replace the vanilla ones (CharaInitParam rows 1000-1009), grouped
+/// two per focus: Strength, Dexterity, Strength/Dexterity, Faith and Intelligence. Every weapon is usable
+/// one-handed with the class's own stats (checked against the retail requirements by the tests) and Soul
+/// Levels stay between 1 and 9. Only item ids that exist in the retail game are used; anything missing is
+/// skipped with a log line.
 /// </summary>
 public static class ClassRevamp
 {
@@ -13,7 +14,7 @@ public static class ClassRevamp
     public const int NoHelm = 101700, NoArmor = 201700, NoGloves = 301500, NoLegs = 401500;
 
     public sealed record Kit(
-        int Id, string Original, string Name, string Pitch,
+        int Id, string Original, string Name, string Focus, string Pitch,
         int Vit, int Int, int End, int Str, int Dex, int Mag, int Fai, int Luc,
         int Right, int Right2, int Left, int Left2,
         int Helm, int Armor, int Gloves, int Legs,
@@ -21,60 +22,67 @@ public static class ClassRevamp
         int Ring1, int[] Spells, (int id, int num)[] Items)
     {
         public int SoulLevel => Vit + Int + End + Str + Dex + Mag + Fai + Luc - 80;
-        public string Title => $"{Name} (replaces {Original})";
+        public string Title => $"{Name} — {Focus} (replaces {Original})";
     }
 
-    // Stats: VIT, INT, END, STR, DEX, MAG, FAI, LUCK. Soul Level = total - 80.
-    // Weapons are the +0 retail ids; items: 1000 Crescent Moon Grass, 1001 Half Moon Grass, 1005 Fresh Spice,
-    // 1011 Throwing Knife, 1012 Kunai, 1013 Firebomb, 1024 Secret Throwing Dagger, 99 Augite of Souls (lantern).
+    // Weapon ids (+0): 10000 Dagger, 10100 Parrying Dagger, 20000 Short Sword, 20200 Long Sword,
+    // 20400 Bastard Sword, 30000 Rapier, 40400 Uchigatana, 50000 Battle Axe, 60000 Club, 60100 Mace,
+    // 60300 Morning Star, 90000 Wooden Catalyst, 90100 Silver Catalyst, 90400 Talisman of God,
+    // 150000 Buckler, 150200 Kite Shield, 150300 Heater Shield, 150800 Soldier's Shield, 151500 Leather Shield.
+    // Spells: 1000 Soul Arrow, 1003 Enchant Weapon, 1017 Fire Spray. Miracles: 2004 Regeneration, 2006 Cure, 2010 Heal.
     public static readonly Kit[] Kits =
     [
-        new(1000, "Soldier", "Sellsword", "Kilij and a Light Crossbow with 30 bolts, Soldier's Shield, chain mail. Paid in advance.",
-            14, 8, 13, 14, 11, 7, 8, 12,
-            40100, 140000, 150800, -1, 100400, 200400, 300400, 400400, -1, 0, 170000, 30,
-            -1, [], [(1000, 8), (1013, 4), (99, 1)]),
-        new(1001, "Knight", "Sentinel", "Knight Sword, Morning Star and Kite Shield in the Gloom armor. The wall that bleeds you.",
-            12, 9, 13, 14, 10, 8, 11, 8,
-            21300, 60300, 150200, -1, 101000, 201000, 301000, 401000, -1, 0, -1, 0,
-            -1, [], [(1000, 8), (1001, 3), (99, 1)]),
-        new(1002, "Hunter", "Tracker", "Short Spear, Long Bow with 60 arrows and Leather Shield in wild shaman garb.",
-            11, 9, 12, 15, 13, 7, 7, 12,
-            70000, 130200, 151500, -1, 100300, 200000, 300000, 400000, 160000, 60, -1, 0,
-            -1, [], [(1000, 10), (1011, 10), (99, 1)]),
-        new(1003, "Priest", "Friar", "Club and Talisman of God in the Binded robes. Heal and Regeneration for the whole party.",
-            13, 10, 11, 12, 8, 7, 15, 9,
-            60000, 90400, 151500, -1, 102000, 202000, 302000, 402000, -1, 0, -1, 0,
-            -1, [2010, 2004], [(1000, 5), (1005, 4), (99, 1)]),
-        new(1004, "Magician", "Sorcerer", "Soul Arrow and Fire Spray, a Kris Blade that scales with Magic, and the witch's hat.",
-            9, 15, 10, 8, 11, 16, 6, 11,
-            90000, 10600, 150100, -1, 102100, 202100, 302100, 402100, -1, 0, -1, 0,
-            -1, [1000, 1017], [(1000, 6), (1005, 8), (99, 1)]),
-        new(1005, "Wanderer", "Blade Dancer", "Shotel and Estoc, a Parrying Dagger in the off hand, black leathers. Parry, riposte, repeat.",
-            10, 10, 12, 10, 16, 8, 7, 13,
-            40200, 30100, 10100, -1, NoHelm, 200200, 300200, 400200, -1, 0, -1, 0,
-            -1, [], [(1000, 8), (1012, 10), (99, 1)]),
-        new(1006, "Barbarian", "Juggernaut", "20 Strength: Great Club in one hand, Battle Axe in the other, Brushwood helm. Shield optional.",
-            15, 7, 13, 20, 9, 7, 8, 10,
-            60400, -1, 50000, 150100, 100800, 200300, 300300, 400300, -1, 0, -1, 0,
-            -1, [], [(1000, 6), (1013, 5), (99, 1)]),
-        new(1007, "Thief", "Nightblade", "Mail Breaker for criticals, Short Bow with 30 arrows, Buckler for parries and the Thief's Ring.",
-            10, 11, 10, 12, 14, 9, 8, 15,
-            10200, 130000, 150000, -1, 100200, 201800, 301800, 401800, 160000, 30, -1, 0,
-            116, [], [(1000, 8), (1024, 5), (99, 1)]),
-        new(1008, "Temple Knight", "Crusader", "Mirdan Hammer, Heater Shield and Talisman of God in full plate. Heal and Cure.",
-            12, 8, 12, 14, 12, 6, 14, 6,
-            80100, 90400, 150300, -1, 100600, 200600, 300600, 400600, -1, 0, -1, 0,
-            -1, [2010, 2006], [(1000, 6), (1005, 3), (99, 1)]),
-        new(1009, "Royalty", "Exiled Heir", "Soul Level 1. Scimitar, Silver Catalyst and Flame Toss, a Gold Mask and a Slave's Shield.",
-            9, 12, 8, 9, 12, 13, 10, 8,
-            40000, 90100, 151000, -1, 100000, 201200, 301200, 401200, -1, 0, -1, 0,
-            102, [1001], [(1000, 6), (1005, 5), (99, 1)]),
+        // --- Strength ---
+        new(1000, "Soldier", "Berserker", "Strength", "Bastard Sword and Battle Axe, no shield, just rage. Firebombs for the rest.",
+            15, 6, 14, 18, 9, 6, 7, 9,
+            20400, 50000, -1, -1, 100800, 200400, 300400, 400400, -1, 0, -1, 0,
+            -1, [], [(1000, 5), (1013, 5), (99, 1)]),
+        new(1001, "Barbarian", "Warrior", "Strength", "Long Sword and a Heater Shield in fluted plate. The wall that hits back.",
+            15, 6, 13, 16, 11, 6, 8, 9,
+            20200, -1, 150300, -1, 100700, 200700, 300700, 400700, -1, 0, -1, 0,
+            -1, [], [(1000, 6), (1023, 3), (99, 1)]),
+        // --- Dexterity ---
+        new(1002, "Hunter", "Samurai", "Dexterity", "Uchigatana and a Buckler to parry. Bleed them, then riposte.",
+            12, 6, 12, 18, 16, 6, 6, 8,
+            40400, -1, 150000, -1, 100200, 200200, 300200, 400200, -1, 0, -1, 0,
+            -1, [], [(1000, 6), (1012, 8), (99, 1)]),
+        new(1003, "Wanderer", "Swordsman", "Dexterity", "Rapier and Parrying Dagger in rogue's leathers. All footwork and criticals.",
+            11, 8, 12, 10, 16, 7, 7, 13,
+            30000, -1, 10100, -1, NoHelm, 201800, 301800, 401800, -1, 0, -1, 0,
+            -1, [], [(1000, 8), (1011, 10), (99, 1)]),
+        // --- Strength / Dexterity ---
+        new(1004, "Knight", "Knight", "Strength/Dexterity", "Long Sword and Kite Shield in fluted armor. The balanced blade.",
+            13, 7, 13, 14, 13, 6, 9, 9,
+            20200, -1, 150200, -1, 100700, 200700, 300700, 400700, -1, 0, -1, 0,
+            -1, [], [(1000, 6), (1001, 3), (99, 1)]),
+        new(1005, "Temple Knight", "Squire", "Strength/Dexterity", "Short Sword and Soldier's Shield in chain mail. The recruit who grows into anything.",
+            12, 8, 12, 13, 13, 8, 8, 10,
+            20000, -1, 150800, -1, 100400, 200400, 300400, 400400, -1, 0, -1, 0,
+            -1, [], [(1000, 6), (1015, 3), (99, 1)]),
+        // --- Faith ---
+        new(1006, "Priest", "Cleric", "Faith", "Mace and Talisman of God, Heal and Regeneration for the whole party.",
+            13, 9, 12, 13, 9, 6, 15, 7,
+            60100, -1, 90400, -1, 102000, 202000, 302000, 402000, -1, 0, -1, 0,
+            -1, [2010, 2004], [(1000, 5), (99, 1)]),
+        new(1007, "Royalty", "Battle Priest", "Faith", "Morning Star and Heater Shield in plate, Talisman on the hip. Heal and Cure between swings.",
+            13, 8, 13, 14, 11, 6, 14, 5,
+            60300, -1, 150300, 90400, 100600, 200600, 300600, 400600, -1, 0, -1, 0,
+            -1, [2010, 2006], [(1000, 5), (99, 1)]),
+        // --- Intelligence ---
+        new(1008, "Magician", "Mage", "Intelligence", "Wooden Catalyst, Soul Arrow and Fire Spray, a Dagger for emergencies. Glass cannon.",
+            9, 16, 10, 8, 10, 16, 6, 9,
+            10000, -1, 90000, -1, 100100, 200100, 300100, 400100, -1, 0, -1, 0,
+            -1, [1000, 1017], [(1000, 6), (99, 1)]),
+        new(1009, "Thief", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst: Soul Arrow at range, Enchant Weapon up close.",
+            11, 13, 12, 10, 12, 14, 6, 6,
+            20000, -1, 90100, -1, 100200, 200200, 300200, 400200, -1, 0, -1, 0,
+            -1, [1000, 1003], [(1000, 6), (99, 1)]),
     ];
 
     /// <summary>Old class name -> new class name, for the menu text.</summary>
     public static IReadOnlyDictionary<string, string> Renames => Kits.ToDictionary(k => k.Original, k => k.Name);
 
-    public static void Apply(RawParam p, Action<RawParam, int, string, double> set, Func<string, int, bool> exists, List<string> log, string label)
+    public static void Apply(RawParam p, Func<RawParam, int, string, double, bool> set, Func<string, int, bool> exists, List<string> log, string label)
     {
         int applied = 0;
         foreach (var k in Kits)

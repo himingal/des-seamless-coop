@@ -49,7 +49,7 @@ public class RealGameTests(ITestOutputHelper output)
         }
 
         // Only the touched params differ, and each has the same size as before.
-        string[] touched = ["EquipParamGoods", "EquipParamWeapon", "EquipParamProtector", "EquipParamAccessory", "ShopLineupParam", "ItemLotParam", "CharaInitParam", "SpEffectParam"];
+        string[] touched = ["EquipParamGoods", "EquipParamWeapon", "EquipParamProtector", "EquipParamAccessory", "ShopLineupParam", "ItemLotParam", "CharaInitParam", "SpEffectParam", "NpcParam"];
         foreach (var f in bnd.Files)
         {
             var o = original.Files.First(x => x.Name == f.Name);
@@ -78,7 +78,8 @@ public class RealGameTests(ITestOutputHelper output)
 
         var lots = Open(bnd, "ItemLotParam");
         int pure = Enumerable.Range(1, 8).First(i => lots.GetInt(320120, $"lotItemId{i:00}") == 2023);
-        Assert.Equal(GamePatcher.PureBladestoneChance, lots.GetInt(320120, $"lotItemBasePoint{pure:00}"));
+        // Pure Bladestone is also an upgrade stone, so the materials pass raises it the rest of the way.
+        Assert.Equal(GamePatcher.UpgradeMaterialChance, lots.GetInt(320120, $"lotItemBasePoint{pure:00}"));
         var lots0 = Open(original, "ItemLotParam");
         int Sum(RawParam p) => Enumerable.Range(1, 8).Sum(i => p.GetInt(320120, $"lotItemBasePoint{i:00}"));
         Assert.Equal(Sum(lots0), Sum(lots));
@@ -86,6 +87,22 @@ public class RealGameTests(ITestOutputHelper output)
         var sp = Open(bnd, "SpEffectParam");
         Assert.Equal(1.0, sp.Get(GamePatcher.SoulFormEffect, "maxHpRate"), 3);
         Assert.Equal(0.5, sp.Get(9, "maxHpRate"), 3); // black phantoms (invaders) keep the penalty
+        Assert.Equal(1, sp.GetInt(GamePatcher.MpRegenEffect, "motionInterval")); // MP regen ticks every second
+
+        var npc = Open(bnd, "NpcParam");
+        var npc0 = Open(original, "NpcParam");
+        foreach (var liz in GamePatcher.CrystalLizards) Assert.Equal(1, npc.GetInt(liz, "hp"));
+        foreach (var d in GamePatcher.Dragons) Assert.Equal(npc0.GetInt(d, "hp") / 2, npc.GetInt(d, "hp"));
+        Assert.Equal((int)Math.Round(npc0.GetInt(512000, "getSoul") * 1.25), npc.GetInt(512000, "getSoul")); // +25% souls
+        Assert.True(npc.GetInt(311000, "getSoul") > npc0.GetInt(311000, "getSoul")); // lizards give more souls too
+
+        var prot = Open(bnd, "EquipParamProtector");
+        var prot0 = Open(original, "EquipParamProtector");
+        Assert.Equal(GamePatcher.MpRegenBehavior, prot.GetInt(200000, "residentSpEffectBehaviorId")); // Shaman's Clothes regens MP
+        Assert.Equal(prot0.GetInt(200400, "residentSpEffectBehaviorId"), prot.GetInt(200400, "residentSpEffectBehaviorId")); // Chain Mail's stamina effect left alone
+        int matSlot = Enumerable.Range(1, 8).FirstOrDefault(i => lots.GetInt(10278, $"lotItemId{i:00}") == 2050 && lots.GetInt(10278, $"lotItemCategory{i:00}") == unchecked((int)0x40000000));
+        // A boosted enemy stone drop reaches at least 25%.
+        if (matSlot > 0) Assert.True(lots.GetInt(10278, $"lotItemBasePoint{matSlot:00}") >= GamePatcher.UpgradeMaterialChance);
 
         var chara = Open(bnd, "CharaInitParam");
         var chara0 = Open(original, "CharaInitParam");

@@ -108,6 +108,12 @@
                                     <TextBlock Text="instead of 0.5%" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
                                     <CheckBox x:Name="ChkLoad" Content="+50% equip load and item burden" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <TextBlock Text="weapons, armor, rings and items weigh a third less" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
+                                    <CheckBox x:Name="ChkMats" Content="Upgrade stones drop far more often" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <CheckBox x:Name="ChkLizard" Content="Crystal Lizards die in one hit" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <CheckBox x:Name="ChkDragon" Content="Red and Blue dragons: half HP" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <CheckBox x:Name="ChkSouls" Content="+25% souls from enemies" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <CheckBox x:Name="ChkMana" Content="Passive MP regeneration" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <TextBlock Text="about 1 MP per second while any chest armor is worn" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
                                     <TextBlock x:Name="TxtPatch" Style="{StaticResource Small}" Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
