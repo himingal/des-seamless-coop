@@ -96,6 +96,8 @@
                                     <TextBlock Text="the host can always return to body form to summon" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
                                     <CheckBox x:Name="ChkSoul" Content="Soul form keeps full HP" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <TextBlock Text="dying no longer halves your HP: soul form plays like body form" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
+                                    <CheckBox x:Name="ChkStaySoul" Content="Stay in soul form" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
+                                    <TextBlock Text="no automatic revival after bosses, so the Blue Eye Stone is always ready (Ephemeral Eyes still revives)" Style="{StaticResource Small}" Margin="21,-1,0,4" TextWrapping="Wrap"/>
                                     <CheckBox x:Name="ChkStartBlue" Content="Start with both co-op stones" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
                                     <TextBlock Text="every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
                                     <CheckBox x:Name="ChkClasses" Content="10 new starting classes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>

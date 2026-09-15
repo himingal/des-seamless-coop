@@ -159,6 +159,33 @@ public class RealGameTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void Stay_in_soul_form_only_disables_automatic_revivals()
+    {
+        var usr = Usr();
+        if (usr == null) return;
+        var path = Path.Combine(usr, "script", "m01.luabnd.dcx");
+        var pristine = File.Exists(path + GamePatcher.BackupSuffix) ? path + GamePatcher.BackupSuffix : path;
+        var bnd = BND3.Read(pristine);
+        var before = bnd.Files.ToDictionary(f => f.Name, f => f.Bytes.ToArray());
+
+        int n = ScriptPatcher.PatchBinder(bnd);
+        Assert.Equal(12, n); // 5 RevivePlayer (one inside an old block comment), 3 RevivePlayerNext, 2 SetAliveMotion, 2 "Revival" texts
+        var again = BND3.Read(bnd.Write());
+        Assert.Equal(DCX.Type.DCX_EDGE, again.Compression.Type);
+        var ge = System.Text.Encoding.Latin1.GetString(again.Files.First(f => f.Name.EndsWith("global_event.lua")).Bytes);
+        var live = ge.Split('\n').Select(l => l.Trim()).Where(l => !l.StartsWith("--")).ToList();
+        // The only automatic-looking revive left is the manual Demon's Soul one.
+        Assert.Single(live, l => l.StartsWith("proxy:RevivePlayer();"));
+        Assert.DoesNotContain(live, l => l.StartsWith("proxy:RevivePlayerNext();"));
+        Assert.Contains("function OnDemonsSoulRevive", ge);
+        output.WriteLine($"{n} lines disabled");
+        foreach (var f in again.Files.Where(f => !f.Name.EndsWith("global_event.lua")))
+            Assert.True(before[f.Name].AsSpan().SequenceEqual(f.Bytes), f.Name);
+        // Idempotent: patching the patched script changes nothing more.
+        Assert.Equal(0, ScriptPatcher.PatchGlobalEvent(again.Files.First(f => f.Name.EndsWith("global_event.lua")).Bytes).changed);
+    }
+
+    [Fact]
     public void Class_names_are_replaced_in_the_menu_text_only()
     {
         var usr = Usr();

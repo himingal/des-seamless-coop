@@ -36,6 +36,7 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
   - The **Blue Eye Stone works in body form**, so nobody has to die to go back to helping.
   - The **Stone of Ephemeral Eyes is never consumed**, so the host can always get their body back to summon.
   - **Soul form keeps full HP**: dying no longer halves your max HP, so soul form plays like body form.
+  - **Stay in soul form**: no automatic revival after a boss (as host or as a blue phantom going home), so the Blue Eye Stone is always ready. The Stone of Ephemeral Eyes still revives you when you want to summon.
   - **Start with both co-op stones**: every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes.
   - **10 new starting classes** replace the vanilla ones, with new names, stats and full kits. Every weapon is usable one-handed from the start and Soul Levels stay between 1 and 9:
     Sellsword, Sentinel, Tracker, Friar, Sorcerer, Blade Dancer, Juggernaut, Nightblade, Crusader and Exiled Heir. Hover the option in the app to see each kit.

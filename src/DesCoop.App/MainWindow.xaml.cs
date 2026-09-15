@@ -35,6 +35,7 @@ public partial class MainWindow : Window
         ChkBlue.IsChecked = _s.Patch.BlueEyeStoneInBodyForm;
         ChkEph.IsChecked = _s.Patch.InfiniteEphemeralEyes;
         ChkSoul.IsChecked = _s.Patch.FullHpSoulForm;
+        ChkStaySoul.IsChecked = _s.Patch.StayInSoulForm;
         ChkStartBlue.IsChecked = _s.Patch.StartWithBlueEyeStone;
         ChkClasses.IsChecked = _s.Patch.RevampedClasses;
         ChkShops.IsChecked = _s.Patch.CheaperShops;
@@ -114,6 +115,7 @@ public partial class MainWindow : Window
         _s.Patch.BlueEyeStoneInBodyForm = ChkBlue.IsChecked == true;
         _s.Patch.InfiniteEphemeralEyes = ChkEph.IsChecked == true;
         _s.Patch.FullHpSoulForm = ChkSoul.IsChecked == true;
+        _s.Patch.StayInSoulForm = ChkStaySoul.IsChecked == true;
         _s.Patch.StartWithBlueEyeStone = ChkStartBlue.IsChecked == true;
         _s.Patch.RevampedClasses = ChkClasses.IsChecked == true;
         _s.Patch.CheaperShops = ChkShops.IsChecked == true;
@@ -296,7 +298,7 @@ public partial class MainWindow : Window
             if (_emu.IsInstalled) _emu.ClearGameCache();
             Log("Original game files restored.");
         }));
-        ChkBlue.IsChecked = ChkEph.IsChecked = ChkSoul.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
+        ChkBlue.IsChecked = ChkEph.IsChecked = ChkSoul.IsChecked = ChkStaySoul.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
             ChkShops.IsChecked = ChkBlade.IsChecked = ChkLoad.IsChecked = false;
     }
 
@@ -483,7 +485,7 @@ public partial class MainWindow : Window
             _emu.RegisterGame(_game);
             await _emu.EnableQualityPatchesAsync();
             var o = _s.Patch;
-            if (o.BlueEyeStoneInBodyForm || o.InfiniteEphemeralEyes || o.FullHpSoulForm || o.StartWithBlueEyeStone || o.RevampedClasses
+            if (o.BlueEyeStoneInBodyForm || o.InfiniteEphemeralEyes || o.FullHpSoulForm || o.StayInSoulForm || o.StartWithBlueEyeStone || o.RevampedClasses
                 || o.CheaperShops || o.EasierPureBladestone || o.HeavierLoads || GamePatcher.IsPatched(_game))
             {
                 Status("Checking the co-op patch…");

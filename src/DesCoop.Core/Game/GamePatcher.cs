@@ -11,6 +11,8 @@ public sealed class PatchOptions
     public bool InfiniteEphemeralEyes { get; set; } = true;
     /// <summary>Soul form keeps 100% max HP instead of 50%: dying costs nothing, it plays like body form.</summary>
     public bool FullHpSoulForm { get; set; } = true;
+    /// <summary>No automatic revival after bosses: you stay in soul form (Stone of Ephemeral Eyes revives on demand).</summary>
+    public bool StayInSoulForm { get; set; } = true;
     /// <summary>Every starting class carries a Blue Eye Stone and a Stone of Ephemeral Eyes from the first second.</summary>
     public bool StartWithBlueEyeStone { get; set; } = true;
     /// <summary>Ten new starting classes (names, stats and kits) replace the vanilla ones.</summary>
@@ -186,6 +188,7 @@ public static class GamePatcher
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
         if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, log)) changed = true;
+        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, log)) changed = true;
         return new PatchReport(changed, log);
     }
 
@@ -363,7 +366,7 @@ public static class GamePatcher
 
     public static bool IsPatched(GameInfo game) =>
         FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix))
-        || MsgPatcher.IsPatched(game.UsrDir);
+        || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir);
 
     public static void Restore(GameInfo game)
     {
@@ -373,6 +376,7 @@ public static class GamePatcher
             if (File.Exists(b)) File.Copy(b, p, true);
         }
         MsgPatcher.Restore(game.UsrDir);
+        ScriptPatcher.Restore(game.UsrDir);
     }
 
     static bool FilesEqual(string a, string b) => File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));
