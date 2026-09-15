@@ -87,7 +87,14 @@ public class RealGameTests(ITestOutputHelper output)
         var sp = Open(bnd, "SpEffectParam");
         Assert.Equal(1.0, sp.Get(GamePatcher.SoulFormEffect, "maxHpRate"), 3);
         Assert.Equal(0.5, sp.Get(9, "maxHpRate"), 3); // black phantoms (invaders) keep the penalty
-        Assert.Equal(1, sp.GetInt(GamePatcher.MpRegenEffect, "motionInterval")); // MP regen ticks every second
+        Assert.Equal(1, sp.GetInt(GamePatcher.MpRegenEffect, "motionInterval")); // light-armor MP regen ticks every second
+        var sp0 = Open(original, "SpEffectParam");
+        foreach (var e in GamePatcher.BodyStaminaEffects) // heavy chests: MP regen added, stamina penalty kept
+        {
+            Assert.Equal(-1, sp.GetInt(e, "changeMpPoint"));
+            Assert.Equal(1, sp.GetInt(e, "motionInterval"));
+            Assert.Equal(sp0.Get(e, "staminaRecoverChangeSpeed"), sp.Get(e, "staminaRecoverChangeSpeed"), 3);
+        }
 
         var npc = Open(bnd, "NpcParam");
         var npc0 = Open(original, "NpcParam");

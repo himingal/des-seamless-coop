@@ -59,6 +59,9 @@ public static class GamePatcher
     public static readonly int[] Dragons = [512000, 513000, 513001];
     /// <summary>MP-regen SpEffect used by equipment (changeMpPoint -1) and the Behavior that applies it.</summary>
     public const int MpRegenEffect = 6030, MpRegenBehavior = 4200;
+    /// <summary>Chest-armor "stamina recovery down" effects (levels 1-4). They have a free changeMpPoint slot,
+    /// so MP regen is added there for medium/heavy armor without removing the stamina penalty.</summary>
+    public static readonly int[] BodyStaminaEffects = [6210, 6211, 6212, 6213];
 
     static readonly string[] BlueEyeNames = ["Blue Eye Stone"];
     static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes"];
@@ -394,19 +397,32 @@ public static class GamePatcher
         if (opt.WeakerDragons) c.Log.Add($"{c.Label}: {dragons} dragon(s) at half HP");
     }
 
-    /// <summary>Makes the equipment MP-regen tick every second and attaches it to every chest-armor row.</summary>
+    /// <summary>
+    /// ~1 MP/second while any chest armor is worn. Light chests have no resident effect, so the equipment
+    /// MP-regen behavior is attached to them; medium/heavy chests already carry a stamina-down effect, so the
+    /// MP regen is added into that same effect (its changeMpPoint is unused) without touching the stamina
+    /// penalty. Either way every body armor is one — and only one — MP-regen source.
+    /// </summary>
     static void ManaRegen(Ctx c)
     {
         var sp = c.Param("SpEffectParam");
-        if (sp != null && sp.Has(MpRegenEffect) && sp.HasField("motionInterval"))
-            c.Set(sp, MpRegenEffect, "motionInterval", 1);
+        if (sp != null && sp.HasField("motionInterval") && sp.HasField("changeMpPoint"))
+        {
+            if (sp.Has(MpRegenEffect)) c.Set(sp, MpRegenEffect, "motionInterval", 1); // light-armor path (behavior 4200)
+            foreach (var id in BodyStaminaEffects.Where(sp.Has)) // medium/heavy chest path
+            {
+                c.Set(sp, id, "changeMpPoint", -1); // negative = restore 1 MP
+                c.Set(sp, id, "motionInterval", 1);
+            }
+        }
         var prot = c.Param("EquipParamProtector");
         if (prot == null || !prot.HasField("residentSpEffectBehaviorId")) { c.Log.Add($"{c.Label}: no protector resident-effect layout, MP regen skipped"); return; }
         int n = 0;
-        // Chest armor ("Armer" slot) ids are 200000-202999; one effect per body avoids stacking.
+        // Chest armor ("Armer" slot) ids are 200000-202999. Light bodies (no resident effect) get the regen
+        // behavior; heavy ones keep their stamina effect (now also regenning), so nothing stacks.
         foreach (var id in prot.RowIds.Where(id => id is >= 200000 and < 203000))
             if (prot.GetInt(id, "residentSpEffectBehaviorId") <= 0 && c.Set(prot, id, "residentSpEffectBehaviorId", MpRegenBehavior)) n++;
-        c.Log.Add($"{c.Label}: MP regen on {n} chest armor(s)");
+        c.Log.Add($"{c.Label}: MP regen on every chest armor ({n} light + heavy via stamina effect)");
     }
 
     static void GiveToClasses(Ctx c, RawParam chara, int itemId, string itemName)

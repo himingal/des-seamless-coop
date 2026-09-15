@@ -44,7 +44,7 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
   - **Crystal Lizards die in one hit** (1 HP), so you never lose the chase.
   - **Red and Blue dragons have half the HP.**
   - **+25% souls** from every enemy.
-  - **Passive MP regeneration** (about 1 MP/second) while any chest armor is worn.
+  - **Passive MP regeneration** (about 1 MP/second) while any chest armor is worn (light or heavy).
   - **Half-price merchants**: everything sold for souls costs 50% (items bought with boss souls are unchanged).
   - **Pure Bladestone** drops from the Shrine of Storms skeletons **15%** of the time instead of 0.5%.
   - **+50% equip load and item burden**: weapons, armor, rings and items weigh a third less.
