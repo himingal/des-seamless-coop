@@ -1,18 +1,13 @@
 namespace DesCoop.Game;
 
 /// <summary>
-/// Ten brand-new starting classes that replace the vanilla ones (CharaInitParam rows 1000-1009), grouped
-/// two per focus: Strength, Dexterity, Strength/Dexterity, Faith and Intelligence.
-///
-/// IMPORTANT: <see cref="Kit.Original"/> must be the row's real vanilla class name, because the menu shows
-/// each row's own archetype name and <see cref="MsgPatcher"/> renames those. Row 1000 is Soldier, 1001
-/// Knight, 1002 Hunter, 1003 Priest, 1004 Magician, 1005 Wanderer, 1006 Barbarian, 1007 Thief, 1008 Temple
-/// Knight, 1009 Royalty. Get Original wrong and the displayed name won't match the kit (that was the bug
-/// where the "Mage" slot showed a sword-and-plate kit).
-///
-/// Every weapon is usable one-handed with the class's own stats (checked against the retail requirements by
-/// the tests), every class has a different armor set, casters carry a catalyst/talisman plus spells, and
-/// Soul Levels stay between 1 and 9.
+/// The ten starting classes (CharaInitParam rows 1000-1009), built to the owner's spec: two per focus,
+/// exact stats and gear. Kit.Original must be the row's real vanilla class, because the menu shows each
+/// row's own archetype name and <see cref="MsgPatcher"/> renames those (row 1000 Soldier, 1001 Knight,
+/// 1002 Hunter, 1003 Priest, 1004 Magician, 1005 Wanderer, 1006 Barbarian, 1007 Thief, 1008 Temple Knight,
+/// 1009 Royalty). Every armor piece is gender=3 (unisex) so it fits a male or female character; where the
+/// requested set is female/male-only or does not exist it is swapped for the closest unisex look. Every
+/// weapon is one-hand-equippable; casters carry a catalyst or talisman plus their spell.
 /// </summary>
 public static class ClassRevamp
 {
@@ -32,68 +27,60 @@ public static class ClassRevamp
         public string Title => $"{Name} — {Focus}";
     }
 
-    // Weapons (+0): 10000 Dagger, 10100 Parrying Dagger, 20000 Short Sword, 20100 Broadsword, 20200 Long Sword,
-    // 20400 Bastard Sword, 30000 Rapier, 40400 Uchigatana, 50000 Battle Axe, 60100 Mace, 60300 Morning Star,
-    // 90000 Wooden Catalyst, 90100 Silver Catalyst, 90400 Talisman of God, 150000 Buckler, 150200 Kite Shield,
-    // 150300 Heater Shield, 150800 Soldier's Shield, 151500 Leather Shield.
-    // Spells: 1000 Soul Arrow, 1003 Enchant Weapon, 1017 Fire Spray. Miracles: 2004 Regeneration, 2006 Cure, 2010 Heal.
-    // Armor sets are all different: 200400 Chain, 200700 Fluted, 200200 Black Leather, 201200 Saint's, 200100
-    // Wizard's, 201800 Rogue's, 200500 Mirdan, 200300 Leather, 200600 Plate, 202100 Old Ragged.
+    // Weapons: 20600 Great Sword, 20400 Bastard Sword, 40400 Uchigatana, 130300 Compound Long Bow, 30100 Estoc,
+    // 20200 Long Sword, 70100 Winged Spear, 60100 Mace, 80200 Halberd, 90000 Wooden Catalyst, 20000 Short Sword,
+    // 90400 Talisman of God, 90100 Silver Catalyst, 10000 Dagger. Shields: 150200 Kite, 150900 Knight's,
+    // 150600 Tower, 150400 Adjudicator's, 10100 Parrying Dagger. Spells: 1001 Flame Toss, 1003 Enchant Weapon;
+    // miracles 2004 Regeneration, 2010 Heal. Goods: 1000 Crescent Moon Grass, 1001 Half Moon Grass,
+    // 1002 Late Moon Grass, 1003 Full Moon Grass, 1005 Fresh Spice, 1006 Old Spice, 1013 Firebomb,
+    // 1015 Turpentine, 1016 Black Turpentine, 1024 Secret Throwing Dagger, 99 Augite of Souls (lantern).
     public static readonly Kit[] Kits =
     [
-        // Every armor piece below is gender=3 (unisex), so it fits a male or a female character; the 10
-        // body pieces are all different. Berserker and Samurai keep their stats and weapons; Berserker's
-        // only change is the male-only Brushwood Helmet swapped for the unisex Chain Helmet.
-        // 1000 Soldier -> Berserker (Strength)
-        new(1000, "Soldier", "Berserker", "Strength", "Bastard Sword and Battle Axe, no shield, just rage. Firebombs for the rest.",
-            15, 6, 14, 18, 9, 6, 7, 9,
-            20400, 50000, -1, -1, 100400, 200400, 300400, 400400, -1, 0, -1, 0,
-            -1, [], [(1000, 5), (1013, 5), (99, 1)]),
-        // 1001 Knight -> Knight (Strength/Dexterity) — Fluted set
-        new(1001, "Knight", "Knight", "Strength/Dexterity", "Long Sword and Kite Shield in fluted plate. The even blade — strong and quick.",
-            13, 7, 13, 14, 13, 6, 9, 9,
-            20200, -1, 150200, -1, 100700, 200700, 300700, 400700, -1, 0, -1, 0,
-            -1, [], [(1000, 6), (1001, 3), (99, 1)]),
-        // 1002 Hunter -> Samurai (Dexterity) — Black Leather set  [kept]
-        new(1002, "Hunter", "Samurai", "Dexterity", "Uchigatana and a Buckler to parry. Bleed them, then riposte.",
-            12, 6, 12, 18, 16, 6, 6, 8,
-            40400, -1, 150000, -1, 100200, 200200, 300200, 400200, -1, 0, -1, 0,
-            -1, [], [(1000, 6), (1012, 8), (99, 1)]),
-        // 1003 Priest -> Cleric (Faith) — Coat of Plate set
-        new(1003, "Priest", "Cleric", "Faith", "Mace and Talisman of God in plate. Heal and Regeneration for the whole party.",
-            13, 9, 12, 13, 9, 6, 15, 7,
-            60100, -1, 90400, -1, 100600, 200600, 300600, 400600, -1, 0, -1, 0,
-            -1, [2010, 2004], [(1000, 5), (99, 1)]),
-        // 1004 Magician -> Mage (Intelligence) — Wizard's set
-        new(1004, "Magician", "Mage", "Intelligence", "Wooden Catalyst, Soul Arrow and Fire Spray, a Dagger for emergencies. Pure glass cannon.",
-            9, 16, 10, 8, 10, 16, 6, 9,
-            10000, -1, 90000, -1, 100100, 200100, 300100, 400100, -1, 0, -1, 0,
-            -1, [1000, 1017], [(1000, 6), (99, 1)]),
-        // 1005 Wanderer -> Swordsman (Dexterity) — Leather set
-        new(1005, "Wanderer", "Swordsman", "Dexterity", "Rapier and Parrying Dagger in leather. All footwork and criticals.",
-            11, 8, 12, 10, 16, 7, 7, 13,
-            30000, -1, 10100, -1, 100300, 200300, 300300, 400300, -1, 0, -1, 0,
-            -1, [], [(1000, 8), (1011, 10), (99, 1)]),
-        // 1006 Barbarian -> Warrior (Strength) — Mirdan Scale set
-        new(1006, "Barbarian", "Warrior", "Strength", "Broadsword and Heater Shield in Mirdan mail. Hits hard, holds the line.",
-            15, 6, 14, 16, 11, 6, 7, 9,
-            20100, -1, 150300, -1, 100500, 200500, 300500, 400500, -1, 0, -1, 0,
-            -1, [], [(1000, 6), (1023, 3), (99, 1)]),
-        // 1007 Thief -> Squire (Strength/Dexterity) — Gloom body with Chain helm/gloves (all unisex)
-        new(1007, "Thief", "Squire", "Strength/Dexterity", "Short Sword and Soldier's Shield in gloom armor. The recruit who grows into anything.",
-            12, 8, 12, 13, 13, 8, 8, 10,
-            20000, -1, 150800, -1, 100400, 201000, 300400, 401000, -1, 0, -1, 0,
-            -1, [], [(1000, 6), (1015, 3), (99, 1)]),
-        // 1008 Temple Knight -> Battle Priest (Faith) — Brushwood body with Plate helm/gloves (all unisex)
-        new(1008, "Temple Knight", "Battle Priest", "Faith", "Morning Star and Leather Shield in brushwood plate, Talisman on the hip. Heal and Cure.",
-            13, 8, 13, 14, 11, 6, 14, 5,
-            60300, -1, 151500, 90400, 100600, 200800, 300600, 400800, -1, 0, -1, 0,
-            -1, [2010, 2006], [(1000, 5), (99, 1)]),
-        // 1009 Royalty -> Battle Mage (Intelligence) — bare chest, Official's Cap, Wizard's gloves/shoes
-        new(1009, "Royalty", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst, robe-less: Soul Arrow at range, Enchant Weapon up close.",
-            11, 13, 12, 10, 12, 14, 6, 6,
+        // ---- Strength ----
+        new(1000, "Soldier", "Berserker", "Strength", "Great Sword in both hands, no shield, just rage.",
+            15, 8, 14, 18, 10, 6, 6, 7,
+            20600, -1, -1, -1, NoHelm, 200300, 300300, 400300, -1, 0, -1, 0,
+            -1, [], [(1000, 5), (99, 1)]),
+        new(1001, "Knight", "Warrior", "Strength", "Bastard Sword and Kite Shield in brushwood plate.",
+            13, 9, 13, 16, 11, 6, 8, 8,
+            20400, -1, 150200, -1, 100400, 200800, 300400, 400800, -1, 0, -1, 0,
+            -1, [], [(1015, 4), (99, 1)]),
+        // ---- Dexterity ----
+        new(1002, "Hunter", "Samurai", "Dexterity", "Uchigatana and a Compound Long Bow with 30 arrows, in dark armor.",
+            11, 10, 11, 14, 16, 8, 8, 7,
+            40400, -1, 130300, -1, 100200, 201000, 300200, 401000, 160000, 30, -1, 0,
+            -1, [], [(1016, 3), (99, 1)]),
+        new(1005, "Wanderer", "Swordsman", "Dexterity", "Estoc and Parrying Dagger in black leather. Riposte everything.",
+            10, 10, 12, 10, 17, 8, 8, 10,
+            30100, -1, 10100, -1, 100200, 200200, 300200, 400200, -1, 0, -1, 0,
+            -1, [], [(1024, 10), (99, 1)]),
+        // ---- Strength/Dexterity (Quality) ----
+        new(1006, "Barbarian", "Knight", "Strength/Dexterity", "Long Sword and Knight's Shield in fluted plate.",
+            12, 11, 12, 14, 14, 9, 9, 7,
+            20200, -1, 150900, -1, 100700, 200700, 300700, 400700, -1, 0, -1, 0,
+            -1, [], [(1001, 4), (99, 1)]),
+        new(1007, "Thief", "Squire", "Strength/Dexterity", "Winged Spear and Tower Shield in full plate. The turtle.",
+            13, 10, 13, 13, 12, 8, 8, 8,
+            70100, -1, 150600, -1, 100600, 200600, 300600, 400600, -1, 0, -1, 0,
+            -1, [], [(1013, 3), (99, 1)]),
+        // ---- Faith ----
+        new(1003, "Priest", "Cleric", "Faith", "Mace and Talisman of God in chain mail. Heal for the party.",
+            12, 10, 10, 11, 8, 6, 16, 8,
+            60100, -1, 90400, -1, 100400, 200400, 300400, 400400, -1, 0, -1, 0,
+            -1, [2010], [(1002, 4), (99, 1)]),
+        new(1008, "Temple Knight", "Battle Priest", "Faith", "Halberd, Adjudicator's Shield and a Talisman in Mirdan mail. Regeneration.",
+            11, 11, 11, 14, 12, 6, 14, 7,
+            80200, -1, 150400, 90400, 100500, 200500, 300500, 400500, -1, 0, -1, 0,
+            -1, [2004], [(1003, 4), (99, 1)]),
+        // ---- Intelligence ----
+        new(1004, "Magician", "Mage", "Intelligence", "Wooden Catalyst and a Dagger. Flame Toss. Pure glass cannon.",
+            9, 16, 9, 9, 10, 16, 6, 9,
+            90000, -1, 10000, -1, 100100, 200100, 300100, 400100, -1, 0, -1, 0,
+            -1, [1001], [(1005, 4), (99, 1)]),
+        new(1009, "Royalty", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst, robe-less. Enchant Weapon.",
+            11, 14, 11, 11, 11, 14, 6, 7,
             20000, -1, 90100, -1, 101800, 201700, 300100, 400100, -1, 0, -1, 0,
-            -1, [1000, 1003], [(1000, 6), (99, 1)]),
+            -1, [1003], [(1006, 4), (99, 1)]),
     ];
 
     /// <summary>Old class name -> new class name, for the menu text. One entry per real vanilla class.</summary>

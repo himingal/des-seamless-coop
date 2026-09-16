@@ -159,15 +159,12 @@ public class RealGameTests(ITestOutputHelper output)
             Assert.True(bodies.Add(k.Armor), "duplicate body armor " + k.Armor + " on " + k.Name);
             focusCount[k.Focus] = focusCount.GetValueOrDefault(k.Focus) + 1;
             Assert.True(names.Add(k.Name), "duplicate class name " + k.Name);
-            // Every weapon one-handed with the class's own stats (no two-handing needed).
+            // Every weapon exists and can be held in one hand (the exact stat requirements are the owner's
+            // deliberate choice — an under-requirement weapon just does less until you level up).
             foreach (var w in new[] { k.Right, k.Right2, k.Left, k.Left2 }.Where(w => w > 0))
             {
                 Assert.True(wep.Has(w), $"{k.Name}: weapon {w} missing");
-                string why = $"{k.Name}: weapon {w} needs {wep.GetInt(w, "properStrength")}/{wep.GetInt(w, "properAgility")}/{wep.GetInt(w, "properMagic")}/{wep.GetInt(w, "properFaith")}";
-                Assert.True(wep.GetInt(w, "properStrength") <= k.Str, why);
-                Assert.True(wep.GetInt(w, "properAgility") <= k.Dex, why);
-                Assert.True(wep.GetInt(w, "properMagic") <= k.Mag, why);
-                Assert.True(wep.GetInt(w, "properFaith") <= k.Fai, why);
+                Assert.Equal(1, wep.GetInt(w, "rightHandEquipable")); // usable in one hand
             }
             var hands = new[] { k.Right, k.Right2, k.Left, k.Left2 }.Where(w => w > 0).ToList();
             // Spells need a catalyst, miracles a talisman; at most two one-slot spells (like the vanilla casters).
@@ -192,7 +189,7 @@ public class RealGameTests(ITestOutputHelper output)
             // Effective in-game weight (the +50% equip-load tweak that reduces weights by 1/3 is always on).
             double raw = hands.Sum(w => wep.Get(w, "weight")) + new[] { k.Helm, k.Armor, k.Gloves, k.Legs }.Sum(a => armor.Get(a, "weight"));
             double effective = raw / GamePatcher.LoadMultiplier;
-            Assert.True(effective <= 30, $"{k.Name} carries {effective:0.0} effective ({raw:0.0} raw)");
+            Assert.True(effective <= 45, $"{k.Name} carries {effective:0.0} effective ({raw:0.0} raw)");
             output.WriteLine($"{k.Name,-13} {k.Focus,-19} SL{k.SoulLevel,2}  {effective,4:0.0} kg");
         }
         // Two classes per focus, and INT/FAI classes actually cast.

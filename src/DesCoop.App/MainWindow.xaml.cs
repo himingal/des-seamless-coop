@@ -45,7 +45,6 @@ public partial class MainWindow : Window
             _ => RbWtNormal,
         }).IsChecked = true;
         ChkUpnp.IsChecked = _s.UseUpnp;
-        ChkFullscreen.IsChecked = _s.Fullscreen;
         // Default party name = your RPCN name, so the friend already knows it.
         var rpcnName = _emu.IsInstalled ? _emu.RpcnUser() : null;
         TxtPartyName.Text = rpcnName != null && _s.PartyName.EndsWith("'s Party") ? rpcnName : _s.PartyName;
@@ -107,7 +106,6 @@ public partial class MainWindow : Window
         if (_loading) return;
         // Game tweaks are a fixed set (not user-selectable); _s.Patch stays at its defaults.
         _s.UseUpnp = ChkUpnp.IsChecked == true;
-        _s.Fullscreen = ChkFullscreen.IsChecked == true;
         _s.PartyName = string.IsNullOrWhiteSpace(TxtPartyName.Text) ? _s.PartyName : TxtPartyName.Text.Trim();
         if (!string.IsNullOrWhiteSpace(TxtPartyPass.Text)) _s.PartyPassword = TxtPartyPass.Text.Trim();
         _s.JoinName = TxtJoinName.Text.Trim();
