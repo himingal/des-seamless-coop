@@ -158,7 +158,9 @@ public class PatcherTests : IDisposable
         Assert.Equal([BlueId], blue);
         Assert.Equal([EphId], eph);
 
-        var report = GamePatcher.Apply(g, new PatchOptions());
+        // These two co-op-item tweaks are off by default, so turn them on for this check.
+        var full = new PatchOptions { BlueEyeStoneInBodyForm = true, InfiniteEphemeralEyes = true };
+        var report = GamePatcher.Apply(g, full);
         Assert.True(report.Changed, string.Join("\n", report.Lines));
         Assert.True(GamePatcher.IsPatched(g));
         foreach (var bnd in GamePatcher.FindParamBnds(g.UsrDir))
@@ -174,7 +176,7 @@ public class PatcherTests : IDisposable
             Assert.Equal(90000, (int)p[9000]!["sortId"].Value);
         }
 
-        Assert.False(GamePatcher.Apply(g, new PatchOptions()).Changed);
+        Assert.False(GamePatcher.Apply(g, full).Changed);
 
         GamePatcher.Apply(g, new PatchOptions { BlueEyeStoneInBodyForm = false, InfiniteEphemeralEyes = true });
         var p2 = ReadGoods(GamePatcher.FindParamBnds(g.UsrDir).First());

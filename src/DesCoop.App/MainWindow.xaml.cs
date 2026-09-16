@@ -32,20 +32,8 @@ public partial class MainWindow : Window
         _game = GameLocator.Resolve(_s.GamePath);
         _joinedAddress = _s.JoinedAddress;
 
-        ChkBlue.IsChecked = _s.Patch.BlueEyeStoneInBodyForm;
-        ChkEph.IsChecked = _s.Patch.InfiniteEphemeralEyes;
-        ChkSoul.IsChecked = _s.Patch.FullHpSoulForm;
-        ChkStaySoul.IsChecked = _s.Patch.StayInSoulForm;
-        ChkStartBlue.IsChecked = _s.Patch.StartWithBlueEyeStone;
-        ChkClasses.IsChecked = _s.Patch.RevampedClasses;
-        ChkShops.IsChecked = _s.Patch.CheaperShops;
-        ChkBlade.IsChecked = _s.Patch.EasierPureBladestone;
-        ChkLoad.IsChecked = _s.Patch.HeavierLoads;
-        ChkMats.IsChecked = _s.Patch.EasierUpgradeMaterials;
-        ChkLizard.IsChecked = _s.Patch.OneHitCrystalLizards;
-        ChkDragon.IsChecked = _s.Patch.WeakerDragons;
-        ChkSouls.IsChecked = _s.Patch.MoreSouls;
-        ChkMana.IsChecked = _s.Patch.ManaRegen;
+        // Tweaks are not selectable any more: the fixed, intended set is always applied.
+        _s.Patch = new PatchOptions();
         TxtClasses.ToolTip = string.Join("\n\n", ClassRevamp.Kits.Select(k =>
             $"{k.Title}  ·  Soul Level {k.SoulLevel}\n{k.Pitch}\nVIT {k.Vit}  INT {k.Int}  END {k.End}  STR {k.Str}  DEX {k.Dex}  MAG {k.Mag}  FAI {k.Fai}  LCK {k.Luc}"));
         (_s.WorldTendency switch
@@ -117,20 +105,7 @@ public partial class MainWindow : Window
     void SaveSettings()
     {
         if (_loading) return;
-        _s.Patch.BlueEyeStoneInBodyForm = ChkBlue.IsChecked == true;
-        _s.Patch.InfiniteEphemeralEyes = ChkEph.IsChecked == true;
-        _s.Patch.FullHpSoulForm = ChkSoul.IsChecked == true;
-        _s.Patch.StayInSoulForm = ChkStaySoul.IsChecked == true;
-        _s.Patch.StartWithBlueEyeStone = ChkStartBlue.IsChecked == true;
-        _s.Patch.RevampedClasses = ChkClasses.IsChecked == true;
-        _s.Patch.CheaperShops = ChkShops.IsChecked == true;
-        _s.Patch.EasierPureBladestone = ChkBlade.IsChecked == true;
-        _s.Patch.HeavierLoads = ChkLoad.IsChecked == true;
-        _s.Patch.EasierUpgradeMaterials = ChkMats.IsChecked == true;
-        _s.Patch.OneHitCrystalLizards = ChkLizard.IsChecked == true;
-        _s.Patch.WeakerDragons = ChkDragon.IsChecked == true;
-        _s.Patch.MoreSouls = ChkSouls.IsChecked == true;
-        _s.Patch.ManaRegen = ChkMana.IsChecked == true;
+        // Game tweaks are a fixed set (not user-selectable); _s.Patch stays at its defaults.
         _s.UseUpnp = ChkUpnp.IsChecked == true;
         _s.Fullscreen = ChkFullscreen.IsChecked == true;
         _s.PartyName = string.IsNullOrWhiteSpace(TxtPartyName.Text) ? _s.PartyName : TxtPartyName.Text.Trim();
@@ -255,8 +230,6 @@ public partial class MainWindow : Window
         RefreshAll();
     }
 
-    void PatchOption_Changed(object sender, RoutedEventArgs e) => SaveSettings();
-
     void Tendency_Changed(object sender, RoutedEventArgs e)
     {
         if (sender is not System.Windows.Controls.RadioButton rb || !int.TryParse(rb.Tag?.ToString(), out int v)) return;
@@ -308,9 +281,6 @@ public partial class MainWindow : Window
             if (_emu.IsInstalled) _emu.ClearGameCache();
             Log("Original game files restored.");
         }));
-        ChkBlue.IsChecked = ChkEph.IsChecked = ChkSoul.IsChecked = ChkStaySoul.IsChecked = ChkStartBlue.IsChecked = ChkClasses.IsChecked =
-            ChkShops.IsChecked = ChkBlade.IsChecked = ChkLoad.IsChecked = ChkMats.IsChecked = ChkLizard.IsChecked =
-            ChkDragon.IsChecked = ChkSouls.IsChecked = ChkMana.IsChecked = false;
     }
 
     void BtnRpcn_Click(object sender, RoutedEventArgs e) => OpenRpcn();

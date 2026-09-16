@@ -89,32 +89,11 @@
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <Rectangle x:Name="DotPatch" Style="{StaticResource Dot}" Fill="{StaticResource Warn}"/>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Game Tweaks" Style="{StaticResource Label}" Margin="0,0,0,4"/>
-                                    <CheckBox x:Name="ChkBlue" Content="Blue Eye Stone works in body form" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="after a boss, your friend places the sign again without dying" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkEph" Content="Endless Stone of Ephemeral Eyes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="the host can always return to body form to summon" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkSoul" Content="Soul form keeps full HP" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="dying no longer halves your HP: soul form plays like body form" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkStaySoul" Content="Stay in soul form" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="no automatic revival after bosses, so the Blue Eye Stone is always ready (Ephemeral Eyes still revives)" Style="{StaticResource Small}" Margin="21,-1,0,4" TextWrapping="Wrap"/>
-                                    <CheckBox x:Name="ChkStartBlue" Content="Start with both co-op stones" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkClasses" Content="10 new starting classes" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock x:Name="TxtClasses" Style="{StaticResource Small}" Margin="21,-1,0,4" Cursor="Help"
-                                               Text="new names, stats and gear, every weapon usable from the start (hover to see them)"/>
-                                    <CheckBox x:Name="ChkShops" Content="Merchants sell everything at half price" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <CheckBox x:Name="ChkBlade" Content="Pure Bladestone: 15% drop from Shrine skeletons" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="instead of 0.5%" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkLoad" Content="+50% equip load and item burden" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="weapons, armor, rings and items weigh a third less" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <CheckBox x:Name="ChkMats" Content="Upgrade stones drop far more often" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <CheckBox x:Name="ChkLizard" Content="Crystal Lizards die in one hit" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <CheckBox x:Name="ChkDragon" Content="Red and Blue dragons: half HP" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <CheckBox x:Name="ChkSouls" Content="+25% souls from enemies" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <CheckBox x:Name="ChkMana" Content="Passive MP regeneration" Checked="PatchOption_Changed" Unchecked="PatchOption_Changed"/>
-                                    <TextBlock Text="about 1 MP per second while any chest armor is worn" Style="{StaticResource Small}" Margin="21,-1,0,4"/>
-                                    <TextBlock x:Name="TxtPatch" Style="{StaticResource Small}" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Game Tweaks (always on)" Style="{StaticResource Label}" Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="TxtClasses" Style="{StaticResource Small}" Cursor="Help" TextWrapping="Wrap"
+                                               Text="• 10 new starting classes — two per focus, every weapon one-handed (hover to see them)"/>
+                                    <TextBlock Style="{StaticResource Small}" TextWrapping="Wrap" Text="• Stay in soul form: no auto-revive after bosses, so the blue sign is always ready&#10;• Soul form keeps full HP · start with both co-op stones · +50% equip load&#10;• Half-price merchants · +25% souls · upgrade stones drop ~25% · Pure Bladestone 15%&#10;• Crystal Lizards die in one hit · Red/Blue dragons half HP · passive MP regen"/>
+                                    <TextBlock x:Name="TxtPatch" Style="{StaticResource Small}" Margin="0,4,0,0"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
                                     <Button x:Name="BtnPatch" Content="Apply" Click="BtnPatch_Click"/>

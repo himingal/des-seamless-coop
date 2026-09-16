@@ -32,13 +32,11 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
   - Blue signs from party members are **moved next to the host in any area**, using the positions the game itself reports.
   - No level range. US, EU and JP copies share one world. Messages, bloodstains and wandering ghosts all work.
   - A live list shows who is online, where they are, and who has a sign down or is in co-op.
-- **Game tweaks** for your own dump. Each one is a checkbox, the originals are backed up, and **Restore** undoes everything.
-  - The **Blue Eye Stone works in body form**, so nobody has to die to go back to helping.
-  - The **Stone of Ephemeral Eyes is never consumed**, so the host can always get their body back to summon.
-  - **Soul form keeps full HP**: dying no longer halves your max HP, so soul form plays like body form.
-  - **Stay in soul form**: no automatic revival after a boss (as host or as a blue phantom going home), so the Blue Eye Stone is always ready. The Stone of Ephemeral Eyes still revives you when you want to summon.
+- **Game tweaks** for your own dump — one fixed, always-on set (the originals are backed up, and **Restore** undoes everything).
+  - **Stay in soul form**: no automatic revival after a boss, so you keep the soul form the blue sign needs. Turn human only when you mean to host, with a normal Stone of Ephemeral Eyes.
+  - **Soul form keeps full HP**: dying no longer halves your max HP.
   - **Start with both co-op stones**: every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes.
-  - **10 new starting classes** replace the vanilla ones, two per focus, every weapon usable one-handed and Soul Level 1–9:
+  - **10 new starting classes** replace the vanilla ones, two per focus, all-different armor, every weapon usable one-handed and Soul Level 1–9:
     Strength (Berserker, Warrior), Dexterity (Samurai, Swordsman), Strength/Dexterity (Knight, Squire), Faith (Cleric, Battle Priest) and Intelligence (Mage, Battle Mage). Hover the option in the app to see each kit.
   - **Upgrade stones drop far more often** from enemies (about 25%).
   - **Crystal Lizards die in one hit** (1 HP), so you never lose the chase.
@@ -57,7 +55,7 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
 
 ## Limits
 
-The game still ends the session when a boss dies or the host dies. That logic lives in the PS3 executable. This project turns rejoining into two clicks (Blue Eye Stone in body form, plus a sign that appears next to the host), but it doesn't prevent the disconnect.
+To place a blue summon sign you must be in **soul form** — this is a rule of the game's executable, not something the tweaks can change (a sign placed in body form is only visible to its owner). So for co-op: the **helper** stays a soul and places the sign; the **host** turns human (one Stone of Ephemeral Eyes) and summons them. The game also ends the session when a boss or the host dies; that logic lives in the PS3 executable too. This project makes rejoining fast (the sign appears next to the host, and you never get auto-reverted out of soul form), but it doesn't remove the disconnect.
 
 ## Build
 

@@ -5,10 +5,12 @@ namespace DesCoop.Game;
 
 public sealed class PatchOptions
 {
-    /// <summary>Blue Eye Stone usable in body form: re-place your sign right after a boss without dying.</summary>
-    public bool BlueEyeStoneInBodyForm { get; set; } = true;
-    /// <summary>Stone of Ephemeral Eyes is not consumed: the host can always get body form back to summon.</summary>
-    public bool InfiniteEphemeralEyes { get; set; } = true;
+    /// <summary>Blue Eye Stone usable in body form. OFF by default: the game only shows a body-form sign to
+    /// its owner, so a sign placed while human never reaches the host. Co-op needs the helper in soul form.</summary>
+    public bool BlueEyeStoneInBodyForm { get; set; } = false;
+    /// <summary>Stone of Ephemeral Eyes never consumed. OFF by default: staying human breaks the blue sign, so
+    /// the stone is left finite (you still start with one, and turn human only when you mean to host).</summary>
+    public bool InfiniteEphemeralEyes { get; set; } = false;
     /// <summary>Soul form keeps 100% max HP instead of 50%: dying costs nothing, it plays like body form.</summary>
     public bool FullHpSoulForm { get; set; } = true;
     /// <summary>No automatic revival after bosses: you stay in soul form (Stone of Ephemeral Eyes revives on demand).</summary>

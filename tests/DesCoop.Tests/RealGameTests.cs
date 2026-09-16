@@ -60,8 +60,9 @@ public class RealGameTests(ITestOutputHelper output)
 
         var goods = Open(bnd, "EquipParamGoods");
         var goods0 = Open(original, "EquipParamGoods");
-        Assert.Equal(1, goods.Get(9997, "enable_live"));
-        Assert.Equal(0, goods.Get(1021, "isConsume"));
+        // Body-form Blue Eye Stone and infinite Ephemeral Eyes are OFF by default now, so those fields are untouched.
+        Assert.Equal(goods0.Get(9997, "enable_live"), goods.Get(9997, "enable_live"));
+        Assert.Equal(goods0.Get(1021, "isConsume"), goods.Get(1021, "isConsume"));
         Assert.Equal(goods0.Get(1000, "weight") / 1.5, goods.Get(1000, "weight"), 4);
 
         var weapons = Open(bnd, "EquipParamWeapon");
@@ -146,8 +147,17 @@ public class RealGameTests(ITestOutputHelper output)
         var magic = Open("Magic");
         var names = new HashSet<string>();
 
+        // Each row's Original must be its real vanilla class, or the menu name won't match the kit.
+        var vanilla = new Dictionary<int, string> {
+            [1000] = "Soldier", [1001] = "Knight", [1002] = "Hunter", [1003] = "Priest", [1004] = "Magician",
+            [1005] = "Wanderer", [1006] = "Barbarian", [1007] = "Thief", [1008] = "Temple Knight", [1009] = "Royalty" };
+        var bodies = new HashSet<int>();
+        var focusCount = new Dictionary<string, int>();
         foreach (var k in ClassRevamp.Kits)
         {
+            Assert.Equal(vanilla[k.Id], k.Original);
+            Assert.True(bodies.Add(k.Armor), "duplicate body armor " + k.Armor + " on " + k.Name);
+            focusCount[k.Focus] = focusCount.GetValueOrDefault(k.Focus) + 1;
             Assert.True(names.Add(k.Name), "duplicate class name " + k.Name);
             // Every weapon one-handed with the class's own stats (no two-handing needed).
             foreach (var w in new[] { k.Right, k.Right2, k.Left, k.Left2 }.Where(w => w > 0))
@@ -178,8 +188,16 @@ public class RealGameTests(ITestOutputHelper output)
             // Total starting weight stays near the vanilla Knight's (36.4).
             double weight = hands.Sum(w => wep.Get(w, "weight")) + new[] { k.Helm, k.Armor, k.Gloves, k.Legs }.Sum(a => armor.Get(a, "weight"));
             Assert.True(weight <= 40, $"{k.Name} carries {weight:0.0}");
-            output.WriteLine($"{k.Name,-13} SL{k.SoulLevel,2}  weight {weight,4:0.0}");
+            output.WriteLine($"{k.Name,-13} {k.Focus,-19} SL{k.SoulLevel,2}  weight {weight,4:0.0}");
         }
+        // Two classes per focus, and INT/FAI classes actually cast.
+        Assert.Equal(2, focusCount["Strength"]);
+        Assert.Equal(2, focusCount["Dexterity"]);
+        Assert.Equal(2, focusCount["Strength/Dexterity"]);
+        Assert.Equal(2, focusCount["Faith"]);
+        Assert.Equal(2, focusCount["Intelligence"]);
+        foreach (var k in ClassRevamp.Kits.Where(k => k.Focus is "Intelligence" or "Faith"))
+            Assert.NotEmpty(k.Spells);
     }
 
     [Fact]
