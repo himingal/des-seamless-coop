@@ -182,13 +182,18 @@ public class RealGameTests(ITestOutputHelper output)
             if (k.Spells.Length > 0) Assert.True(k.Int >= 8 && Math.Max(k.Mag, k.Fai) >= 13, k.Name);
             if (k.Arrow > 0) Assert.Contains(hands, w => wep.GetInt(w, "weaponCategory") == 10);
             if (k.Bolt > 0) Assert.Contains(hands, w => wep.GetInt(w, "weaponCategory") == 11);
-            foreach (var a in new[] { k.Helm, k.Armor, k.Gloves, k.Legs }) Assert.True(armor.Has(a), $"{k.Name}: armor {a} missing");
+            foreach (var a in new[] { k.Helm, k.Armor, k.Gloves, k.Legs })
+            {
+                Assert.True(armor.Has(a), $"{k.Name}: armor {a} missing");
+                Assert.Equal(3, armor.GetInt(a, "equipModelGender")); // 3 = unisex; fits a male OR female character
+            }
             if (k.Ring1 > 0) Assert.True(rings.Has(k.Ring1));
             foreach (var (id, _) in k.Items) Assert.True(goods.Has(id), $"{k.Name}: item {id} missing");
-            // Total starting weight stays near the vanilla Knight's (36.4).
-            double weight = hands.Sum(w => wep.Get(w, "weight")) + new[] { k.Helm, k.Armor, k.Gloves, k.Legs }.Sum(a => armor.Get(a, "weight"));
-            Assert.True(weight <= 40, $"{k.Name} carries {weight:0.0}");
-            output.WriteLine($"{k.Name,-13} {k.Focus,-19} SL{k.SoulLevel,2}  weight {weight,4:0.0}");
+            // Effective in-game weight (the +50% equip-load tweak that reduces weights by 1/3 is always on).
+            double raw = hands.Sum(w => wep.Get(w, "weight")) + new[] { k.Helm, k.Armor, k.Gloves, k.Legs }.Sum(a => armor.Get(a, "weight"));
+            double effective = raw / GamePatcher.LoadMultiplier;
+            Assert.True(effective <= 30, $"{k.Name} carries {effective:0.0} effective ({raw:0.0} raw)");
+            output.WriteLine($"{k.Name,-13} {k.Focus,-19} SL{k.SoulLevel,2}  {effective,4:0.0} kg");
         }
         // Two classes per focus, and INT/FAI classes actually cast.
         Assert.Equal(2, focusCount["Strength"]);

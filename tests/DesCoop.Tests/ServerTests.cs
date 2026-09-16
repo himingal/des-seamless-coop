@@ -140,11 +140,13 @@ public class ServerTests : IDisposable
     }
 
     [Fact]
-    public void Same_block_sign_keeps_original_position_and_regions_merge()
+    public void Same_block_sign_is_shown_across_merged_regions()
     {
+        // A JP sign is visible to a US reader in the same block (regions are merged). The co-op sign is
+        // moved next to the reader (here the only known position is the sign's own), so it stays reachable.
         _server.Dispatch("addSosData.spd", Sign("Jp0", 20070, 42), "10.0.0.4", 18668);
         var (_, fresh) = ParseSos(_server.Dispatch("getSosData.spd", P(("characterID", "Us0"), ("blockID", "20070"), ("sosNum", "10"), ("sosList", "")), "10.0.0.5", 18666)!.Value.data);
-        Assert.Equal(42f, Assert.Single(fresh).x);
+        Assert.Equal(42f, Assert.Single(fresh).x, 3f); // near the anchor
     }
 
     [Fact]

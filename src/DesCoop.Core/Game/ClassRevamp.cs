@@ -41,55 +41,58 @@ public static class ClassRevamp
     // Wizard's, 201800 Rogue's, 200500 Mirdan, 200300 Leather, 200600 Plate, 202100 Old Ragged.
     public static readonly Kit[] Kits =
     [
-        // 1000 Soldier -> Berserker (Strength)  [kept from the version the user liked]
+        // Every armor piece below is gender=3 (unisex), so it fits a male or a female character; the 10
+        // body pieces are all different. Berserker and Samurai keep their stats and weapons; Berserker's
+        // only change is the male-only Brushwood Helmet swapped for the unisex Chain Helmet.
+        // 1000 Soldier -> Berserker (Strength)
         new(1000, "Soldier", "Berserker", "Strength", "Bastard Sword and Battle Axe, no shield, just rage. Firebombs for the rest.",
             15, 6, 14, 18, 9, 6, 7, 9,
-            20400, 50000, -1, -1, 100800, 200400, 300400, 400400, -1, 0, -1, 0,
+            20400, 50000, -1, -1, 100400, 200400, 300400, 400400, -1, 0, -1, 0,
             -1, [], [(1000, 5), (1013, 5), (99, 1)]),
-        // 1001 Knight -> Knight (Strength/Dexterity)
+        // 1001 Knight -> Knight (Strength/Dexterity) — Fluted set
         new(1001, "Knight", "Knight", "Strength/Dexterity", "Long Sword and Kite Shield in fluted plate. The even blade — strong and quick.",
             13, 7, 13, 14, 13, 6, 9, 9,
             20200, -1, 150200, -1, 100700, 200700, 300700, 400700, -1, 0, -1, 0,
             -1, [], [(1000, 6), (1001, 3), (99, 1)]),
-        // 1002 Hunter -> Samurai (Dexterity)  [kept]
+        // 1002 Hunter -> Samurai (Dexterity) — Black Leather set  [kept]
         new(1002, "Hunter", "Samurai", "Dexterity", "Uchigatana and a Buckler to parry. Bleed them, then riposte.",
             12, 6, 12, 18, 16, 6, 6, 8,
             40400, -1, 150000, -1, 100200, 200200, 300200, 400200, -1, 0, -1, 0,
             -1, [], [(1000, 6), (1012, 8), (99, 1)]),
-        // 1003 Priest -> Cleric (Faith)
-        new(1003, "Priest", "Cleric", "Faith", "Mace and Talisman of God in Saint's robes. Heal and Regeneration for the whole party.",
+        // 1003 Priest -> Cleric (Faith) — Coat of Plate set
+        new(1003, "Priest", "Cleric", "Faith", "Mace and Talisman of God in plate. Heal and Regeneration for the whole party.",
             13, 9, 12, 13, 9, 6, 15, 7,
-            60100, -1, 90400, -1, 101400, 201200, 301200, 401200, -1, 0, -1, 0,
+            60100, -1, 90400, -1, 100600, 200600, 300600, 400600, -1, 0, -1, 0,
             -1, [2010, 2004], [(1000, 5), (99, 1)]),
-        // 1004 Magician -> Mage (Intelligence)
+        // 1004 Magician -> Mage (Intelligence) — Wizard's set
         new(1004, "Magician", "Mage", "Intelligence", "Wooden Catalyst, Soul Arrow and Fire Spray, a Dagger for emergencies. Pure glass cannon.",
             9, 16, 10, 8, 10, 16, 6, 9,
             10000, -1, 90000, -1, 100100, 200100, 300100, 400100, -1, 0, -1, 0,
             -1, [1000, 1017], [(1000, 6), (99, 1)]),
-        // 1005 Wanderer -> Swordsman (Dexterity)
-        new(1005, "Wanderer", "Swordsman", "Dexterity", "Rapier and Parrying Dagger in rogue's leathers. All footwork and criticals.",
+        // 1005 Wanderer -> Swordsman (Dexterity) — Leather set
+        new(1005, "Wanderer", "Swordsman", "Dexterity", "Rapier and Parrying Dagger in leather. All footwork and criticals.",
             11, 8, 12, 10, 16, 7, 7, 13,
-            30000, -1, 10100, -1, 101800, 201800, 301800, 401800, -1, 0, -1, 0,
+            30000, -1, 10100, -1, 100300, 200300, 300300, 400300, -1, 0, -1, 0,
             -1, [], [(1000, 8), (1011, 10), (99, 1)]),
-        // 1006 Barbarian -> Warrior (Strength)
-        new(1006, "Barbarian", "Warrior", "Strength", "Broadsword and Heater Shield in gloom plate. Hits hard, holds the line.",
+        // 1006 Barbarian -> Warrior (Strength) — Mirdan Scale set
+        new(1006, "Barbarian", "Warrior", "Strength", "Broadsword and Heater Shield in Mirdan mail. Hits hard, holds the line.",
             15, 6, 14, 16, 11, 6, 7, 9,
-            20100, -1, 150300, -1, 101000, 201000, 301000, 401000, -1, 0, -1, 0,
+            20100, -1, 150300, -1, 100500, 200500, 300500, 400500, -1, 0, -1, 0,
             -1, [], [(1000, 6), (1023, 3), (99, 1)]),
-        // 1007 Thief -> Squire (Strength/Dexterity)
-        new(1007, "Thief", "Squire", "Strength/Dexterity", "Short Sword and Soldier's Shield in leather. The recruit who grows into anything.",
+        // 1007 Thief -> Squire (Strength/Dexterity) — Gloom body with Chain helm/gloves (all unisex)
+        new(1007, "Thief", "Squire", "Strength/Dexterity", "Short Sword and Soldier's Shield in gloom armor. The recruit who grows into anything.",
             12, 8, 12, 13, 13, 8, 8, 10,
-            20000, -1, 150800, -1, 100300, 200300, 300300, 400300, -1, 0, -1, 0,
+            20000, -1, 150800, -1, 100400, 201000, 300400, 401000, -1, 0, -1, 0,
             -1, [], [(1000, 6), (1015, 3), (99, 1)]),
-        // 1008 Temple Knight -> Battle Priest (Faith)
-        new(1008, "Temple Knight", "Battle Priest", "Faith", "Morning Star and Leather Shield in plate, Talisman on the hip. Heal and Cure between swings.",
+        // 1008 Temple Knight -> Battle Priest (Faith) — Brushwood body with Plate helm/gloves (all unisex)
+        new(1008, "Temple Knight", "Battle Priest", "Faith", "Morning Star and Leather Shield in brushwood plate, Talisman on the hip. Heal and Cure.",
             13, 8, 13, 14, 11, 6, 14, 5,
-            60300, -1, 151500, 90400, 100600, 200600, 300600, 400600, -1, 0, -1, 0,
+            60300, -1, 151500, 90400, 100600, 200800, 300600, 400800, -1, 0, -1, 0,
             -1, [2010, 2006], [(1000, 5), (99, 1)]),
-        // 1009 Royalty -> Battle Mage (Intelligence)
-        new(1009, "Royalty", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst: Soul Arrow at range, Enchant Weapon up close.",
+        // 1009 Royalty -> Battle Mage (Intelligence) — bare chest, Official's Cap, Wizard's gloves/shoes
+        new(1009, "Royalty", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst, robe-less: Soul Arrow at range, Enchant Weapon up close.",
             11, 13, 12, 10, 12, 14, 6, 6,
-            20000, -1, 90100, -1, 102100, 202100, 302100, 402100, -1, 0, -1, 0,
+            20000, -1, 90100, -1, 101800, 201700, 300100, 400100, -1, 0, -1, 0,
             -1, [1000, 1003], [(1000, 6), (99, 1)]),
     ];
 

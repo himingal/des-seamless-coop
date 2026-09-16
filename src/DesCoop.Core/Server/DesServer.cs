@@ -37,7 +37,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.7.1";
+    public const string Version = "1.7.2";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -271,6 +271,9 @@ public sealed class DesServer : IDisposable
                 break;
             case "/descoop/status":
                 result = GetStatus();
+                break;
+            case "/descoop/signs":
+                result = new { app = "descoop", signs = ActiveSigns() };
                 break;
             default:
                 result = new { ok = true, app = "descoop", version = Version, name = _o.ServerName };
@@ -634,34 +637,64 @@ public sealed class DesServer : IDisposable
         bool hasAnchor = false;
         int slot = 0;
 
+        int considered = 0, relocated = 0, skipped = 0;
         foreach (var s in _sos.Values.OrderByDescending(s => s.UpdatedAt))
         {
             if (known.Count + fresh.Count >= max) break;
-            if (!SameRegion(s.Port, port)) continue;
+            if (!SameRegion(s.Port, port)) { skipped++; continue; }
+            considered++;
             bool sameBlock = s.BlockId == block;
-            bool relocate = !sameBlock && _o.PartySigns && s.IsCoopSign && s.CharacterId != me
-                            && (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor)));
-            if (!sameBlock && !relocate) continue;
+            bool mine = s.CharacterId == me;
+
+            // Your own sign only shows in its own block (the client hides it anyway). Another player's blue
+            // co-op sign is moved right next to you whenever we know where you are, so it is always reachable —
+            // that is the "seamless" part. Only red/invasion signs are left where they were placed.
+            bool place = sameBlock;
+            bool doRelocate = false;
+            if (!mine && s.IsCoopSign && _o.PartySigns)
+            {
+                if (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor))) { place = true; doRelocate = true; }
+            }
+            if (!place) { skipped++; if (!mine) Write($"getSosData {me} block {block}: {s.CharacterId}'s sign in block {s.BlockId} NOT shown (no anchor to move it here)"); continue; }
 
             if (knownIds.Contains(s.SosId.ToString())) { known.Add(s.SosId); continue; }
-            if (sameBlock) fresh.Add(s.Serialize());
-            else
+            if (doRelocate)
             {
-                // A small fan in front of the host so several signs do not overlap.
                 double yaw = anchor.AngY + (slot - 0.5) * 0.6;
                 float x = anchor.X + (float)(Math.Sin(yaw) * 1.2);
                 float z = anchor.Z + (float)(Math.Cos(yaw) * 1.2);
                 fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ));
-                slot++;
-                Write($"Sign of {s.CharacterId} shown to {me} in {BlockNames.Get(block)}");
+                slot++; relocated++;
+                if (!mine) Write($"getSosData {me} block {block}: showing {s.CharacterId}'s sign next to you (from block {s.BlockId})");
             }
+            else fresh.Add(s.Serialize());
         }
+        if (_sos.Count > 0)
+            Write($"getSosData {me} block {block} port {port}: {_sos.Count} sign(s), {considered} in region, returned {known.Count + fresh.Count} ({relocated} moved), skipped {skipped}");
 
         var w = new Payload().I32(known.Count);
         foreach (var id in known) w.U32(id);
         w.I32(fresh.Count);
         foreach (var f in fresh) w.Bytes(f);
         return (0x0f, w.ToArray());
+    }
+
+    /// <summary>Active signs, for the /descoop/signs diagnostic endpoint.</summary>
+    public object[] ActiveSigns()
+    {
+        lock (_lock)
+        {
+            var now = DateTime.UtcNow;
+            return _sos.Values.OrderByDescending(s => s.UpdatedAt).Select(s => (object)new
+            {
+                who = s.CharacterId,
+                area = BlockNames.Get(s.BlockId),
+                blockId = s.BlockId,
+                color = s.IsBlack == 2 ? "blue" : s.IsBlack == 1 ? "red" : s.IsBlack == 3 ? "invasion" : $"other({s.IsBlack})",
+                ageSeconds = (int)(now - s.UpdatedAt).TotalSeconds,
+                port = s.Port,
+            }).ToArray();
+        }
     }
 
     (byte, byte[]) AddSosData(Dictionary<string, string> p, int port)
