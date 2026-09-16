@@ -54,6 +54,10 @@ public sealed class AppSettings
         }
         catch { }
 
+        // The game tweaks are a fixed, non-selectable set, so any value persisted by an older version is
+        // ignored — every launch and every --setup applies the current intended options.
+        s.Patch = new PatchOptions();
+
         // An RPCS3 that an older version (or the installer) put next to the exe keeps being used,
         // so firmware, saves and the RPCN account are not lost.
         if (string.IsNullOrWhiteSpace(s.Rpcs3Dir) && !File.Exists(Path.Combine(DataDir, "rpcs3", "rpcs3.exe"))
