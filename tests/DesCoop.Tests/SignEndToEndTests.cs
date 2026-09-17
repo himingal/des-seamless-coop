@@ -72,8 +72,8 @@ public class SignEndToEndTests(ITestOutputHelper output) : IDisposable
         var replay = Protocol.EncodeGameBase64(ServerTests.MakeReplay([10f, 1.5f, 20f, 0f, 0.5f, 0f]));
         Call("setWanderingGhost.spd", $"characterID=Host0&ghostBlockID=10010&replayData={replay}", null);
 
-        // Host reads signs for 1-1.
-        var (cmd, data) = Call("getSosData.spd", "characterID=Host0&blockID=10010&sosNum=10&sosList=", null);
+        // Host reads signs for 1-1. The real game asks for sosNum=0, which must still return the sign.
+        var (cmd, data) = Call("getSosData.spd", "characterID=Host0&blockID=10010&sosNum=0&sosList=", null);
         Assert.Equal(0x0f, cmd);
 
         int o = 0;

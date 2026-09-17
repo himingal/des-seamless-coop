@@ -37,7 +37,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.7.3";
+    public const string Version = "1.7.4";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -629,7 +629,11 @@ public sealed class DesServer : IDisposable
     {
         PurgeSigns();
         int block = Protocol.ToSigned(p["blockID"]);
-        int max = Protocol.I(p.GetValueOrDefault("sosNum", "10"));
+        // The reference server (desse) ignores the client's sosNum and returns every matching sign; the game
+        // often asks for 0, so honouring it would return nothing (this was why signs never appeared). Cap only
+        // to keep the response sane.
+        int clientAsked = Protocol.I(p.GetValueOrDefault("sosNum", "0"));
+        const int max = 100;
         var knownIds = new HashSet<string>(p.GetValueOrDefault("sosList", "").Split("a0a"));
         var known = new List<uint>();
         var fresh = new List<byte[]>();
@@ -670,7 +674,7 @@ public sealed class DesServer : IDisposable
             else fresh.Add(s.Serialize());
         }
         if (_sos.Count > 0)
-            Write($"getSosData {me} block {block} port {port}: {_sos.Count} sign(s), {considered} in region, returned {known.Count + fresh.Count} ({relocated} moved), skipped {skipped}");
+            Write($"getSosData {me} block {block} port {port} (asked {clientAsked}): {_sos.Count} sign(s), {considered} in region, returned {known.Count + fresh.Count} ({relocated} moved), skipped {skipped}");
 
         var w = new Payload().I32(known.Count);
         foreach (var id in known) w.U32(id);
