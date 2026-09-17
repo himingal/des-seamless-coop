@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.png" alt="DeS Seamless Co-op" width="100%">
+  <img src="docs/hero.gif" alt="DeS Seamless Co-op" width="100%">
 </p>
 
 <p align="center">
