@@ -77,9 +77,9 @@ public static class ClassRevamp
             9, 16, 9, 9, 10, 16, 6, 9,
             90000, -1, 10000, -1, 100100, 200100, 300100, 400100, -1, 0, -1, 0,
             -1, [1001], [(1005, 4), (99, 1)]),
-        new(1009, "Royalty", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst in black leather. Enchant Weapon.",
+        new(1009, "Royalty", "Battle Mage", "Intelligence", "Short Sword and Silver Catalyst in the Shaman's set. Enchant Weapon.",
             11, 14, 11, 11, 11, 14, 6, 7,
-            20000, -1, 90100, -1, NoHelm, 200200, 300200, 400200, -1, 0, -1, 0,
+            20000, -1, 90100, -1, NoHelm, 200000, 300000, 400000, -1, 0, -1, 0,
             -1, [1003], [(1006, 4), (99, 1)]),
     ];
 

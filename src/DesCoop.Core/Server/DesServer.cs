@@ -37,7 +37,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.8.0";
+    public const string Version = "2.0.0";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -383,11 +383,15 @@ public sealed class DesServer : IDisposable
     {
         var st = GetStatus();
         var motd = new StringBuilder();
-        motd.Append($"{Ascii(_o.ServerName)}\r\n");
-        motd.Append("DeS Seamless Co-op v" + Version + "\r\n\r\n");
-        motd.Append("Party: use the Blue Eye Stone anywhere.\r\n");
-        motd.Append("Your sign appears right next to the host,\r\n");
-        motd.Append("in any area of the world.\r\n");
+        motd.Append($"{Ascii(_o.ServerName)}  -  Seamless Co-op v" + Version + "\r\n\r\n");
+        motd.Append("HOW TO PLAY TOGETHER\r\n");
+        motd.Append("1) Pick who leads: that player is the HOST.\r\n");
+        motd.Append("2) The HELPER dies once to become a ghost,\r\n");
+        motd.Append("   then uses the Blue Eye Stone to place a sign.\r\n");
+        motd.Append("3) The HOST stays human (Stone of Ephemeral\r\n");
+        motd.Append("   Eyes) and touches the sign - it appears\r\n");
+        motd.Append("   right next to you, in any area.\r\n");
+        motd.Append("4) After a boss, do it again. Swap roles any time.\r\n");
         var motd2 = new StringBuilder();
         motd2.Append($"Players online: {st.Players.Length}\r\n");
         foreach (var pl in st.Players.Take(8))

@@ -34,6 +34,18 @@ public partial class MainWindow : Window
 
         // Tweaks are a fixed, always-applied set (no UI for them).
         _s.Patch = new PatchOptions();
+
+        // Language: first run detects the Windows language (pt/es, else English); a dropdown changes it.
+        if (string.IsNullOrEmpty(_s.Language))
+        {
+            var two = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            _s.Language = two is "pt" or "es" ? two : "en";
+        }
+        Loc.Lang = _s.Language;
+        CmbLang.ItemsSource = Loc.Languages;
+        CmbLang.SelectedValue = _s.Language;
+        ApplyLanguage();
+
         (_s.WorldTendency switch
         {
             >= 200 => RbWtPureWhite,
@@ -79,6 +91,49 @@ public partial class MainWindow : Window
             }
             catch { }
         }, DispatcherPriority.ApplicationIdle);
+    }
+
+    void CmbLang_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_loading || CmbLang.SelectedValue is not string code) return;
+        Loc.Lang = code;
+        _s.Language = code;
+        ApplyLanguage();
+        RefreshAll();
+        UpdateGameIndicator();
+        SaveSettings();
+    }
+
+    void ApplyLanguage()
+    {
+        TxtSubtitle.Text = Loc.T("subtitle");
+        LblRpcn.Text = Loc.T("lblRpcn");
+        BtnRpcn.Content = Loc.T("rpcnBtn");
+        BtnRpcs3Pick.Content = Loc.T("browse");
+        BtnGame.Content = Loc.T("browse");
+        BtnFw.Content = Loc.T("install");
+        RbHost.Content = Loc.T("host");
+        RbJoin.Content = Loc.T("join");
+        RbPublic.Content = Loc.T("public");
+        TxtNoneHint.Text = Loc.T("noneHint");
+        LblPartyName.Text = Loc.T("partyName");
+        LblPartyPass.Text = Loc.T("password");
+        LblJoinName.Text = Loc.T("joinName");
+        LblJoinPass.Text = Loc.T("password");
+        ChkUpnp.Content = Loc.T("upnp");
+        LblWorldTendency.Text = Loc.T("worldTendency");
+        LblTellFriend.Text = Loc.T("tellFriend");
+        BtnCopy.Content = Loc.T("copy");
+        BtnHost.Content = Loc.T("createParty");
+        BtnJoin.Content = Loc.T("joinBtn");
+        TxtJoinInfo.Text = Loc.T("joinInfo");
+        TxtPublicInfo.Text = Loc.T("publicInfo");
+        LblPhantoms.Text = Loc.T("phantoms");
+        TxtNoPlayers.Text = Loc.T("noPlayers");
+        LblHowTo.Text = Loc.T("howTo");
+        TxtHowTo.Text = Loc.T("howToLines");
+        CmbLang.ToolTip = Loc.T("language");
+        if (TxtStatus.Text is "Ready." or "Pronto." or "Listo.") TxtStatus.Text = Loc.T("ready");
     }
 
     // ------------------------------------------------------------------ helpers
@@ -238,14 +293,13 @@ public partial class MainWindow : Window
     void UpdateGameIndicator()
     {
         bool running = _emu.IsInstalled && _emu.IsRunning();
-        if (_gameShown == running) return;
-        _gameShown = running;
         var brush = B(running ? "Ok" : "Muted");
         DotGameTop.Fill = DotGame2.Fill = brush;
-        TxtGameTop.Text = running ? "GAME RUNNING" : "GAME CLOSED";
+        TxtGameTop.Text = (running ? "▶ " : "● ") + (running ? Loc.T("gameRunning") : Loc.T("gameClosed")).ToUpperInvariant();
         TxtGameTop.Foreground = running ? B("Ok") : B("Muted");
-        TxtGame2.Text = running ? "Demon's Souls is running" : "Demon's Souls is closed";
+        TxtGame2.Text = running ? Loc.T("gameRunning") : Loc.T("gameClosed");
         TxtGame2.Foreground = TxtGameTop.Foreground;
+        _gameShown = running;
     }
 
     // The game tweaks are applied automatically when you press PLAY (there is no UI for them).
@@ -414,19 +468,6 @@ public partial class MainWindow : Window
             if (_emu.RpcnUser() == null && !Ui.Ask(this, "No RPCN account yet, so online co-op won't work.\n\nPlay offline anyway?")) return;
         }
         if (_emu.IsRunning()) { Ui.Info(this, "RPCS3 is already open. Close it so the app can apply the network settings before launching."); return; }
-
-        if (!_s.TutorialShown)
-        {
-            Ui.Info(this,
-                "How co-op works in Demon's Souls:\n\n" +
-                "1.  Decide who leads this run — that player becomes the HOST.\n" +
-                "2.  The HELPER dies once to enter Soul form (a ghost), then uses the Blue Eye Stone. This drops a blue sign.\n" +
-                "3.  The HOST stays human (use a Stone of Ephemeral Eyes if needed) and touches the blue sign — which now appears right next to you — to summon the helper.\n" +
-                "4.  Play together. After a boss, do it again.\n\n" +
-                "You each start with both stones, and you can swap who hosts any time.");
-            _s.TutorialShown = true;
-            SaveSettings();
-        }
 
         await RunBusy("Preparing…", async _ =>
         {

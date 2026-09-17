@@ -183,7 +183,8 @@ public class RealGameTests(ITestOutputHelper output)
             foreach (var a in new[] { k.Helm, k.Armor, k.Gloves, k.Legs })
             {
                 Assert.True(armor.Has(a), $"{k.Name}: armor {a} missing");
-                Assert.Equal(3, armor.GetInt(a, "equipModelGender")); // 3 = unisex; fits a male OR female character
+                // 3 = unisex; every class is unisex except Battle Mage, whose Shaman's set the owner picked on purpose.
+                if (k.Name != "Battle Mage") Assert.Equal(3, armor.GetInt(a, "equipModelGender"));
             }
             if (k.Ring1 > 0) Assert.True(rings.Has(k.Ring1));
             foreach (var (id, _) in k.Items) Assert.True(goods.Has(id), $"{k.Name}: item {id} missing");

@@ -13,6 +13,8 @@
 
         <!-- Title -->
         <Grid Margin="0,0,0,18">
+        <ComboBox x:Name="CmbLang" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,6,0,0" Width="150"
+                  SelectionChanged="CmbLang_Changed" DisplayMemberPath="Name" SelectedValuePath="Code"/>
         <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,0,0" Padding="12,6" BorderThickness="1"
                 BorderBrush="{StaticResource Line}" Background="#80050506" ToolTip="Is Demon's Souls running in RPCS3?">
             <StackPanel Orientation="Horizontal">
@@ -30,7 +32,7 @@
                 <TextBlock Grid.Column="1" Text="SEAMLESS  CO-OP" FontFamily="{StaticResource Serif}" FontSize="14" Foreground="{StaticResource Gold}" Margin="16,0"/>
                 <Border Grid.Column="2" Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
             </Grid>
-            <TextBlock Text="Join your friend's world on RPCS3 and stay together for as long as you want." Style="{StaticResource Small}" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="TxtSubtitle" Text="Join your friend's world on RPCS3 and stay together for as long as you want." Style="{StaticResource Small}" HorizontalAlignment="Center"/>
         </StackPanel>
         </Grid>
 
@@ -89,7 +91,7 @@
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <Rectangle x:Name="DotRpcn" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="RPCN Account" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="LblRpcn" Text="RPCN Account" Style="{StaticResource Label}"/>
                                     <TextBlock x:Name="TxtRpcn" Style="{StaticResource Small}"/>
                                 </StackPanel>
                                 <Button x:Name="BtnRpcn" Grid.Column="2" Content="Create / Sign in" Click="BtnRpcn_Click" VerticalAlignment="Top"/>
@@ -115,21 +117,18 @@
                     </StackPanel>
 
                     <Grid DockPanel.Dock="Top">
-                        <StackPanel x:Name="PanelNone">
-                            <TextBlock Style="{StaticResource Small}" HorizontalAlignment="Center" TextAlignment="Center"
-                                       Text="One of you hosts, the other joins with the host's code."/>
+                        <StackPanel x:Name="PanelNone"><TextBlock x:Name="TxtNoneHint" Style="{StaticResource Small}" HorizontalAlignment="Center" TextAlignment="Center" Text="One of you hosts, the other joins with the host's code."/>
                         </StackPanel>
 
                         <StackPanel x:Name="PanelHost" Visibility="Collapsed">
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="Party name" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                                    <TextBlock x:Name="LblPartyName" Text="Party name" Style="{StaticResource Small}" Margin="0,0,0,3"/>
                                     <TextBox x:Name="TxtPartyName"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="TxtPartyPass" FontFamily="Consolas"/>
+                                    <TextBlock x:Name="LblPartyPass" Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/><TextBox x:Name="TxtPartyPass" FontFamily="Consolas"/>
                                 </StackPanel>
                                 <Button x:Name="BtnHost" Grid.Column="3" Content="Create Party" Click="BtnHost_Click" Margin="10,0,0,0" VerticalAlignment="Bottom"/>
                             </Grid>
@@ -141,7 +140,7 @@
                                         <Setter Property="GroupName" Value="wt"/>
                                     </Style>
                                 </DockPanel.Resources>
-                                <TextBlock Text="World tendency" Style="{StaticResource Small}" VerticalAlignment="Center" Margin="0,0,6,0"
+                                <TextBlock x:Name="LblWorldTendency" Text="World tendency" Style="{StaticResource Small}" VerticalAlignment="Center" Margin="0,0,6,0"
                                            ToolTip="The party server pushes every world toward this tendency (applies when the game syncs with the server)."/>
                                 <StackPanel Orientation="Horizontal">
                                     <RadioButton x:Name="RbWtPureWhite" Content="PURE WHITE" Tag="200" Checked="Tendency_Changed"/>
@@ -153,7 +152,7 @@
                             </DockPanel>
                             <Border x:Name="CodeBox" Visibility="Collapsed" BorderBrush="{StaticResource GoldDim}" BorderThickness="1" Background="#80050506" Padding="12" Margin="0,10,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Tell your friend:" Style="{StaticResource Small}"/>
+                                    <TextBlock x:Name="LblTellFriend" Text="Tell your friend:" Style="{StaticResource Small}"/>
                                     <DockPanel Margin="0,4,0,0">
                                         <Button x:Name="BtnCopy" Content="Copy" DockPanel.Dock="Right" Click="BtnCopy_Click" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         <TextBlock x:Name="TxtInvite" FontFamily="{StaticResource Serif}" FontSize="16" Foreground="{StaticResource Soul}"/>
@@ -167,12 +166,11 @@
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="Host's party name" Style="{StaticResource Small}" Margin="0,0,0,3"/>
+                                    <TextBlock x:Name="LblJoinName" Text="Host's party name" Style="{StaticResource Small}" Margin="0,0,0,3"/>
                                     <TextBox x:Name="TxtJoinName"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/>
-                                    <TextBox x:Name="TxtJoinPass" FontFamily="Consolas"/>
+                                    <TextBlock x:Name="LblJoinPass" Text="Password" Style="{StaticResource Small}" Margin="0,0,0,3"/><TextBox x:Name="TxtJoinPass" FontFamily="Consolas"/>
                                 </StackPanel>
                                 <Button x:Name="BtnJoin" Grid.Column="3" Content="Join" Click="BtnJoin_Click" Margin="10,0,0,0" VerticalAlignment="Bottom"/>
                             </Grid>
@@ -180,13 +178,11 @@
                                        Text="No VPN or port forwarding needed: the app finds the host and connects by itself."/>
                         </StackPanel>
 
-                        <StackPanel x:Name="PanelPublic" Visibility="Collapsed">
-                            <TextBlock Style="{StaticResource Small}" TextAlignment="Center"
-                                       Text="Play on The Archstones community server: messages, ghosts and summon signs from players all over the world. Regular co-op, without party signs that follow the host."/>
+                        <StackPanel x:Name="PanelPublic" Visibility="Collapsed"><TextBlock x:Name="TxtPublicInfo" Style="{StaticResource Small}" TextAlignment="Center" TextWrapping="Wrap" Text="Play on The Archstones community server."/>
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock DockPanel.Dock="Top" Text="PHANTOMS IN THIS WORLD" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="12" Margin="0,16,0,6"/>
+                    <TextBlock x:Name="LblPhantoms" DockPanel.Dock="Top" Text="PHANTOMS IN THIS WORLD" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="12" Margin="0,16,0,6"/>
                     <Border DockPanel.Dock="Top" BorderBrush="{StaticResource Line}" BorderThickness="1" Background="#80050506" MinHeight="64" Padding="10,6">
                         <Grid>
                             <ItemsControl x:Name="ListPlayers">
@@ -211,13 +207,8 @@
                         </Grid>
                     </Border>
 
-                    <TextBlock DockPanel.Dock="Top" Text="HOW TO PLAY TOGETHER" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="12" Margin="0,14,0,4"/>
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Small}" LineHeight="19">
-                        <Run Text="I.   Both press PLAY. Online turns on by itself."/><LineBreak/>
-                        <Run Text="II.  The helper uses the Blue Eye Stone anywhere in the world."/><LineBreak/>
-                        <Run Text="III. The sign appears right next to the host, wherever they are. Touch it."/><LineBreak/>
-                        <Run Text="IV.  Boss down? Blue Eye Stone again and keep going."/>
-                    </TextBlock>
+                    <TextBlock x:Name="LblHowTo" DockPanel.Dock="Top" Text="HOW TO PLAY TOGETHER" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="12" Margin="0,14,0,4"/>
+                    <TextBlock x:Name="TxtHowTo" DockPanel.Dock="Top" Style="{StaticResource Small}" LineHeight="19" Text="I. ..."/>
 
                     <TextBox x:Name="TxtLog" Margin="0,12,0,0" IsReadOnly="True" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource Muted}"
                              VerticalScrollBarVisibility="Auto" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" MinHeight="50"/>
