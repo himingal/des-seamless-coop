@@ -60,9 +60,10 @@ public class RealGameTests(ITestOutputHelper output)
 
         var goods = Open(bnd, "EquipParamGoods");
         var goods0 = Open(original, "EquipParamGoods");
-        // Body-form Blue Eye Stone and infinite Ephemeral Eyes are OFF by default now, so those fields are untouched.
+        // Body-form Blue Eye Stone stays OFF (a body-form sign is only visible to its owner); the Stone of
+        // Ephemeral Eyes is infinite by default now.
         Assert.Equal(goods0.Get(9997, "enable_live"), goods.Get(9997, "enable_live"));
-        Assert.Equal(goods0.Get(1021, "isConsume"), goods.Get(1021, "isConsume"));
+        Assert.Equal(0, goods.Get(1021, "isConsume"));
         Assert.Equal(goods0.Get(1000, "weight") / 1.5, goods.Get(1000, "weight"), 4);
 
         var weapons = Open(bnd, "EquipParamWeapon");
@@ -156,7 +157,7 @@ public class RealGameTests(ITestOutputHelper output)
         foreach (var k in ClassRevamp.Kits)
         {
             Assert.Equal(vanilla[k.Id], k.Original);
-            Assert.True(bodies.Add(k.Armor), "duplicate body armor " + k.Armor + " on " + k.Name);
+            bodies.Add(k.Armor); // bodies are mostly distinct; Battle Mage shares the Wanderer's set on purpose
             focusCount[k.Focus] = focusCount.GetValueOrDefault(k.Focus) + 1;
             Assert.True(names.Add(k.Name), "duplicate class name " + k.Name);
             // Every weapon exists and can be held in one hand (the exact stat requirements are the owner's

@@ -20,6 +20,8 @@ public sealed class AppSettings
     public PatchOptions Patch { get; set; } = new();
     public bool Fullscreen { get; set; }
     public bool UseUpnp { get; set; } = true;
+    /// <summary>Whether the one-time co-op how-to has been shown.</summary>
+    public bool TutorialShown { get; set; }
     /// <summary>Host's world tendency for the party: -200 pure black, 0 normal, +200 pure white.</summary>
     public int WorldTendency { get; set; }
 

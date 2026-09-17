@@ -8,9 +8,8 @@ public sealed class PatchOptions
     /// <summary>Blue Eye Stone usable in body form. OFF by default: the game only shows a body-form sign to
     /// its owner, so a sign placed while human never reaches the host. Co-op needs the helper in soul form.</summary>
     public bool BlueEyeStoneInBodyForm { get; set; } = false;
-    /// <summary>Stone of Ephemeral Eyes never consumed. OFF by default: staying human breaks the blue sign, so
-    /// the stone is left finite (you still start with one, and turn human only when you mean to host).</summary>
-    public bool InfiniteEphemeralEyes { get; set; } = false;
+    /// <summary>Stone of Ephemeral Eyes is never consumed, so you can turn human any time to host.</summary>
+    public bool InfiniteEphemeralEyes { get; set; } = true;
     /// <summary>Soul form keeps 100% max HP instead of 50%: dying costs nothing, it plays like body form.</summary>
     public bool FullHpSoulForm { get; set; } = true;
     /// <summary>No automatic revival after bosses: you stay in soul form (Stone of Ephemeral Eyes revives on demand).</summary>
@@ -35,6 +34,8 @@ public sealed class PatchOptions
     public bool MoreSouls { get; set; } = true;
     /// <summary>Passive MP regeneration (about 1 MP per second) while any chest armor is worn.</summary>
     public bool ManaRegen { get; set; } = true;
+    /// <summary>Every world pickup and drop gives twice as much, so a host and helper each get one.</summary>
+    public bool DoubleLoot { get; set; } = true;
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);
@@ -281,6 +282,7 @@ public static class GamePatcher
         if (opt.CheaperShops) CheaperShops(c);
         if (opt.EasierPureBladestone) BoostDrop(c, ids.PureBladestone.Count > 0 ? ids.PureBladestone : [2023], PureBladestoneChance, "Pure Bladestone");
         if (opt.EasierUpgradeMaterials) BoostDrop(c, [.. UpgradeStones], UpgradeMaterialChance, "upgrade stones");
+        if (opt.DoubleLoot) DoubleLoot(c);
         if (opt.OneHitCrystalLizards || opt.WeakerDragons || opt.MoreSouls) TweakEnemies(c, opt);
         if (opt.ManaRegen) ManaRegen(c);
 
@@ -373,6 +375,22 @@ public static class GamePatcher
             }
         }
         c.Log.Add($"{c.Label}: {n} drop lot(s) boosted for {what}");
+    }
+
+    /// <summary>Doubles how many of each item a lot gives, so a host and helper can each grab one.</summary>
+    static void DoubleLoot(Ctx c)
+    {
+        var lots = c.Param("ItemLotParam");
+        if (lots == null) return;
+        int n = 0;
+        foreach (var lot in lots.RowIds)
+            for (int i = 1; i <= 8; i++)
+            {
+                if (lots.GetInt(lot, $"lotItemCategory{i:00}") == 0 || lots.GetInt(lot, $"lotItemId{i:00}") <= 0) continue;
+                int num = lots.GetInt(lot, $"lotItemNum{i:00}");
+                if (num >= 1 && num < 99 && c.Set(lots, lot, $"lotItemNum{i:00}", Math.Min(99, num * 2))) n++;
+            }
+        c.Log.Add($"{c.Label}: {n} loot stack(s) doubled");
     }
 
     static void TweakEnemies(Ctx c, PatchOptions opt)

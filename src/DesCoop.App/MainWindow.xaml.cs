@@ -32,10 +32,8 @@ public partial class MainWindow : Window
         _game = GameLocator.Resolve(_s.GamePath);
         _joinedAddress = _s.JoinedAddress;
 
-        // Tweaks are not selectable any more: the fixed, intended set is always applied.
+        // Tweaks are a fixed, always-applied set (no UI for them).
         _s.Patch = new PatchOptions();
-        TxtClasses.ToolTip = string.Join("\n\n", ClassRevamp.Kits.Select(k =>
-            $"{k.Title}  ·  Soul Level {k.SoulLevel}\n{k.Pitch}\nVIT {k.Vit}  INT {k.Int}  END {k.End}  STR {k.Str}  DEX {k.Dex}  MAG {k.Mag}  FAI {k.Fai}  LCK {k.Luc}"));
         (_s.WorldTendency switch
         {
             >= 200 => RbWtPureWhite,
@@ -142,7 +140,7 @@ public partial class MainWindow : Window
 
     void SetButtons(bool on)
     {
-        foreach (var b in new[] { BtnRpcs3Install, BtnRpcs3Pick, BtnFw, BtnGame, BtnPatch, BtnUnpatch, BtnRpcn, BtnHost, BtnJoin, BtnPlay })
+        foreach (var b in new[] { BtnRpcs3Install, BtnRpcs3Pick, BtnFw, BtnGame, BtnRpcn, BtnHost, BtnJoin, BtnPlay })
             b.IsEnabled = on;
     }
 
@@ -164,12 +162,6 @@ public partial class MainWindow : Window
         TxtGame.Text = _game != null
             ? $"{_game.Title}  [{_game.Serial}]  v{_game.Version}\n{_game.Root}" + (GameLocator.IsDemonsSouls(_game) ? "" : "\nThis doesn't look like Demon's Souls.")
             : "Your own game dump: the folder that contains PS3_GAME.";
-
-        bool patched = _game != null && GamePatcher.IsPatched(_game);
-        DotPatch.Fill = B(_game == null ? "Bad" : patched ? "Ok" : "Warn");
-        TxtPatch.Text = _game == null ? "" : patched ? "Applied (original files backed up)." : "Not applied yet. PLAY applies it automatically.";
-        BtnPatch.IsEnabled = BtnUnpatch.IsEnabled = !_busy && _game != null;
-        BtnUnpatch.Visibility = patched ? Visibility.Visible : Visibility.Collapsed;
 
         var rpcn = emu ? _emu.RpcnUser() : null;
         DotRpcn.Fill = B(rpcn != null ? "Ok" : "Bad");
@@ -256,29 +248,12 @@ public partial class MainWindow : Window
         TxtGame2.Foreground = TxtGameTop.Foreground;
     }
 
-    async void BtnPatch_Click(object sender, RoutedEventArgs e)
-    {
-        if (_game == null) return;
-        SaveSettings();
-        await RunBusy("Applying patch…", async _ => await Task.Run(ApplyPatch));
-    }
-
+    // The game tweaks are applied automatically when you press PLAY (there is no UI for them).
     void ApplyPatch()
     {
         var r = GamePatcher.Apply(_game!, _s.Patch);
         foreach (var l in r.Lines) Log(l);
         if (r.Changed && _emu.IsInstalled) _emu.ClearGameCache();
-    }
-
-    async void BtnUnpatch_Click(object sender, RoutedEventArgs e)
-    {
-        if (_game == null) return;
-        await RunBusy("Restoring original files…", async _ => await Task.Run(() =>
-        {
-            GamePatcher.Restore(_game);
-            if (_emu.IsInstalled) _emu.ClearGameCache();
-            Log("Original game files restored.");
-        }));
     }
 
     void BtnRpcn_Click(object sender, RoutedEventArgs e) => OpenRpcn();
@@ -440,6 +415,19 @@ public partial class MainWindow : Window
         }
         if (_emu.IsRunning()) { Ui.Info(this, "RPCS3 is already open. Close it so the app can apply the network settings before launching."); return; }
 
+        if (!_s.TutorialShown)
+        {
+            Ui.Info(this,
+                "How co-op works in Demon's Souls:\n\n" +
+                "1.  Decide who leads this run — that player becomes the HOST.\n" +
+                "2.  The HELPER dies once to enter Soul form (a ghost), then uses the Blue Eye Stone. This drops a blue sign.\n" +
+                "3.  The HOST stays human (use a Stone of Ephemeral Eyes if needed) and touches the blue sign — which now appears right next to you — to summon the helper.\n" +
+                "4.  Play together. After a boss, do it again.\n\n" +
+                "You each start with both stones, and you can swap who hosts any time.");
+            _s.TutorialShown = true;
+            SaveSettings();
+        }
+
         await RunBusy("Preparing…", async _ =>
         {
             string target;
@@ -463,14 +451,8 @@ public partial class MainWindow : Window
             _emu.ConfigureNetwork(target);
             _emu.RegisterGame(_game);
             await _emu.EnableQualityPatchesAsync();
-            var o = _s.Patch;
-            if (o.BlueEyeStoneInBodyForm || o.InfiniteEphemeralEyes || o.FullHpSoulForm || o.StayInSoulForm || o.StartWithBlueEyeStone || o.RevampedClasses
-                || o.CheaperShops || o.EasierPureBladestone || o.HeavierLoads || o.EasierUpgradeMaterials
-                || o.OneHitCrystalLizards || o.WeakerDragons || o.MoreSouls || o.ManaRegen || GamePatcher.IsPatched(_game))
-            {
-                Status("Checking the co-op patch…");
-                await Task.Run(ApplyPatch);
-            }
+            Status("Checking the co-op patch…");
+            await Task.Run(ApplyPatch);
             Log($"Launching the game. Server: {target}");
             _emu.Launch(_game, _s.Fullscreen);
             Dispatcher.InvokeAsync(async () => { await Task.Delay(4000); UpdateGameIndicator(); });

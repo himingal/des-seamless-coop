@@ -32,24 +32,18 @@ No VPN, no port forwarding and no router setup. The app connects directly when i
   - Blue signs from party members are **moved next to the host in any area**, using the positions the game itself reports.
   - No level range. US, EU and JP copies share one world. Messages, bloodstains and wandering ghosts all work.
   - A live list shows who is online, where they are, and who has a sign down or is in co-op.
-- **Game tweaks** for your own dump — one fixed, always-on set (the originals are backed up, and **Restore** undoes everything).
-  - **Stay in soul form**: no automatic revival after a boss, so you keep the soul form the blue sign needs. Turn human only when you mean to host, with a normal Stone of Ephemeral Eyes.
-  - **Soul form keeps full HP**: dying no longer halves your max HP.
-  - **Start with both co-op stones**: every new character carries a Blue Eye Stone and a Stone of Ephemeral Eyes.
-  - **10 new starting classes** replace the vanilla ones, two per focus, all-different armor, every weapon usable one-handed and Soul Level 1–9:
-    Strength (Berserker, Warrior), Dexterity (Samurai, Swordsman), Strength/Dexterity (Knight, Squire), Faith (Cleric, Battle Priest) and Intelligence (Mage, Battle Mage). Hover the option in the app to see each kit.
-  - **Upgrade stones drop far more often** from enemies (about 25%).
-  - **Crystal Lizards die in one hit** (1 HP), so you never lose the chase.
-  - **Red and Blue dragons have half the HP.**
-  - **+25% souls** from every enemy.
-  - **Passive MP regeneration** (about 1 MP/second) while any chest armor is worn (light or heavy).
-  - **Half-price merchants**: everything sold for souls costs 50% (items bought with boss souls are unchanged).
-  - **Pure Bladestone** drops from the Shrine of Storms skeletons **15%** of the time instead of 0.5%.
-  - **+50% equip load and item burden**: weapons, armor, rings and items weigh a third less.
-- **World tendency selector** for the host: Pure White, White, Normal, Black or Pure Black. The party server pushes every world toward it.
-- **Game status badge** that shows whether Demon's Souls is running.
+- **Game tweaks** for your own dump — one fixed, always-on set, applied automatically when you press PLAY (the originals are backed up).
+  - **10 new starting classes** replace the vanilla ones, two per focus, every weapon one-hand-equippable and unisex armor (fits a male or female character):
+    Strength (Berserker, Warrior), Dexterity (Samurai, Swordsman), Strength/Dexterity (Knight, Squire), Faith (Cleric, Battle Priest) and Intelligence (Mage, Battle Mage).
+  - **Start with both co-op stones**, and the **Stone of Ephemeral Eyes is infinite** so you can turn human to host any time.
+  - **Stay in soul form**: no automatic revival after a boss.
+  - **Soul form keeps full HP**; **passive MP regeneration** (~1 MP/s) with any chest armor.
+  - **Double loot**: every world pickup and drop gives twice as much.
+  - **Half-price merchants**, **+25% souls**, **upgrade stones drop ~25%**, **Pure Bladestone 15%**, **+50% equip load**.
+  - **Crystal Lizards die in one hit**; the **Red and Blue dragons have half the HP**.
+- **World tendency selector** for the host: Pure White, White, Normal, Black or Pure Black.
 - **Automatic RPCS3 setup**: RPCN, server redirection, UPnP, skipping the intro videos and registering the game.
-- **RPCN account creation inside the app**, with no digging through RPCS3's menus.
+- **RPCN account creation inside the app**.
 - **Dedicated server mode**: `DesCoop.exe --server --name "My Party"`, for a VPS or an always-on PC.
 - **Public server**: one click to play on *The Archstones* with everyone.
 

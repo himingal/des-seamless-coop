@@ -37,7 +37,7 @@ public sealed record ServerStatus(string App, string Version, string Name, Party
 
 public sealed class DesServer : IDisposable
 {
-    public const string Version = "1.7.4";
+    public const string Version = "1.8.0";
     static readonly int[] MonkBlocks = [40070, 40071, 40072, 40073, 40074, 40170, 40171, 40172, 40270];
     static readonly TimeSpan SignTtl = TimeSpan.FromSeconds(30);
     static readonly TimeSpan GhostTtl = TimeSpan.FromSeconds(45);
@@ -85,7 +85,7 @@ public sealed class DesServer : IDisposable
             _ = AcceptLoop(l, port);
         }
         Running = true;
-        Write($"Server listening on TCP ports {_o.BootstrapPort}, {_o.PortUS}-{_o.PortJP}");
+        Write("Party server running — your friend can join.");
     }
 
     public void Dispose()
@@ -97,11 +97,12 @@ public sealed class DesServer : IDisposable
         _logFile?.Dispose();
     }
 
-    void Write(string msg)
+    // important=false lines (per-request chatter) go to the log file only, not to the app's status box.
+    void Write(string msg, bool important = true)
     {
         var line = $"[{DateTime.Now:HH:mm:ss}] {msg}";
         try { _logFile?.WriteLine(line); } catch { }
-        Log?.Invoke(line);
+        if (important) Log?.Invoke(line);
     }
 
     async Task AcceptLoop(TcpListener l, int port)
@@ -345,7 +346,7 @@ public sealed class DesServer : IDisposable
                     "updateOtherPlayerGrade.spd" => UpdateOtherPlayerGrade(p, me),
                     _ => ((byte, byte[])?)null,
                 };
-                if (r == null) Write($"Unknown game command: {cmd}");
+                if (r == null) Write($"Unknown game command: {cmd}", false);
                 return r;
             }
             finally
@@ -588,7 +589,7 @@ public sealed class DesServer : IDisposable
         if (last != null)
         {
             if (_ghosts.TryGetValue(me, out var prev) && prev.BlockId != block)
-                Write($"{me} moved to {BlockNames.Get(block)}");
+                Write($"{me} moved to {BlockNames.Get(block)}", false);
             _ghosts[me] = new Ghost { CharacterId = me, BlockId = block, ReplayData = raw };
             if (last.Length == 6) UpdatePosition(me, block, last[0], last[1], last[2], last[3], last[4], last[5]);
         }
@@ -603,7 +604,7 @@ public sealed class DesServer : IDisposable
         foreach (var k in _sos.Where(s => now - s.Value.UpdatedAt > SignTtl).Select(s => s.Key).ToList())
         {
             _sos.Remove(k);
-            Write($"Sign of {k} expired");
+            Write($"Sign of {k} expired", false);
         }
     }
 
@@ -659,7 +660,7 @@ public sealed class DesServer : IDisposable
             {
                 if (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor))) { place = true; doRelocate = true; }
             }
-            if (!place) { skipped++; if (!mine) Write($"getSosData {me} block {block}: {s.CharacterId}'s sign in block {s.BlockId} NOT shown (no anchor to move it here)"); continue; }
+            if (!place) { skipped++; if (!mine) Write($"getSosData {me} block {block}: {s.CharacterId}'s sign in block {s.BlockId} NOT shown (no anchor to move it here)", false); continue; }
 
             if (knownIds.Contains(s.SosId.ToString())) { known.Add(s.SosId); continue; }
             if (doRelocate)
@@ -669,12 +670,12 @@ public sealed class DesServer : IDisposable
                 float z = anchor.Z + (float)(Math.Cos(yaw) * 1.2);
                 fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ));
                 slot++; relocated++;
-                if (!mine) Write($"getSosData {me} block {block}: showing {s.CharacterId}'s sign next to you (from block {s.BlockId})");
+                if (!mine) Write($"getSosData {me} block {block}: showing {s.CharacterId}'s sign next to you (from block {s.BlockId})", false);
             }
             else fresh.Add(s.Serialize());
         }
         if (_sos.Count > 0)
-            Write($"getSosData {me} block {block} port {port} (asked {clientAsked}): {_sos.Count} sign(s), {considered} in region, returned {known.Count + fresh.Count} ({relocated} moved), skipped {skipped}");
+            Write($"getSosData {me} block {block} port {port} (asked {clientAsked}): {_sos.Count} sign(s), {considered} in region, returned {known.Count + fresh.Count} ({relocated} moved), skipped {skipped}", false);
 
         var w = new Payload().I32(known.Count);
         foreach (var id in known) w.U32(id);
@@ -720,12 +721,12 @@ public sealed class DesServer : IDisposable
         if (_sos.TryGetValue(id, out var s)) s.UpdatedAt = DateTime.UtcNow;
         if (_pendingMonk.Remove(id, out var monkRoom))
         {
-            Write($"{id} summoned as the Old Monk");
+            Write($"{id} summoned as the Old Monk", false);
             return (0x0b, Protocol.Raw.GetBytes(monkRoom));
         }
         if (_pendingSummon.Remove(id, out var room))
         {
-            Write($"{id} is being summoned");
+            Write($"{id} is being summoned", false);
             return (0x0b, Protocol.Raw.GetBytes(room));
         }
         return (0x0b, [0]);
@@ -748,7 +749,7 @@ public sealed class DesServer : IDisposable
             return (0x0a, [0]);
         }
         _pendingSummon[s.CharacterId] = room;
-        Write($"{me} is summoning {s.CharacterId}");
+        Write($"{me} is summoning {s.CharacterId}", false);
         return (0x0a, [1]);
     }
 

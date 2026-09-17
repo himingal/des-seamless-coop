@@ -85,21 +85,6 @@
                                 <Button x:Name="BtnGame" Grid.Column="2" Content="Browse" Click="BtnGame_Click" VerticalAlignment="Top"/>
                             </Grid>
 
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <Rectangle x:Name="DotPatch" Style="{StaticResource Dot}" Fill="{StaticResource Warn}"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Game Tweaks (always on)" Style="{StaticResource Label}"/>
-                                    <TextBlock x:Name="TxtClasses" Style="{StaticResource Small}" Cursor="Help" TextWrapping="Wrap"
-                                               Text="New classes, easier co-op and quality-of-life tweaks. Hover to see the classes."/>
-                                    <TextBlock x:Name="TxtPatch" Style="{StaticResource Small}" Margin="0,4,0,0"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="2" VerticalAlignment="Top">
-                                    <Button x:Name="BtnPatch" Content="Apply" Click="BtnPatch_Click"/>
-                                    <Button x:Name="BtnUnpatch" Content="Restore" Click="BtnUnpatch_Click" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </Grid>
-
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <Rectangle x:Name="DotRpcn" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
