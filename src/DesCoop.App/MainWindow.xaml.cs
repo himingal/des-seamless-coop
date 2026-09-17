@@ -85,9 +85,9 @@ public partial class MainWindow : Window
             try
             {
                 if (_s.Mode == PartyMode.Host && _emu.IsInstalled && _game != null)
-                    await RunBusy("Opening your party…", async _ => await StartHostAsync());
+                    await RunBusy(Loc.T("stOpeningParty"), async _ => await StartHostAsync());
                 else if (_s.Mode == PartyMode.Join && !string.IsNullOrWhiteSpace(_s.JoinName))
-                    await RunBusy("Rejoining the party…", async _ => await JoinAsync());
+                    await RunBusy(Loc.T("stRejoining"), async _ => await JoinAsync());
             }
             catch { }
         }, DispatcherPriority.ApplicationIdle);
@@ -107,14 +107,22 @@ public partial class MainWindow : Window
     void ApplyLanguage()
     {
         TxtSubtitle.Text = Loc.T("subtitle");
+        LblNexus.Text = Loc.T("theNexus");
+        LblYourParty.Text = Loc.T("yourParty");
+        LblRpcs3Emu.Text = Loc.T("rpcs3Emulator");
+        LblFwTitle.Text = Loc.T("ps3Firmware");
         LblRpcn.Text = Loc.T("lblRpcn");
-        BtnRpcn.Content = Loc.T("rpcnBtn");
         BtnRpcs3Pick.Content = Loc.T("browse");
         BtnGame.Content = Loc.T("browse");
         BtnFw.Content = Loc.T("install");
         RbHost.Content = Loc.T("host");
         RbJoin.Content = Loc.T("join");
         RbPublic.Content = Loc.T("public");
+        RbWtPureWhite.Content = Loc.T("wtPureWhite");
+        RbWtWhite.Content = Loc.T("wtWhite");
+        RbWtNormal.Content = Loc.T("wtNormal");
+        RbWtBlack.Content = Loc.T("wtBlack");
+        RbWtPureBlack.Content = Loc.T("wtPureBlack");
         TxtNoneHint.Text = Loc.T("noneHint");
         LblPartyName.Text = Loc.T("partyName");
         LblPartyPass.Text = Loc.T("password");
@@ -124,9 +132,9 @@ public partial class MainWindow : Window
         LblWorldTendency.Text = Loc.T("worldTendency");
         LblTellFriend.Text = Loc.T("tellFriend");
         BtnCopy.Content = Loc.T("copy");
-        BtnHost.Content = Loc.T("createParty");
+        BtnHost.Content = Loc.T(_host == null ? "createParty" : "closeParty");
         BtnJoin.Content = Loc.T("joinBtn");
-        TxtJoinInfo.Text = Loc.T("joinInfo");
+        if (_client == null) TxtJoinInfo.Text = Loc.T("joinInfo");
         TxtPublicInfo.Text = Loc.T("publicInfo");
         LblPhantoms.Text = Loc.T("phantoms");
         TxtNoPlayers.Text = Loc.T("noPlayers");
@@ -177,11 +185,11 @@ public partial class MainWindow : Window
         {
             Status(what, 0);
             await work(progress);
-            Status("Ready.");
+            Status(Loc.T("ready"));
         }
         catch (Exception ex)
         {
-            Status("Error: " + ex.Message);
+            Status(Loc.T("stError", ex.Message));
             Log("ERROR: " + ex);
             Ui.Warn(this, ex.Message);
         }
@@ -205,23 +213,23 @@ public partial class MainWindow : Window
     {
         bool emu = _emu.IsInstalled;
         DotRpcs3.Fill = B(emu ? "Ok" : "Bad");
-        TxtRpcs3.Text = emu ? _emu.Root : "Download the latest official build, or point to your own RPCS3.";
-        BtnRpcs3Install.Content = emu ? "Update" : "Download";
+        TxtRpcs3.Text = emu ? _emu.Root : Loc.T("rpcs3Missing");
+        BtnRpcs3Install.Content = Loc.T(emu ? "update" : "download");
 
         bool fw = emu && _emu.FirmwareInstalled;
         DotFw.Fill = B(fw ? "Ok" : "Bad");
-        TxtFw.Text = fw ? "Installed." : emu ? "Downloads the official firmware straight from Sony." : "Install RPCS3 first.";
+        TxtFw.Text = fw ? Loc.T("fwInstalled") : emu ? Loc.T("fwDownload") : Loc.T("fwNeedRpcs3");
         BtnFw.IsEnabled = !_busy && emu && !fw;
 
         DotGame.Fill = B(_game != null ? (GameLocator.IsDemonsSouls(_game) ? "Ok" : "Warn") : "Bad");
         TxtGame.Text = _game != null
-            ? $"{_game.Title}  [{_game.Serial}]  v{_game.Version}\n{_game.Root}" + (GameLocator.IsDemonsSouls(_game) ? "" : "\nThis doesn't look like Demon's Souls.")
-            : "Your own game dump: the folder that contains PS3_GAME.";
+            ? $"{_game.Title}  [{_game.Serial}]  v{_game.Version}\n{_game.Root}" + (GameLocator.IsDemonsSouls(_game) ? "" : Loc.T("gameNotDeS"))
+            : Loc.T("gameHint");
 
         var rpcn = emu ? _emu.RpcnUser() : null;
         DotRpcn.Fill = B(rpcn != null ? "Ok" : "Bad");
-        TxtRpcn.Text = rpcn != null ? $"Signed in as {rpcn}." : "Free account needed for online play (RPCS3's PlayStation Network).";
-        BtnRpcn.Content = rpcn != null ? "Change" : "Create / Sign in";
+        TxtRpcn.Text = rpcn != null ? Loc.T("rpcnSignedIn", rpcn) : Loc.T("rpcnHint");
+        BtnRpcn.Content = Loc.T(rpcn != null ? "change" : "rpcnBtn");
         BtnRpcn.IsEnabled = !_busy && emu;
     }
 
@@ -229,9 +237,9 @@ public partial class MainWindow : Window
 
     async void BtnRpcs3Install_Click(object sender, RoutedEventArgs e)
     {
-        if (_emu.IsRunning()) { Ui.Info(this, "Close RPCS3 first."); return; }
+        if (_emu.IsRunning()) { Ui.Info(this, Loc.T("dgCloseRpcs3")); return; }
         _emu = new Rpcs3Manager(_s.EffectiveRpcs3Dir);
-        await RunBusy("Downloading RPCS3…", async p =>
+        await RunBusy(Loc.T("stDlRpcs3"), async p =>
         {
             await _emu.InstallLatestAsync(p);
             Log("RPCS3 installed at " + _emu.Root);
@@ -245,9 +253,9 @@ public partial class MainWindow : Window
 
     void BtnRpcs3Pick_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new OpenFolderDialog { Title = "Folder that contains rpcs3.exe" };
+        var dlg = new OpenFolderDialog { Title = Loc.T("dgTitleRpcs3") };
         if (dlg.ShowDialog(this) != true) return;
-        if (!Rpcs3Manager.LooksLikeRpcs3(dlg.FolderName)) { Ui.Warn(this, "rpcs3.exe was not found in that folder."); return; }
+        if (!Rpcs3Manager.LooksLikeRpcs3(dlg.FolderName)) { Ui.Warn(this, Loc.T("dgNoRpcs3Exe")); return; }
         _s.Rpcs3Dir = dlg.FolderName;
         _emu = new Rpcs3Manager(dlg.FolderName);
         SaveSettings();
@@ -255,16 +263,16 @@ public partial class MainWindow : Window
     }
 
     async void BtnFw_Click(object sender, RoutedEventArgs e) =>
-        await RunBusy("Installing firmware…", p => _emu.InstallFirmwareAsync(p));
+        await RunBusy(Loc.T("stInstallFw"), p => _emu.InstallFirmwareAsync(p));
 
     void BtnGame_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new OpenFolderDialog { Title = "Demon's Souls folder (the one that contains PS3_GAME)" };
+        var dlg = new OpenFolderDialog { Title = Loc.T("dgTitleGame") };
         if (dlg.ShowDialog(this) != true) return;
         var g = GameLocator.Resolve(dlg.FolderName);
         if (g == null)
         {
-            Ui.Warn(this, "PS3_GAME/USRDIR/EBOOT.BIN was not found there.\nPick your game dump folder (e.g. BLUS30443).");
+            Ui.Warn(this, Loc.T("dgNoGame"));
             return;
         }
         _game = g;
@@ -335,14 +343,14 @@ public partial class MainWindow : Window
     {
         if (_host != null) { await StopHostAsync(); return; }
         SaveSettings();
-        await RunBusy("Creating party…", async _ => await StartHostAsync());
+        await RunBusy(Loc.T("stCreatingParty"), async _ => await StartHostAsync());
     }
 
     /// <summary>One UAC prompt so Windows does not block the friend (server ports + RPCS3 P2P).</summary>
     void EnsureFirewall()
     {
         if (Firewall.AllConfigured(_emu.Exe)) return;
-        Status("Allowing through Windows Firewall (accept the Windows prompt)…");
+        Status(Loc.T("stFirewall"));
         if (!Firewall.Configure(Environment.ProcessPath ?? "", _emu.Exe))
             Log("Firewall not configured (prompt declined). If your friend can't connect, allow DesCoop and RPCS3 in Windows Firewall.");
     }
@@ -363,9 +371,9 @@ public partial class MainWindow : Window
             throw new InvalidOperationException("Ports 18000/18666-18668 are already in use. Is another Demon's Souls server (or another copy of this app) running?");
         }
         _host = host;
-        TxtInvite.Text = $"Party: {host.Name}     Password: {host.Password}";
+        TxtInvite.Text = Loc.T("invite", host.Name, host.Password);
         CodeBox.Visibility = Visibility.Visible;
-        BtnHost.Content = "Close Party";
+        BtnHost.Content = Loc.T("closeParty");
         UpdateHostInfo();
     }
 
@@ -374,12 +382,12 @@ public partial class MainWindow : Window
         if (_host == null) return;
         var lines = new List<string>
         {
-            _host.RelayOk ? "Relay online: your friend can join from anywhere, no VPN needed." : "Relay offline: only LAN/VPN/open-port connections will work.",
-            _host.Published ? "Party listed: your friend types the name and password in \"Join a Party\"." : "Party not listed online yet.",
+            _host.RelayOk ? Loc.T("relayOn") : Loc.T("relayOff"),
+            _host.Published ? Loc.T("listed") : Loc.T("notListed"),
         };
-        if (_host.UpnpOk) lines.Add($"Router ports opened via UPnP ({_host.PublicIp}).");
+        if (_host.UpnpOk) lines.Add(Loc.T("upnpOpened", _host.PublicIp ?? ""));
         foreach (var a in _host.LocalAddresses.Where(a => a.Kind != "LAN")) lines.Add($"{a.Kind}: {a.Address}");
-        lines.Add("Keep this app open while you play: it is the party server.");
+        lines.Add(Loc.T("keepOpenServer"));
         TxtHostInfo.Text = string.Join("\n", lines);
     }
 
@@ -390,7 +398,7 @@ public partial class MainWindow : Window
         _host = null;
         await h.DisposeAsync();
         CodeBox.Visibility = Visibility.Collapsed;
-        BtnHost.Content = "Create Party";
+        BtnHost.Content = Loc.T("createParty");
         Log("Party closed.");
     }
 
@@ -400,7 +408,7 @@ public partial class MainWindow : Window
         try
         {
             Clipboard.SetText($"Demon's Souls party: {_host.Name}\nPassword: {_host.Password}\n(DeS Seamless Co-op > Join a Party)");
-            Status("Copied. Send it to your friend (Discord, WhatsApp…).");
+            Status(Loc.T("stCopied"));
         }
         catch { }
     }
@@ -408,30 +416,30 @@ public partial class MainWindow : Window
     async void BtnJoin_Click(object sender, RoutedEventArgs e)
     {
         SaveSettings();
-        await RunBusy("Looking for the party…", async _ => await JoinAsync());
+        await RunBusy(Loc.T("joinLooking"), async _ => await JoinAsync());
     }
 
     async Task JoinAsync()
     {
         var name = TxtJoinName.Text.Trim();
         var pass = TxtJoinPass.Text.Trim();
-        if (name.Length == 0) throw new InvalidOperationException("Type the host's party name and password.");
+        if (name.Length == 0) throw new InvalidOperationException(Loc.T("joinNeedName"));
         _client?.Dispose();
         _client = null;
-        TxtJoinInfo.Text = "Looking for the party…";
+        TxtJoinInfo.Text = Loc.T("joinLooking");
         try
         {
             _client = await PartyClient.ConnectAsync(name, pass, _emu.IsInstalled ? _emu.RpcnUser() : null, Log);
         }
         catch
         {
-            TxtJoinInfo.Text = "Could not join.";
+            TxtJoinInfo.Text = Loc.T("joinFailed");
             throw;
         }
         _joinedAddress = _client.Address;
         SaveSettings();
-        TxtJoinInfo.Text = $"Connected to \"{_client.PartyName}\"" + (_client.ViaRelay ? " through the relay" : $" via {_client.Address}") +
-                           ". Now press PLAY and keep this app open.";
+        var via = _client.ViaRelay ? Loc.T("viaRelay") : Loc.T("viaAddr", _client.Address);
+        TxtJoinInfo.Text = Loc.T("joinConnected", _client.PartyName, via);
     }
 
     async Task RefreshPartyAsync()
@@ -458,18 +466,18 @@ public partial class MainWindow : Window
     async void BtnPlay_Click(object sender, RoutedEventArgs e)
     {
         SaveSettings();
-        if (!_emu.IsInstalled) { Ui.Info(this, "Install RPCS3 first (Download)."); return; }
-        if (!_emu.FirmwareInstalled) { Ui.Info(this, "Install the PS3 firmware first."); return; }
-        if (_game == null) { Ui.Info(this, "Pick your Demon's Souls folder first."); return; }
-        if (_s.Mode == PartyMode.None) { Ui.Info(this, "Choose one: Host a Party, Join a Party or Public Server."); return; }
+        if (!_emu.IsInstalled) { Ui.Info(this, Loc.T("dgNeedRpcs3")); return; }
+        if (!_emu.FirmwareInstalled) { Ui.Info(this, Loc.T("dgNeedFw")); return; }
+        if (_game == null) { Ui.Info(this, Loc.T("dgNeedGame")); return; }
+        if (_s.Mode == PartyMode.None) { Ui.Info(this, Loc.T("dgNeedMode")); return; }
         if (_emu.RpcnUser() == null)
         {
             OpenRpcn();
-            if (_emu.RpcnUser() == null && !Ui.Ask(this, "No RPCN account yet, so online co-op won't work.\n\nPlay offline anyway?")) return;
+            if (_emu.RpcnUser() == null && !Ui.Ask(this, Loc.T("dgOfflineAnyway"))) return;
         }
-        if (_emu.IsRunning()) { Ui.Info(this, "RPCS3 is already open. Close it so the app can apply the network settings before launching."); return; }
+        if (_emu.IsRunning()) { Ui.Info(this, Loc.T("dgRpcs3Running")); return; }
 
-        await RunBusy("Preparing…", async _ =>
+        await RunBusy(Loc.T("stPreparing"), async _ =>
         {
             string target;
             switch (_s.Mode)
@@ -488,30 +496,30 @@ public partial class MainWindow : Window
             }
 
             EnsureFirewall();
-            Status("Configuring RPCS3…");
+            Status(Loc.T("stConfiguring"));
             _emu.ConfigureNetwork(target);
             _emu.RegisterGame(_game);
             await _emu.EnableQualityPatchesAsync();
-            Status("Checking the co-op patch…");
+            Status(Loc.T("stPatch"));
             await Task.Run(ApplyPatch);
             Log($"Launching the game. Server: {target}");
             _emu.Launch(_game, _s.Fullscreen);
             Dispatcher.InvokeAsync(async () => { await Task.Delay(4000); UpdateGameIndicator(); });
         });
-        Status(_host != null ? "Game running. Keep this app open: it is the party server." : "Game running. Good hunting, Slayer of Demons.");
+        Status(Loc.T(_host != null ? "stGameHost" : "stGameSolo"));
     }
 
     protected override void OnClosing(CancelEventArgs e)
     {
         SaveSettings();
         if (_client != null && !_closingConfirmed && _client.ViaRelay && _emu.IsRunning() &&
-            !Ui.Ask(this, "You are connected through the relay. Closing the app disconnects you from the party.\n\nClose anyway?"))
+            !Ui.Ask(this, Loc.T("dgRelayClose")))
         {
             e.Cancel = true;
             return;
         }
         if (_host == null || _closingConfirmed) { _client?.Dispose(); base.OnClosing(e); return; }
-        if (!Ui.Ask(this, "You are the host. Closing the app ends the party for your friend.\n\nClose anyway?"))
+        if (!Ui.Ask(this, Loc.T("dgHostClose")))
         {
             e.Cancel = true;
             return;

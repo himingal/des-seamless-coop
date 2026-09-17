@@ -14,7 +14,11 @@
         <!-- Title -->
         <Grid Margin="0,0,0,18">
         <ComboBox x:Name="CmbLang" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,6,0,0" Width="150"
-                  SelectionChanged="CmbLang_Changed" DisplayMemberPath="Name" SelectedValuePath="Code"/>
+                  SelectionChanged="CmbLang_Changed" SelectedValuePath="Code">
+            <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" FontSize="12"/></DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
         <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,0,0" Padding="12,6" BorderThickness="1"
                 BorderBrush="{StaticResource Line}" Background="#80050506" ToolTip="Is Demon's Souls running in RPCS3?">
             <StackPanel Orientation="Horizontal">
@@ -49,7 +53,7 @@
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                         <Border Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="THE NEXUS" Style="{StaticResource H}" Margin="14,0"/>
+                        <TextBlock x:Name="LblNexus" Grid.Column="1" Text="THE NEXUS" Style="{StaticResource H}" Margin="14,0"/>
                         <Border Grid.Column="2" Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
                     </Grid>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -58,7 +62,7 @@
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <Rectangle x:Name="DotRpcs3" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="RPCS3 Emulator" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="LblRpcs3Emu" Text="RPCS3 Emulator" Style="{StaticResource Label}"/>
                                     <TextBlock x:Name="TxtRpcs3" Style="{StaticResource Small}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
@@ -71,7 +75,7 @@
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <Rectangle x:Name="DotFw" Style="{StaticResource Dot}" Fill="{StaticResource Bad}"/>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="PS3 Firmware" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="LblFwTitle" Text="PS3 Firmware" Style="{StaticResource Label}"/>
                                     <TextBlock x:Name="TxtFw" Style="{StaticResource Small}"/>
                                 </StackPanel>
                                 <Button x:Name="BtnFw" Grid.Column="2" Content="Install" Click="BtnFw_Click" VerticalAlignment="Top"/>
@@ -107,7 +111,7 @@
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                         <Border Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="YOUR PARTY" Style="{StaticResource H}" Margin="14,0"/>
+                        <TextBlock x:Name="LblYourParty" Grid.Column="1" Text="YOUR PARTY" Style="{StaticResource H}" Margin="14,0"/>
                         <Border Grid.Column="2" Height="1" Background="{StaticResource Rule}" VerticalAlignment="Center"/>
                     </Grid>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">

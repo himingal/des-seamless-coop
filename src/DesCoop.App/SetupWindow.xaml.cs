@@ -10,7 +10,7 @@ namespace DesCoop.App;
 public sealed class SetupStep : INotifyPropertyChanged
 {
     public required string Name { get; init; }
-    string _state = "waiting";
+    string _state = Loc.T("suWaiting");
     Brush _color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x4A, 0x44, 0x38));
     public string State { get => _state; set { _state = value; PropertyChanged?.Invoke(this, new(nameof(State))); } }
     public Brush Color { get => _color; set { _color = value; PropertyChanged?.Invoke(this, new(nameof(Color))); } }
@@ -29,11 +29,23 @@ public partial class SetupWindow : Window
 
     public SetupWindow(string? gamePath)
     {
+        // Match the app language before any text is shown (empty = detect from Windows).
+        var lang = AppSettings.Load().Language;
+        if (string.IsNullOrEmpty(lang))
+        {
+            var two = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            lang = two is "pt" or "es" ? two : "en";
+        }
+        Loc.Lang = lang;
+
         InitializeComponent();
         Ui.DarkTitleBar(this);
         _gamePath = gamePath;
-        foreach (var n in new[] { "RPCS3 emulator", "PS3 firmware (from Sony)", "Demon's Souls", "Co-op patch", "RPCS3 settings" })
-            _steps.Add(new SetupStep { Name = n });
+        TxtTitle.Text = Loc.T("suTitlePreparing");
+        TxtStatus.Text = Loc.T("suStarting");
+        BtnClose.Content = Loc.T("suContinue");
+        foreach (var n in new[] { "suStepRpcs3", "suStepFw", "suStepGame", "suStepPatch", "suStepSettings" })
+            _steps.Add(new SetupStep { Name = Loc.T(n) });
         Steps.ItemsSource = _steps;
         Loaded += async (_, _) => await RunAsync();
     }
@@ -43,7 +55,7 @@ public partial class SetupWindow : Window
     async Task Step(int i, Func<IProgress<DownloadProgress>, Task<string>> work)
     {
         var s = _steps[i];
-        s.State = "working…";
+        s.State = Loc.T("suWorking");
         s.Color = Res("Gold");
         var progress = new Progress<DownloadProgress>(p => { TxtStatus.Text = p.Stage; Bar.Value = p.Fraction; });
         try
@@ -54,7 +66,7 @@ public partial class SetupWindow : Window
         catch (Exception ex)
         {
             _failed = true;
-            s.State = "failed";
+            s.State = Loc.T("suFailed");
             s.Color = Res("Bad");
             TxtStatus.Text = ex.Message;
             await Task.Delay(1500);
@@ -69,20 +81,20 @@ public partial class SetupWindow : Window
 
         await Step(0, async p =>
         {
-            if (emu.IsInstalled) return "already installed";
+            if (emu.IsInstalled) return Loc.T("suAlready");
             await emu.InstallLatestAsync(p);
-            return "installed";
+            return Loc.T("suInstalled");
         });
         await Step(1, async p =>
         {
-            if (!emu.IsInstalled) return "skipped";
-            if (emu.FirmwareInstalled) return "already installed";
+            if (!emu.IsInstalled) return Loc.T("suSkipped");
+            if (emu.FirmwareInstalled) return Loc.T("suAlready");
             await emu.InstallFirmwareAsync(p);
-            return "installed";
+            return Loc.T("suInstalled");
         });
         await Step(2, _ =>
         {
-            if (game == null) return Task.FromResult(_gamePath == null ? "pick it later in the app" : "not found, pick it in the app");
+            if (game == null) return Task.FromResult(_gamePath == null ? Loc.T("suPickLater") : Loc.T("suNotFound"));
             settings.GamePath = game.Root;
             settings.Save();
             if (emu.IsInstalled) emu.RegisterGame(game);
@@ -90,31 +102,31 @@ public partial class SetupWindow : Window
         });
         await Step(3, async _ =>
         {
-            if (game == null) return "skipped";
-            TxtStatus.Text = "Patching the game files (backup kept)…";
+            if (game == null) return Loc.T("suSkipped");
+            TxtStatus.Text = Loc.T("suPatching");
             var r = await Task.Run(() => GamePatcher.Apply(game, settings.Patch));
             if (r.Changed && emu.IsInstalled) emu.ClearGameCache();
-            return r.Lines.Any(l => l.StartsWith("Warning") || l.StartsWith("Error")) ? "partially applied" : "applied";
+            return r.Lines.Any(l => l.StartsWith("Warning") || l.StartsWith("Error")) ? Loc.T("suPartial") : Loc.T("suApplied");
         });
         await Step(4, async _ =>
         {
-            if (!emu.IsInstalled) return "skipped";
+            if (!emu.IsInstalled) return Loc.T("suSkipped");
             emu.PrepareGuiSettings();
             await emu.EnableQualityPatchesAsync();
-            return "done";
+            return Loc.T("suDone");
         });
 
         Bar.Value = 1;
         if (_failed)
         {
-            TxtTitle.Text = "ALMOST THERE";
-            TxtStatus.Text = "Some steps failed (no internet?). The app has buttons to retry each one.";
+            TxtTitle.Text = Loc.T("suTitleAlmost");
+            TxtStatus.Text = Loc.T("suSomeFailed");
             BtnClose.Visibility = Visibility.Visible;
         }
         else
         {
-            TxtTitle.Text = "THE NEXUS AWAITS";
-            TxtStatus.Text = "All set.";
+            TxtTitle.Text = Loc.T("suTitleDone");
+            TxtStatus.Text = Loc.T("suAllSet");
             await Task.Delay(1400);
             Close();
         }

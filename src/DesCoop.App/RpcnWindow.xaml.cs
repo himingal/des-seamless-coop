@@ -15,8 +15,28 @@ public partial class RpcnWindow : Window
         InitializeComponent();
         Ui.DarkTitleBar(this);
         _emu = emu;
+        ApplyLanguage();
         var (npid, _, _) = emu.RpcnAccount();
         if (!string.IsNullOrEmpty(npid)) { TxtUser.Text = npid; RbSignIn.IsChecked = true; }
+    }
+
+    void ApplyLanguage()
+    {
+        Title = Loc.T("lblRpcn");
+        LblTitle.Text = Loc.T("rpcnTitle");
+        LblBlurb.Text = Loc.T("rpcnBlurb");
+        RbCreate.Content = Loc.T("rpcnCreate");
+        RbSignIn.Content = Loc.T("rpcnHaveOne");
+        LblUser.Text = Loc.T("rpcnUser");
+        LblEmail.Text = Loc.T("rpcnEmail");
+        LblPass.Text = Loc.T("password");
+        LblPass2.Text = Loc.T("rpcnPass2");
+        LblTokenSignIn.Text = Loc.T("rpcnTokenSignIn");
+        LblTokenTitle.Text = Loc.T("rpcnCreated");
+        LblTokenBlurb.Text = Loc.T("rpcnPasteToken");
+        BtnResend.Content = Loc.T("rpcnResend");
+        BtnConfirm.Content = Loc.T("rpcnConfirm");
+        BtnGo.Content = Loc.T(RbCreate.IsChecked == true ? "rpcnCreateAccount" : "rpcnSignInBtn");
     }
 
     void Tab_Changed(object sender, RoutedEventArgs e)
@@ -25,7 +45,7 @@ public partial class RpcnWindow : Window
         bool create = RbCreate.IsChecked == true;
         EmailRow.Visibility = ConfirmRow.Visibility = create ? Visibility.Visible : Visibility.Collapsed;
         TokenRowSignIn.Visibility = create ? Visibility.Collapsed : Visibility.Visible;
-        BtnGo.Content = create ? "Create Account" : "Sign In";
+        BtnGo.Content = Loc.T(create ? "rpcnCreateAccount" : "rpcnSignInBtn");
         StepForm.Visibility = Visibility.Visible;
         StepToken.Visibility = Visibility.Collapsed;
         TxtMsg.Text = "";
@@ -40,18 +60,18 @@ public partial class RpcnWindow : Window
     async void BtnGo_Click(object sender, RoutedEventArgs e)
     {
         var user = TxtUser.Text.Trim();
-        if (!RpcnClient.IsValidUsername(user)) { TxtMsg.Text = "Username must be 3-16 letters, numbers, - or _."; return; }
-        if (TxtPass.Password.Length < 4) { TxtMsg.Text = "Pick a longer password."; return; }
+        if (!RpcnClient.IsValidUsername(user)) { TxtMsg.Text = Loc.T("rpcnVUser"); return; }
+        if (TxtPass.Password.Length < 4) { TxtMsg.Text = Loc.T("rpcnVPass"); return; }
         bool create = RbCreate.IsChecked == true;
         if (create)
         {
-            if (!TxtEmail.Text.Contains('@')) { TxtMsg.Text = "Enter a real email: RPCN sends the token there."; return; }
-            if (TxtPass.Password != TxtPass2.Password) { TxtMsg.Text = "Passwords don't match."; return; }
+            if (!TxtEmail.Text.Contains('@')) { TxtMsg.Text = Loc.T("rpcnVEmail"); return; }
+            if (TxtPass.Password != TxtPass2.Password) { TxtMsg.Text = Loc.T("rpcnVMatch"); return; }
         }
         string token = TxtTokenSignIn.Text.Trim();
-        if (!create && token.Length > 0 && !RpcnClient.IsValidToken(token)) { TxtMsg.Text = "The token is 16 characters (A-Z, 0-9)."; return; }
+        if (!create && token.Length > 0 && !RpcnClient.IsValidToken(token)) { TxtMsg.Text = Loc.T("rpcnVToken"); return; }
 
-        Busy(true, "Talking to RPCN…");
+        Busy(true, Loc.T("rpcnTalking"));
         try
         {
             string pass = TxtPass.Password, email = TxtEmail.Text.Trim();
@@ -76,14 +96,14 @@ public partial class RpcnWindow : Window
                 Done();
             }
         }
-        catch (Exception ex) { Busy(false, "Could not reach RPCN: " + ex.Message); }
+        catch (Exception ex) { Busy(false, Loc.T("rpcnUnreachable", ex.Message)); }
     }
 
     async void BtnConfirm_Click(object sender, RoutedEventArgs e)
     {
         var token = TxtToken.Text.Trim();
-        if (!RpcnClient.IsValidToken(token)) { TxtMsg.Text = "The token is 16 characters (A-Z, 0-9)."; return; }
-        Busy(true, "Checking the token…");
+        if (!RpcnClient.IsValidToken(token)) { TxtMsg.Text = Loc.T("rpcnVToken"); return; }
+        Busy(true, Loc.T("rpcnCheckToken"));
         try
         {
             await using var c = await RpcnClient.ConnectAsync();
@@ -92,24 +112,24 @@ public partial class RpcnWindow : Window
             _emu.SaveRpcnAccount(_npid, _derived, token);
             Done();
         }
-        catch (Exception ex) { Busy(false, "Could not reach RPCN: " + ex.Message); }
+        catch (Exception ex) { Busy(false, Loc.T("rpcnUnreachable", ex.Message)); }
     }
 
     async void BtnResend_Click(object sender, RoutedEventArgs e)
     {
-        Busy(true, "Asking RPCN to resend the email…");
+        Busy(true, Loc.T("rpcnResending"));
         try
         {
             await using var c = await RpcnClient.ConnectAsync();
             var r = await c.ResendTokenAsync(_npid, _derived);
-            Busy(false, r == RpcnClient.Error.NoError ? "Sent. Check your inbox and spam folder." : RpcnClient.Describe(r));
+            Busy(false, r == RpcnClient.Error.NoError ? Loc.T("rpcnResent") : RpcnClient.Describe(r));
         }
-        catch (Exception ex) { Busy(false, "Could not reach RPCN: " + ex.Message); }
+        catch (Exception ex) { Busy(false, Loc.T("rpcnUnreachable", ex.Message)); }
     }
 
     void Done()
     {
-        Ui.Info(this, $"You're in, {_npid}. RPCS3 will sign in by itself when the game goes online.");
+        Ui.Info(this, Loc.T("rpcnDone", _npid));
         DialogResult = true;
     }
 }
