@@ -118,7 +118,7 @@ for i in range(FRAMES):
     d.line([(sx + subw + 24, ry), (sx + subw + 130, ry)], fill=(90, 74, 45), width=1)
 
     # tagline
-    tag = "Co-op across the whole game on RPCS3 — one hosts, the other joins."
+    tag = "Co-op across the whole game on RPCS3."
     tw = d.textlength(tag, font=f_tag)
     d.text(((W - tw) / 2, 212), tag, font=f_tag, fill=MUTED)
 
