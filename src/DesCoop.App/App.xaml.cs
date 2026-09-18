@@ -38,6 +38,10 @@ public partial class App : Application
             MainWindow.Show();
             return;
         }
+        // Experimental sandbox: DesCoop.exe --seamless uses a separate settings profile and the beefier
+        // "Seamless (TEST)" preset, so it never disturbs the stable co-op the user plays with.
+        AppSettings.Seamless = e.Args.Contains("--seamless", StringComparer.OrdinalIgnoreCase);
+
         MainWindow = new MainWindow();
         MainWindow.Show();
     }

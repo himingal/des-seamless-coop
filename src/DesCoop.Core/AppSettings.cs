@@ -42,7 +42,12 @@ public sealed class AppSettings
         return d;
     }
 
-    static string FilePath => Path.Combine(DataDir, "descoop-settings.json");
+    /// <summary>Experimental "Seamless (TEST)" mode (launched with --seamless): a separate settings profile
+    /// and a beefier patch preset, kept apart from the stable co-op so testing never touches it.</summary>
+    public static bool Seamless { get; set; }
+
+    static string StableFilePath => Path.Combine(DataDir, "descoop-settings.json");
+    static string FilePath => Seamless ? Path.Combine(DataDir, "descoop-settings.seamless.json") : StableFilePath;
     static string LegacyFilePath => Path.Combine(BaseDir, "descoop-settings.json");
     static string LegacyRpcs3 => Path.Combine(BaseDir, "rpcs3");
 
@@ -52,13 +57,17 @@ public sealed class AppSettings
         try
         {
             if (File.Exists(FilePath)) s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Json) ?? new();
+            // First run of the seamless profile: seed emulator/game/RPCN paths from the stable one so the
+            // tester doesn't reconfigure. Party name/mode start fresh (the seamless preset overrides tweaks).
+            else if (Seamless && File.Exists(StableFilePath)) s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(StableFilePath), Json) ?? new();
             else if (File.Exists(LegacyFilePath)) s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(LegacyFilePath), Json) ?? new();
         }
         catch { }
 
         // The game tweaks are a fixed, non-selectable set, so any value persisted by an older version is
-        // ignored — every launch and every --setup applies the current intended options.
-        s.Patch = new PatchOptions();
+        // ignored — every launch and every --setup applies the current intended options. Seamless mode uses
+        // the beefier experimental preset instead.
+        s.Patch = Seamless ? PatchOptions.SeamlessPreset() : new PatchOptions();
 
         // An RPCS3 that an older version (or the installer) put next to the exe keeps being used,
         // so firmware, saves and the RPCN account are not lost.

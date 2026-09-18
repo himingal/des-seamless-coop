@@ -36,6 +36,15 @@ public sealed class PatchOptions
     public bool ManaRegen { get; set; } = true;
     /// <summary>Every world pickup and drop gives twice as much, so a host and helper each get one.</summary>
     public bool DoubleLoot { get; set; } = true;
+
+    /// <summary>
+    /// Experimental "Seamless (TEST)" preset. Beefier than the stable set: the Blue Eye Stone works in body
+    /// form (so you can place a sign without dying first) and the loot doubling is OFF (the tester wants raw
+    /// pickups). The truly seamless behaviours — summon in any form, no session teardown on a boss/host death,
+    /// both players picking up items and shared boss progress — live in the PS3 executable and the per-PC
+    /// save, so they are NOT here: params and the server can't reach them.
+    /// </summary>
+    public static PatchOptions SeamlessPreset() => new() { BlueEyeStoneInBodyForm = true, DoubleLoot = false };
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);

@@ -55,6 +55,9 @@ Source: "..\publish\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+; Experimental sandbox shortcut (separate profile; never touches the stable co-op).
+Name: "{autoprograms}\{#AppName} - Seamless (TEST)"; Filename: "{app}\{#AppExe}"; Parameters: "--seamless"
+Name: "{autodesktop}\{#AppName} - Seamless (TEST)"; Filename: "{app}\{#AppExe}"; Parameters: "--seamless"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#AppExe}"; Parameters: "--setup --game ""{code:GamePath}"""; StatusMsg: "{cm:Preparing}"; Flags: waituntilterminated
