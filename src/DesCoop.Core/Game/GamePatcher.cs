@@ -38,13 +38,22 @@ public sealed class PatchOptions
     public bool DoubleLoot { get; set; } = true;
 
     /// <summary>
-    /// Experimental "Seamless (TEST)" preset. Beefier than the stable set: the Blue Eye Stone works in body
-    /// form (so you can place a sign without dying first) and the loot doubling is OFF (the tester wants raw
-    /// pickups). The truly seamless behaviours — summon in any form, no session teardown on a boss/host death,
-    /// both players picking up items and shared boss progress — live in the PS3 executable and the per-PC
-    /// save, so they are NOT here: params and the server can't reach them.
+    /// EXPERIMENTAL: keep the summoned blue phantom in the host's world through a boss clear and through the
+    /// host's death, instead of being sent home. Implemented by commenting out the single
+    /// <c>proxy:WarpNextStageKick();</c> call in the co-op teardown functions of the game's own Lua
+    /// (<c>BlockClear2_3</c> = boss/area clear, <c>HostDead_1</c> = host death) in every m*.luabnd. Plain-Lua
+    /// edit, pristine backup kept, fully reversible — no EBOOT memory patching. Needs in-game testing.
     /// </summary>
-    public static PatchOptions SeamlessPreset() => new() { BlueEyeStoneInBodyForm = true, DoubleLoot = false };
+    public bool PersistentCoop { get; set; } = false;
+
+    /// <summary>
+    /// Experimental "Seamless (TEST)" preset. Beefier than the stable set: the Blue Eye Stone works in body
+    /// form (place a sign without dying first), loot doubling is OFF (raw pickups), and the co-op session
+    /// persists through bosses and host death (<see cref="PersistentCoop"/>). Still out of reach at this
+    /// layer: summon in any form, both players picking up items and shared boss progress — those live in the
+    /// PS3 executable and the per-PC save.
+    /// </summary>
+    public static PatchOptions SeamlessPreset() => new() { BlueEyeStoneInBodyForm = true, DoubleLoot = false, PersistentCoop = true };
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);
@@ -222,7 +231,7 @@ public static class GamePatcher
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
         if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, log)) changed = true;
-        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, log)) changed = true;
+        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, log)) changed = true;
         return new PatchReport(changed, log);
     }
 

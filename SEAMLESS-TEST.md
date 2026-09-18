@@ -20,28 +20,42 @@ RPCS3, kept completely separate from the stable co-op:
 ## What actually works here today
 
 - Place a summon sign **without dying first** (Blue Eye Stone in human form).
+- **Persistent co-op (NEW):** the summoned blue phantom is **not sent home after a
+  boss** and **not sent home when the host dies**. Found by reverse-engineering the
+  game: the teardown is a single `proxy:WarpNextStageKick();` call in the game's own
+  Lua (`BlockClear2_3` = boss/area clear, `HostDead_1` = host death), so it is
+  commented out in every `m*.luabnd` — a plain-Lua edit with a pristine backup,
+  fully reversible, **no EBOOT memory patching**. Experimental: needs in-game
+  testing with a friend (keeping the phantom past a boss transition may desync).
 - Everything the stable app already does: sign relocated next to the host, full-HP
   soul form, infinite Ephemeral Eyes, stay-in-soul-form.
 - Loot doubling is off (raw single pickups).
 
-## What does NOT work (and why)
+## What still does NOT work (and why)
 
-These are the real "seamless" behaviours, and they live in the **PS3 game
-executable (EBOOT)** and in each player's **own save file** — places the launcher,
-the reimplemented server and param edits cannot reach:
+The RE changed the picture: "no teardown" turned out to be a Lua call, so it's done
+above. These three remain out of reach — they live in the **PS3 executable (EBOOT)**
+or each player's **own save file**:
 
 | Wanted | Where it lives | Status |
 |---|---|---|
 | Summon / be summoned in **any form** | EBOOT summon handshake (client-side form check) | ❌ needs EBOOT patch |
-| **No session teardown** on boss / host death | EBOOT sends the phantom home on boss clear | ❌ needs EBOOT patch |
 | **Both** players pick up world items | pickup writes the **host's** save; the guest's inventory is a separate save on their PC | ❌ needs save sync |
 | **Shared boss progression** | boss-defeat flags are per-save on each PC | ❌ needs save sync |
 
-Doing these properly means reverse-engineering the Demon's Souls EBOOT and hooking
-game code at runtime (the way the Elden Ring Seamless Co-op mod hooks the PC exe),
-plus an inventory/flag sync channel that doesn't exist yet. Guessing PPU patch
-addresses without verified codes **crashes RPCS3 and can corrupt saves**, so this
-build does not ship fake patches — the plumbing is here, the verified game-code
-patches are not.
+The form check is C++ in the EBOOT; the two save-level ones need an inventory/flag
+sync channel that doesn't exist yet. Guessing PPU patch addresses without verified
+codes **crashes RPCS3 and can corrupt saves**, so this build ships no fake EBOOT
+patches — only the verified, reversible Lua edits above.
+
+## Reverse-engineering notes
+
+The decrypted EBOOT (`rpcs3.exe --decrypt EBOOT.BIN`) keeps full debug symbols for
+the online session state machine (`OnBeSummoned_White`, `SummonSuccess_White`,
+`HostDead`, `BlockClear2_*`, `IsWhiteGhost`/`IsGreyGhost`/`IsBlackGhost`,
+`WarpNextStageKick`, `SetSosSignPos`, `ClearSosSign`) and the original source paths
+(`N:/DemonsSoul/Source/...`). The session logic that ends co-op is driven from the
+per-map `global_event.lua` inside each `m*.luabnd`, which is plaintext and patchable
+— that is how both "stay in soul form" and this "persistent co-op" work.
 
 **Bottom line:** treat this as a scratchpad for the seamless experiment, not a build to hand to a friend.

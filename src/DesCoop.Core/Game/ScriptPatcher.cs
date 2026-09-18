@@ -35,8 +35,15 @@ public static class ScriptPatcher
                     || f.EndsWith(".luabnd.dcx.sdat", StringComparison.OrdinalIgnoreCase)));
     }
 
-    /// <summary>Comments out the automatic revive statements; returns the new text and how many lines changed.</summary>
-    public static (byte[] bytes, int changed) PatchGlobalEvent(byte[] source)
+    /// <summary>Functions whose single <c>proxy:WarpNextStageKick();</c> sends the summoned blue phantom home
+    /// on a boss/area clear and on the host's death. Disabling only these keeps co-op going (seamless), while
+    /// the phantom's own death, PvP and "leave" paths still kick as normal.</summary>
+    static readonly string[] PersistFunctions = ["BlockClear2_3", "HostDead_1"];
+    const string KickCall = "proxy:WarpNextStageKick();";
+
+    /// <summary>Comments out the automatic revive statements (and, when <paramref name="persistentCoop"/> is
+    /// set, the co-op teardown kick); returns the new text and how many lines changed.</summary>
+    public static (byte[] bytes, int changed) PatchGlobalEvent(byte[] source, bool persistentCoop = false)
     {
         // Shift-JIS file: split on raw bytes and only touch pure-ASCII statements.
         var lines = Split(source);
@@ -47,36 +54,48 @@ public static class ScriptPatcher
             var text = Encoding.Latin1.GetString(lines[i]);
             var t = text.Trim();
             if (t.StartsWith("function ")) fn = t[9..].Split('(')[0].Trim();
+
+            // Seamless persistence: disable the lone kick call, only inside the two teardown functions.
+            if (persistentCoop && fn != null && PersistFunctions.Contains(fn) && CommentStatement(lines, i, text, t, KickCall))
+            {
+                changed++;
+                continue;
+            }
+
             if (fn != null && KeepInFunctions.Contains(fn)) continue;
             foreach (var stmt in Disabled)
-            {
-                if (!t.StartsWith(stmt)) continue;
-                var rest = t[stmt.Length..].Trim();
-                if (rest.Length > 0 && !rest.StartsWith("--")) break; // something else on the line: leave it
-                int indent = text.Length - text.TrimStart().Length;
-                lines[i] = Encoding.Latin1.GetBytes(text[..indent] + "--[DeS Co-op] " + text[indent..]);
-                changed++;
-                break;
-            }
+                if (CommentStatement(lines, i, text, t, stmt)) { changed++; break; }
         }
         return (Join(lines), changed);
     }
 
+    /// <summary>Comments the line in place if it is exactly <paramref name="stmt"/> (nothing else after it).</summary>
+    static bool CommentStatement(List<byte[]> lines, int i, string text, string t, string stmt)
+    {
+        if (!t.StartsWith(stmt)) return false;
+        var rest = t[stmt.Length..].Trim();
+        if (rest.Length > 0 && !rest.StartsWith("--")) return false; // something else on the line: leave it
+        int indent = text.Length - text.TrimStart().Length;
+        lines[i] = Encoding.Latin1.GetBytes(text[..indent] + "--[DeS Co-op] " + text[indent..]);
+        return true;
+    }
+
     /// <summary>Patches global_event.lua in a script binder; returns the number of disabled statements.</summary>
-    public static int PatchBinder(BND3 bnd)
+    public static int PatchBinder(BND3 bnd, bool persistentCoop = false)
     {
         int n = 0;
         foreach (var f in bnd.Files.Where(f => Path.GetFileName(f.Name ?? "").Equals(ScriptName, StringComparison.OrdinalIgnoreCase)))
         {
-            var (bytes, changed) = PatchGlobalEvent(f.Bytes);
+            var (bytes, changed) = PatchGlobalEvent(f.Bytes, persistentCoop);
             f.Bytes = bytes;
             n += changed;
         }
         return n;
     }
 
-    public static bool Apply(string usrDir, bool stayInSoulForm, List<string> log)
+    public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, List<string> log)
     {
+        bool doPatch = stayInSoulForm || persistentCoop;
         bool changed = false;
         foreach (var path in FindScriptBnds(usrDir))
         {
@@ -85,7 +104,7 @@ public static class ScriptPatcher
             try
             {
                 byte[] fresh;
-                if (!stayInSoulForm)
+                if (!doPatch)
                 {
                     if (!File.Exists(backup)) continue;
                     fresh = File.ReadAllBytes(backup);
@@ -104,9 +123,9 @@ public static class ScriptPatcher
                         File.Copy(source, sourceBackup);
                     }
                     var bnd = BND3.Read(sdat ? sourceBackup : backup);
-                    int n = PatchBinder(bnd);
-                    if (n == 0) { log.Add($"{name}: revive calls not found, left alone"); fresh = File.ReadAllBytes(backup); }
-                    else { fresh = bnd.Write(); log.Add($"{name}: {n} automatic revive line(s) disabled"); }
+                    int n = PatchBinder(bnd, persistentCoop);
+                    if (n == 0) { log.Add($"{name}: script calls not found, left alone"); fresh = File.ReadAllBytes(backup); }
+                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) disabled{(persistentCoop ? " (incl. co-op teardown)" : "")}"); }
                 }
                 if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
                 {
