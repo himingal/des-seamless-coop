@@ -1,6 +1,6 @@
 ; DeS Seamless Co-op installer (Inno Setup 6). Built by tools/build-release.ps1.
-; Installs the app, then runs "DesCoop.exe --setup" which downloads RPCS3 + the official PS3 firmware,
-; registers and patches the game, and configures RPCS3. After this the player only needs an RPCN account.
+; Installs the app and opens it, handing over the chosen game folder. RPCS3 is downloaded by the user from
+; rpcs3.net and pointed to in the app; the app itself only downloads the PS3 firmware. No setup step runs.
 #define AppName "DeS Seamless Co-op"
 #ifndef AppVersion
   #define AppVersion "2.0.0"
@@ -37,9 +37,9 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 
 [Messages]
 WelcomeLabel1=Welcome, Slayer of Demons
-WelcomeLabel2=This installs [name/ver].%n%nIt also downloads the RPCS3 emulator and the official PS3 firmware (from Sony), sets up your Demon's Souls copy for seamless co-op and configures everything for online play.%n%nYou need your own Demon's Souls dump and an internet connection.
+WelcomeLabel2=This installs [name/ver].%n%nWhen it opens, get RPCS3 from rpcs3.net and point the app to it (one click). The app downloads the official PS3 firmware for you and sets up your Demon's Souls copy for seamless co-op on PLAY.%n%nYou need your own Demon's Souls dump and an internet connection.
 FinishedHeadingLabel=The Nexus awaits
-FinishedLabel=Everything is ready. Open the app, create your free RPCN account (one click), then host or join a party and press PLAY.
+FinishedLabel=Open the app, point it to RPCS3 (get it at rpcs3.net) and your Demon's Souls folder, install the PS3 firmware and create your free RPCN account, then host or join a party and press PLAY.
 
 [CustomMessages]
 DesktopIcon=Create a desktop shortcut
@@ -60,8 +60,7 @@ Name: "{autoprograms}\{#AppName} - Seamless (TEST)"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName} - Seamless (TEST)"; Filename: "{app}\{#AppExe}"; Parameters: "--seamless"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExe}"; Parameters: "--setup --game ""{code:GamePath}"""; StatusMsg: "{cm:Preparing}"; Flags: waituntilterminated
-Filename: "{app}\{#AppExe}"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Parameters: "--game ""{code:GamePath}"""; Description: "{cm:Launch}"; Flags: nowait postinstall
 
 [UninstallDelete]
 ; RPCS3, your saves and the party server data live in {app}\rpcs3 and are kept on purpose.

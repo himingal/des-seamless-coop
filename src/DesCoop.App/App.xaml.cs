@@ -42,7 +42,9 @@ public partial class App : Application
         // "Seamless (TEST)" preset, so it never disturbs the stable co-op the user plays with.
         AppSettings.Seamless = e.Args.Contains("--seamless", StringComparer.OrdinalIgnoreCase);
 
-        MainWindow = new MainWindow();
+        // The installer hands the chosen game folder to the main window on first launch (it no longer runs a
+        // separate setup step): RPCS3 is downloaded by the user from rpcs3.net and just pointed to here.
+        MainWindow = new MainWindow(Arg(e.Args, "--game"));
         MainWindow.Show();
     }
 

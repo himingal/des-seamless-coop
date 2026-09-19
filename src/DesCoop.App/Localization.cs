@@ -38,9 +38,10 @@ public static class Loc
         ["rpcs3Emulator"] = new() { ["en"] = "RPCS3 Emulator", ["pt"] = "Emulador RPCS3", ["es"] = "Emulador RPCS3" },
         ["ps3Firmware"] = new() { ["en"] = "PS3 Firmware", ["pt"] = "Firmware do PS3", ["es"] = "Firmware de PS3" },
         ["rpcs3Missing"] = new() {
-            ["en"] = "Download the latest official build, or point to your own RPCS3.",
-            ["pt"] = "Baixe a versão oficial mais recente, ou aponte para o seu RPCS3.",
-            ["es"] = "Descarga la versión oficial más reciente, o indica tu propio RPCS3." },
+            ["en"] = "Download RPCS3 from rpcs3.net, then point the app to its folder with Browse.",
+            ["pt"] = "Baixe o RPCS3 em rpcs3.net e aponte o app para a pasta dele em Procurar.",
+            ["es"] = "Descarga RPCS3 de rpcs3.net y apunta la app a su carpeta con Explorar." },
+        ["getRpcs3"] = new() { ["en"] = "Get RPCS3", ["pt"] = "Baixar RPCS3", ["es"] = "Obtener RPCS3" },
         ["fwInstalled"] = new() { ["en"] = "Installed.", ["pt"] = "Instalado.", ["es"] = "Instalado." },
         ["fwDownload"] = new() {
             ["en"] = "Downloads the official firmware straight from Sony.",
@@ -248,6 +249,7 @@ public static class Loc
             ["en"] = "Open your email (check spam too) and paste the 16-letter token from RPCN here.",
             ["pt"] = "Abra seu e-mail (veja o spam também) e cole aqui o token de 16 letras do RPCN.",
             ["es"] = "Abre tu email (revisa el spam también) y pega aquí el token de 16 letras de RPCN." },
+        ["rpcnBack"] = new() { ["en"] = "Back", ["pt"] = "Voltar", ["es"] = "Atrás" },
         ["rpcnResend"] = new() { ["en"] = "Resend Email", ["pt"] = "Reenviar E-mail", ["es"] = "Reenviar Email" },
         ["rpcnConfirm"] = new() { ["en"] = "Confirm", ["pt"] = "Confirmar", ["es"] = "Confirmar" },
         ["rpcnVUser"] = new() {

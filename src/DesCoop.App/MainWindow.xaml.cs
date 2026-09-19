@@ -24,12 +24,20 @@ public partial class MainWindow : Window
     PartyClient? _client;
     bool _busy, _loading = true, _closingConfirmed, _refreshing;
 
-    public MainWindow()
+    public MainWindow(string? initialGame = null)
     {
         InitializeComponent();
         Ui.DarkTitleBar(this);
         _emu = new Rpcs3Manager(_s.EffectiveRpcs3Dir);
         _game = GameLocator.Resolve(_s.GamePath);
+        // First launch straight from the installer: it passes the game folder the user picked, so it is
+        // remembered without a separate setup step.
+        if (_game == null && !string.IsNullOrWhiteSpace(initialGame) && GameLocator.Resolve(initialGame) is { } g0)
+        {
+            _game = g0;
+            _s.GamePath = g0.Root;
+            _s.Save();
+        }
         _joinedAddress = _s.JoinedAddress;
 
         // Tweaks are a fixed, always-applied set (no UI for them). Seamless (TEST) mode uses the beefier preset.
@@ -217,7 +225,7 @@ public partial class MainWindow : Window
         bool emu = _emu.IsInstalled;
         DotRpcs3.Fill = B(emu ? "Ok" : "Bad");
         TxtRpcs3.Text = emu ? _emu.Root : Loc.T("rpcs3Missing");
-        BtnRpcs3Install.Content = Loc.T(emu ? "update" : "download");
+        BtnRpcs3Install.Content = Loc.T("getRpcs3");
 
         bool fw = emu && _emu.FirmwareInstalled;
         DotFw.Fill = B(fw ? "Ok" : "Bad");
@@ -238,20 +246,12 @@ public partial class MainWindow : Window
 
     // ------------------------------------------------------------------ setup actions
 
-    async void BtnRpcs3Install_Click(object sender, RoutedEventArgs e)
+    // RPCS3 is no longer downloaded by the app: it opens the official download page so the user grabs the
+    // build they want, then points to it with Browse. (The only thing the app downloads is the PS3 firmware.)
+    void BtnRpcs3Install_Click(object sender, RoutedEventArgs e)
     {
-        if (_emu.IsRunning()) { Ui.Info(this, Loc.T("dgCloseRpcs3")); return; }
-        _emu = new Rpcs3Manager(_s.EffectiveRpcs3Dir);
-        await RunBusy(Loc.T("stDlRpcs3"), async p =>
-        {
-            await _emu.InstallLatestAsync(p);
-            Log("RPCS3 installed at " + _emu.Root);
-            if (!_emu.FirmwareInstalled)
-            {
-                await _emu.InstallFirmwareAsync(p);
-                Log("Firmware installed.");
-            }
-        });
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://rpcs3.net/download") { UseShellExecute = true }); }
+        catch { }
     }
 
     void BtnRpcs3Pick_Click(object sender, RoutedEventArgs e)

@@ -34,12 +34,12 @@ Demon's Souls' online servers were shut down in 2018. This app brings co-op back
 | ⚔️ **10 new starting classes** | Two per focus (Strength, Dexterity, Quality, Faith, Intelligence), unisex armor, ready-to-play kits. |
 | ✨ **Quality-of-life tweaks** | Full-HP soul form, infinite Ephemeral Eyes, passive MP regen, half-price merchants, double loot, faster upgrade stones and more — applied to your own dump, originals backed up. |
 | 🎌 **Multi-language** | English, Português (BR) and Español. Detected on first run, switchable any time. |
-| 🖱️ **One-click setup** | Downloads RPCS3 and the official PS3 firmware from Sony, patches the game and configures everything by itself. |
+| 🖱️ **Point-and-play setup** | Get [RPCS3](https://rpcs3.net) and point the app to it; it downloads the official PS3 firmware from Sony, patches the game and configures everything by itself. |
 
 ## Quick start
 
 1. **Download and run** [`DesSeamlessCoop-Setup.exe`](https://github.com/himingal/des-seamless-coop/releases/latest) and point it at your Demon's Souls folder (the one that contains `PS3_GAME`).
-   It downloads [RPCS3](https://rpcs3.net) and the official PS3 firmware, patches your game and configures everything.
+   Then get [RPCS3](https://rpcs3.net/download) and point the app to its folder — the app downloads the official PS3 firmware, patches your game and configures everything.
 2. **Open the app** and create your free **RPCN** account ([RPCS3's PlayStation Network](https://github.com/RipleyTom/rpcn)) — one small form, a token arrives by email.
 3. Both of you press **PLAY**.
 
