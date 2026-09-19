@@ -383,7 +383,7 @@ public sealed class DesServer : IDisposable
     {
         var st = GetStatus();
         var motd = new StringBuilder();
-        motd.Append($"{Ascii(_o.ServerName)}  -  Seamless Co-op v" + Version + "\r\n\r\n");
+        motd.Append($"{Ascii(_o.ServerName)}  -  Seamless Co-op\r\n\r\n");
         motd.Append("HOW TO PLAY TOGETHER\r\n");
         motd.Append("1) Pick who leads: that player is the HOST.\r\n");
         motd.Append("2) The HELPER dies once to become a ghost,\r\n");
