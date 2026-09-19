@@ -232,6 +232,43 @@ public class RealGameTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void Bonus_merchant_adds_the_rare_stock_to_Ed_without_a_tendency_gate()
+    {
+        var usr = Usr();
+        if (usr == null) return;
+        var defs = GamePatcher.LoadParamdefs(usr)!;
+        RawParam Shop(BND3 b)
+        {
+            var f = b.Files.First(x => x.Name.EndsWith("ShopLineupParam.param", StringComparison.OrdinalIgnoreCase));
+            return new RawParam(f.Bytes, defs[PARAM.Read(f.Bytes).ParamType]);
+        }
+
+        var bnd = BND3.Read(Pristine(usr));
+        int before = Shop(bnd).RowIds.Count();
+        var log = new List<string>();
+        int added = MerchantPatcher.AddBonusStock(bnd, usr, log, "na");
+        Assert.Equal(24, added);
+
+        // Round-trip through the binder writer, then read the rows back with our own param reader.
+        var shop = Shop(BND3.Read(bnd.Write()));
+        Assert.Equal(before + 24, shop.RowIds.Count());
+
+        // First new row = Talisman of Beasts, soul-paid, no gate.
+        Assert.True(shop.Has(5005));
+        Assert.Equal(90500, shop.GetInt(5005, "equipId"));
+        Assert.Equal(0, shop.GetInt(5005, "equipType"));
+        Assert.Equal(30000, shop.GetInt(5005, "value"));
+        Assert.Equal(-1, shop.GetInt(5005, "mtrlId"));
+        Assert.Equal(0, shop.GetInt(5005, "qwcId"));      // no world/character-tendency requirement
+        Assert.Equal(0, shop.GetInt(5005, "eventFlag"));  // no event-flag gate
+        // Colorless Demon's Soul (goods) and Pure Bladestone (goods) are on the list.
+        Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == 34);
+        Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == 2023);
+        // Ed's real row 5004 is untouched.
+        Assert.Equal(60600, shop.GetInt(5004, "equipId"));
+    }
+
+    [Fact]
     public void Persistent_coop_disables_the_kick_only_in_the_two_teardown_functions()
     {
         // Synthetic global_event.lua: the co-op-ending kick lives in BlockClear2_3 (boss clear) and

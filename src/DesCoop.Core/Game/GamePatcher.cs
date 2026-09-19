@@ -32,10 +32,21 @@ public sealed class PatchOptions
     public bool WeakerDragons { get; set; } = true;
     /// <summary>Enemies give 25% more souls.</summary>
     public bool MoreSouls { get; set; } = true;
-    /// <summary>Passive MP regeneration (about 1 MP per second) while any chest armor is worn.</summary>
+    /// <summary>Passive MP regeneration while any chest armor is worn.</summary>
     public bool ManaRegen { get; set; } = true;
+    /// <summary>Seconds between each +1 MP tick of the passive regen (1 = 1 MP/s; 2 = 1 MP every 2 s).</summary>
+    public int ManaRegenIntervalSeconds { get; set; } = 1;
     /// <summary>Every world pickup and drop gives twice as much, so a host and helper each get one.</summary>
     public bool DoubleLoot { get; set; } = true;
+
+    /// <summary>
+    /// Blacksmith Ed also sells the world-tendency-locked rarities (so a co-op run never misses them):
+    /// Talisman of Beasts, Phosphorescent Pole, Dragon Bone Smasher, Magic Sword "Makoto", Istarelle, Blind,
+    /// Large Sword of Moonlight, Blueblood Sword, Monk's Head Wrappings, Colorless Demon's Soul (10k each) and
+    /// every Pure upgrade stone. Added as extra ShopLineupParam rows in Ed's own menu (ids 5005+), with no
+    /// tendency/flag gate — pure param, pristine backup, reversible, no ESD.
+    /// </summary>
+    public bool BonusMerchant { get; set; } = false;
 
     /// <summary>
     /// EXPERIMENTAL: keep the summoned blue phantom in the host's world through a boss clear and through the
@@ -53,7 +64,7 @@ public sealed class PatchOptions
     /// layer: summon in any form, both players picking up items and shared boss progress — those live in the
     /// PS3 executable and the per-PC save.
     /// </summary>
-    public static PatchOptions SeamlessPreset() => new() { BlueEyeStoneInBodyForm = true, DoubleLoot = false, PersistentCoop = true };
+    public static PatchOptions SeamlessPreset() => new() { BlueEyeStoneInBodyForm = true, DoubleLoot = false, PersistentCoop = true, BonusMerchant = true, ManaRegenIntervalSeconds = 2 };
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);
@@ -222,6 +233,7 @@ public static class GamePatcher
             if (!File.Exists(backup)) File.Copy(path, backup);
             var bnd = BND3.Read(backup);
             int n = PatchBinder(bnd, opt, ids, defs, log, Path.GetFileName(path));
+            if (opt.BonusMerchant) n += MerchantPatcher.AddBonusStock(bnd, game.UsrDir, log, Path.GetFileName(path));
             var fresh = bnd.Write();
             if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
             {
@@ -302,7 +314,7 @@ public static class GamePatcher
         if (opt.EasierUpgradeMaterials) BoostDrop(c, [.. UpgradeStones], UpgradeMaterialChance, "upgrade stones");
         if (opt.DoubleLoot) DoubleLoot(c);
         if (opt.OneHitCrystalLizards || opt.WeakerDragons || opt.MoreSouls) TweakEnemies(c, opt);
-        if (opt.ManaRegen) ManaRegen(c);
+        if (opt.ManaRegen) ManaRegen(c, opt.ManaRegenIntervalSeconds);
 
         var chara = c.Param("CharaInitParam");
         if (chara != null)
@@ -441,16 +453,16 @@ public static class GamePatcher
     /// MP regen is added into that same effect (its changeMpPoint is unused) without touching the stamina
     /// penalty. Either way every body armor is one — and only one — MP-regen source.
     /// </summary>
-    static void ManaRegen(Ctx c)
+    static void ManaRegen(Ctx c, int intervalSeconds)
     {
         var sp = c.Param("SpEffectParam");
         if (sp != null && sp.HasField("motionInterval") && sp.HasField("changeMpPoint"))
         {
-            if (sp.Has(MpRegenEffect)) c.Set(sp, MpRegenEffect, "motionInterval", 1); // light-armor path (behavior 4200)
+            if (sp.Has(MpRegenEffect)) c.Set(sp, MpRegenEffect, "motionInterval", intervalSeconds); // light-armor path (behavior 4200)
             foreach (var id in BodyStaminaEffects.Where(sp.Has)) // medium/heavy chest path
             {
                 c.Set(sp, id, "changeMpPoint", -1); // negative = restore 1 MP
-                c.Set(sp, id, "motionInterval", 1);
+                c.Set(sp, id, "motionInterval", intervalSeconds);
             }
         }
         var prot = c.Param("EquipParamProtector");

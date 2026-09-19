@@ -30,6 +30,15 @@ RPCS3, kept completely separate from the stable co-op:
 - Everything the stable app already does: sign relocated next to the host, full-HP
   soul form, infinite Ephemeral Eyes, stay-in-soul-form.
 - Loot doubling is off (raw single pickups).
+- **Blacksmith Ed bonus stock (NEW):** Ed also sells the world-tendency-locked
+  rarities so a co-op run never misses them — Talisman of Beasts, Phosphorescent
+  Pole, Dragon Bone Smasher, Magic Sword "Makoto", Istarelle, Blind, Large Sword of
+  Moonlight, Blueblood Sword, Monk's Head Wrappings, Colorless Demon's Soul (10k
+  each) and every Pure upgrade stone. Added as extra `ShopLineupParam` rows in Ed's
+  own menu (ids 5005+), no tendency/flag gate. Pure param, pristine backup,
+  reversible, no ESD (safer than the Noble Lady route).
+- **MP regen at 1 per 2 s (NEW):** the passive mana regen ticks every 2 seconds in
+  this profile instead of every second (stable keeps 1/s).
 
 ## What still does NOT work (and why)
 
