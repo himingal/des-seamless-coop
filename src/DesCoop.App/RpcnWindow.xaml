@@ -42,6 +42,7 @@
                        Text="Open your email (check spam too) and paste the 16-letter token from RPCN here."/>
             <TextBox x:Name="TxtToken" CharacterCasing="Upper" MaxLength="16" FontFamily="Consolas" FontSize="16" HorizontalContentAlignment="Center" Foreground="{StaticResource Soul}"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                <Button x:Name="BtnBack" Content="Back" Click="BtnBack_Click"/>
                 <Button x:Name="BtnResend" Content="Resend Email" Click="BtnResend_Click"/>
                 <Button x:Name="BtnConfirm" Content="Confirm" Click="BtnConfirm_Click" FontSize="15"/>
             </StackPanel>

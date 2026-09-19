@@ -34,6 +34,7 @@ public partial class RpcnWindow : Window
         LblTokenSignIn.Text = Loc.T("rpcnTokenSignIn");
         LblTokenTitle.Text = Loc.T("rpcnCreated");
         LblTokenBlurb.Text = Loc.T("rpcnPasteToken");
+        BtnBack.Content = Loc.T("rpcnBack");
         BtnResend.Content = Loc.T("rpcnResend");
         BtnConfirm.Content = Loc.T("rpcnConfirm");
         BtnGo.Content = Loc.T(RbCreate.IsChecked == true ? "rpcnCreateAccount" : "rpcnSignInBtn");
@@ -82,7 +83,9 @@ public partial class RpcnWindow : Window
             {
                 var r = await c.CreateAccountAsync(user, _derived, email);
                 if (r != RpcnClient.Error.NoError) { Busy(false, RpcnClient.Describe(r)); return; }
-                _emu.SaveRpcnAccount(user, _derived, "");
+                // Do NOT write rpcn.yml yet: the account only counts as signed in once the e-mail token is
+                // confirmed (below). Saving here made a wrong-e-mail account show as "connected" even though
+                // the token never arrived and online never worked.
                 StepForm.Visibility = Visibility.Collapsed;
                 StepToken.Visibility = Visibility.Visible;
                 Busy(false, "");
@@ -97,6 +100,14 @@ public partial class RpcnWindow : Window
             }
         }
         catch (Exception ex) { Busy(false, Loc.T("rpcnUnreachable", ex.Message)); }
+    }
+
+    // Back from the token step to the form, to fix a wrong e-mail (or username) and create again.
+    void BtnBack_Click(object sender, RoutedEventArgs e)
+    {
+        StepToken.Visibility = Visibility.Collapsed;
+        StepForm.Visibility = Visibility.Visible;
+        TxtMsg.Text = "";
     }
 
     async void BtnConfirm_Click(object sender, RoutedEventArgs e)
