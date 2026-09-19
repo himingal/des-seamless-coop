@@ -40,9 +40,8 @@ public partial class MainWindow : Window
         }
         _joinedAddress = _s.JoinedAddress;
 
-        // Tweaks are a fixed, always-applied set (no UI for them). Seamless (TEST) mode uses the beefier preset.
-        _s.Patch = AppSettings.Seamless ? PatchOptions.SeamlessPreset() : new PatchOptions();
-        if (AppSettings.Seamless) Title += "  —  Seamless (TEST)";
+        // Tweaks are a fixed, always-applied set (no UI for them).
+        _s.Patch = new PatchOptions();
 
         // Language: first run detects the Windows language (pt/es, else English); a dropdown changes it.
         if (string.IsNullOrEmpty(_s.Language))
@@ -151,8 +150,6 @@ public partial class MainWindow : Window
         TxtHowTo.Text = Loc.T("howToLines");
         CmbLang.ToolTip = Loc.T("language");
         if (TxtStatus.Text is "Ready." or "Pronto." or "Listo.") TxtStatus.Text = Loc.T("ready");
-        if (AppSettings.Seamless)
-            TxtSubtitle.Text = "⚠ SEAMLESS (TEST) — experimental profile, separate from your stable co-op.";
     }
 
     // ------------------------------------------------------------------ helpers

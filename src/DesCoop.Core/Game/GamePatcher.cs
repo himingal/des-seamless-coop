@@ -35,9 +35,12 @@ public sealed class PatchOptions
     /// <summary>Passive MP regeneration while any chest armor is worn.</summary>
     public bool ManaRegen { get; set; } = true;
     /// <summary>Seconds between each +1 MP tick of the passive regen (1 = 1 MP/s; 2 = 1 MP every 2 s).</summary>
-    public int ManaRegenIntervalSeconds { get; set; } = 1;
-    /// <summary>Every world pickup and drop gives twice as much, so a host and helper each get one.</summary>
-    public bool DoubleLoot { get; set; } = true;
+    public int ManaRegenIntervalSeconds { get; set; } = 2;
+    /// <summary>Every world pickup and drop gives twice as much. Off: co-op keeps raw single pickups.</summary>
+    public bool DoubleLoot { get; set; } = false;
+    /// <summary>Every starting class carries a "Cyanide Pill" that kills you instantly, so the helper turns
+    /// into a soul-form ghost on demand instead of having to farm a death to place a summon sign.</summary>
+    public bool CyanidePill { get; set; } = true;
 
     /// <summary>
     /// Blacksmith Ed also sells the world-tendency-locked rarities (so a co-op run never misses them):
@@ -46,25 +49,16 @@ public sealed class PatchOptions
     /// every Pure upgrade stone. Added as extra ShopLineupParam rows in Ed's own menu (ids 5005+), with no
     /// tendency/flag gate — pure param, pristine backup, reversible, no ESD.
     /// </summary>
-    public bool BonusMerchant { get; set; } = false;
+    public bool BonusMerchant { get; set; } = true;
 
     /// <summary>
-    /// EXPERIMENTAL: keep the summoned blue phantom in the host's world through a boss clear and through the
-    /// host's death, instead of being sent home. Implemented by commenting out the single
-    /// <c>proxy:WarpNextStageKick();</c> call in the co-op teardown functions of the game's own Lua
-    /// (<c>BlockClear2_3</c> = boss/area clear, <c>HostDead_1</c> = host death) in every m*.luabnd. Plain-Lua
-    /// edit, pristine backup kept, fully reversible — no EBOOT memory patching. Needs in-game testing.
+    /// Keep the summoned blue phantom in the host's world through a boss clear and through the host's death,
+    /// instead of being sent home. Implemented by commenting out the single <c>proxy:WarpNextStageKick();</c>
+    /// call in the co-op teardown functions of the game's own Lua (<c>BlockClear2_3</c> = boss/area clear,
+    /// <c>HostDead_1</c> = host death) in every m*.luabnd. Plain-Lua edit, pristine backup kept, fully
+    /// reversible — no EBOOT memory patching.
     /// </summary>
-    public bool PersistentCoop { get; set; } = false;
-
-    /// <summary>
-    /// Experimental "Seamless (TEST)" preset. Beefier than the stable set: the Blue Eye Stone works in body
-    /// form (place a sign without dying first), loot doubling is OFF (raw pickups), and the co-op session
-    /// persists through bosses and host death (<see cref="PersistentCoop"/>). Still out of reach at this
-    /// layer: summon in any form, both players picking up items and shared boss progress — those live in the
-    /// PS3 executable and the per-PC save.
-    /// </summary>
-    public static PatchOptions SeamlessPreset() => new() { BlueEyeStoneInBodyForm = true, DoubleLoot = false, PersistentCoop = true, BonusMerchant = true, ManaRegenIntervalSeconds = 2 };
+    public bool PersistentCoop { get; set; } = true;
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);
@@ -234,6 +228,7 @@ public static class GamePatcher
             var bnd = BND3.Read(backup);
             int n = PatchBinder(bnd, opt, ids, defs, log, Path.GetFileName(path));
             if (opt.BonusMerchant) n += MerchantPatcher.AddBonusStock(bnd, game.UsrDir, log, Path.GetFileName(path));
+            if (opt.CyanidePill) n += CyanidePillPatcher.AddParams(bnd, game.UsrDir, log, Path.GetFileName(path));
             var fresh = bnd.Write();
             if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
             {
@@ -243,6 +238,7 @@ public static class GamePatcher
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
         if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, log)) changed = true;
+        if (opt.CyanidePill && CyanidePillPatcher.AddName(game.UsrDir, log)) changed = true;
         if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, log)) changed = true;
         return new PatchReport(changed, log);
     }
@@ -325,6 +321,8 @@ public static class GamePatcher
                 foreach (var blue in ids.Blue.Where(goods.Has).Take(1)) GiveToClasses(c, chara, blue, "Blue Eye Stone");
                 foreach (var eph in ids.Ephemeral.Where(goods.Has).Take(1)) GiveToClasses(c, chara, eph, "Stone of Ephemeral Eyes");
             }
+            // The Cyanide Pill goods row is added after PatchBinder, so hand it out by id directly.
+            if (opt.CyanidePill) GiveToClasses(c, chara, CyanidePillPatcher.GoodsId, "Cyanide Pill");
         }
 
         c.Commit();

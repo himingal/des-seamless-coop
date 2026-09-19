@@ -29,10 +29,13 @@ Demon's Souls' online servers were shut down in 2018. This app brings co-op back
 |---|---|
 | 🌗 **Built-in party server** | The Demon's Souls online server, reimplemented and running inside the host's app. No VPS to rent, nothing to configure. |
 | 🩸 **Signs that follow the host** | Your friend's blue summon sign is moved right next to you, in whatever area you're in — not left across the map. |
+| ⛓️ **Persistent co-op** | The summoned phantom stays with you through a boss clear and through the host's death, instead of being sent home. |
 | 🌍 **Join from anywhere** | Direct when it can (LAN, VPN, UPnP); otherwise through a free public relay, automatically. No port forwarding. |
 | ♾️ **No level range** | US, EU and JP copies share one world. Messages, bloodstains and wandering ghosts all work. |
 | ⚔️ **10 new starting classes** | Two per focus (Strength, Dexterity, Quality, Faith, Intelligence), unisex armor, ready-to-play kits. |
-| ✨ **Quality-of-life tweaks** | Full-HP soul form, infinite Ephemeral Eyes, passive MP regen, half-price merchants, double loot, faster upgrade stones and more — applied to your own dump, originals backed up. |
+| 🛒 **Blacksmith carries the rarities** | Ed also sells the world-tendency-locked weapons, Colorless Demon's Souls and every Pure stone, so a co-op run never permanently misses them. |
+| ☠️ **Cyanide Pill** | Every class starts with one (and Ed sells more): use it to die on the spot and turn into a soul-form ghost on demand, instead of farming a death to place a summon sign. |
+| ✨ **Quality-of-life tweaks** | Full-HP soul form, infinite Ephemeral Eyes, passive MP regen, half-price merchants, faster upgrade stones and more — applied to your own dump, originals backed up. |
 | 🎌 **Multi-language** | English, Português (BR) and Español. Detected on first run, switchable any time. |
 | 🖱️ **Point-and-play setup** | Get [RPCS3](https://rpcs3.net) and point the app to it; it downloads the official PS3 firmware from Sony, patches the game and configures everything by itself. |
 

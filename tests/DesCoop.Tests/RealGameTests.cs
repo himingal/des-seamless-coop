@@ -89,12 +89,12 @@ public class RealGameTests(ITestOutputHelper output)
         var sp = Open(bnd, "SpEffectParam");
         Assert.Equal(1.0, sp.Get(GamePatcher.SoulFormEffect, "maxHpRate"), 3);
         Assert.Equal(0.5, sp.Get(9, "maxHpRate"), 3); // black phantoms (invaders) keep the penalty
-        Assert.Equal(1, sp.GetInt(GamePatcher.MpRegenEffect, "motionInterval")); // light-armor MP regen ticks every second
+        Assert.Equal(2, sp.GetInt(GamePatcher.MpRegenEffect, "motionInterval")); // light-armor MP regen ticks every 2s (default)
         var sp0 = Open(original, "SpEffectParam");
         foreach (var e in GamePatcher.BodyStaminaEffects) // heavy chests: MP regen added, stamina penalty kept
         {
             Assert.Equal(-1, sp.GetInt(e, "changeMpPoint"));
-            Assert.Equal(1, sp.GetInt(e, "motionInterval"));
+            Assert.Equal(2, sp.GetInt(e, "motionInterval"));
             Assert.Equal(sp0.Get(e, "staminaRecoverChangeSpeed"), sp.Get(e, "staminaRecoverChangeSpeed"), 3);
         }
 
@@ -266,6 +266,34 @@ public class RealGameTests(ITestOutputHelper output)
         Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == 2023);
         // Ed's real row 5004 is untouched.
         Assert.Equal(60600, shop.GetInt(5004, "equipId"));
+    }
+
+    [Fact]
+    public void Cyanide_pill_is_a_lethal_consumable_that_Ed_also_sells()
+    {
+        var usr = Usr();
+        if (usr == null) return;
+        var defs = GamePatcher.LoadParamdefs(usr)!;
+        RawParam Open(BND3 b, string name)
+        {
+            var f = b.Files.First(x => x.Name.EndsWith(name + ".param", StringComparison.OrdinalIgnoreCase));
+            return new RawParam(f.Bytes, defs[PARAM.Read(f.Bytes).ParamType]);
+        }
+
+        var bnd = BND3.Read(Pristine(usr));
+        var log = new List<string>();
+        int n = CyanidePillPatcher.AddParams(bnd, usr, log, "na");
+        Assert.Equal(3, n); // SpEffect + Behavior + Goods
+
+        var b2 = BND3.Read(bnd.Write());
+        var goods = Open(b2, "EquipParamGoods");
+        Assert.True(goods.Has(CyanidePillPatcher.GoodsId));
+        Assert.Equal(9990, goods.GetInt(CyanidePillPatcher.GoodsId, "behaviorId"));
+        Assert.Equal(1, goods.GetInt(CyanidePillPatcher.GoodsId, "isConsume"));
+        Assert.Equal(9990, Open(b2, "BehaviorParam").GetInt(9990, "spEffectId"));
+        Assert.Equal(9999, Open(b2, "SpEffectParam").GetInt(9990, "changeHpPoint")); // positive = damage = lethal
+        var shop = Open(b2, "ShopLineupParam");
+        Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == CyanidePillPatcher.GoodsId);
     }
 
     [Fact]
