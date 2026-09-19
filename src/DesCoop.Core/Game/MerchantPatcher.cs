@@ -89,9 +89,9 @@ public static class MerchantPatcher
             row["equipType"].Value = type;
             row["equipId"].Value = itemId;
             row["value"].Value = price;
-            if (Has("mtrlId")) row["mtrlId"].Value = -1;       // paid with souls, not materials
-            if (Has("eventFlag")) row["eventFlag"].Value = 0;  // no flag gate
-            if (Has("qwcId")) row["qwcId"].Value = 0;          // no world/character-tendency gate
+            if (Has("mtrlId")) row["mtrlId"].Value = -1;        // paid with souls, not materials
+            if (Has("eventFlag")) row["eventFlag"].Value = -1;  // -1 = always shown (0 would gate on flag 0 = hidden)
+            if (Has("qwcId")) row["qwcId"].Value = -1;          // -1 = no world/character-tendency requirement
             param.Rows.Add(row);
             id++; added++;
         }

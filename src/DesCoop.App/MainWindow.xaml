@@ -19,13 +19,17 @@
                 <DataTemplate><TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" FontSize="12"/></DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
-        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,0,0" Padding="12,6" BorderThickness="1"
-                BorderBrush="{StaticResource Line}" Background="#80050506" ToolTip="Is Demon's Souls running in RPCS3?">
-            <StackPanel Orientation="Horizontal">
-                <Ellipse x:Name="DotGameTop" Width="9" Height="9" Fill="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <TextBlock x:Name="TxtGameTop" Text="GAME CLOSED" FontFamily="{StaticResource Serif}" FontSize="12" Foreground="{StaticResource Muted}"/>
-            </StackPanel>
-        </Border>
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top">
+            <TextBlock x:Name="TxtVersion" HorizontalAlignment="Right" Margin="0,0,2,3" FontSize="11"
+                       Foreground="{StaticResource Muted}" Opacity="0.75" Text="v0.0.0"/>
+            <Border Padding="12,6" BorderThickness="1"
+                    BorderBrush="{StaticResource Line}" Background="#80050506" ToolTip="Is Demon's Souls running in RPCS3?">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="DotGameTop" Width="9" Height="9" Fill="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtGameTop" Text="GAME CLOSED" FontFamily="{StaticResource Serif}" FontSize="12" Foreground="{StaticResource Muted}"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
         <StackPanel HorizontalAlignment="Center">
             <TextBlock Text="DEMON'S SOULS" FontFamily="{StaticResource Serif}" FontSize="44" Foreground="#E6DCC6" HorizontalAlignment="Center">
                 <TextBlock.Effect><DropShadowEffect Color="#C4A468" BlurRadius="24" ShadowDepth="0" Opacity="0.35"/></TextBlock.Effect>

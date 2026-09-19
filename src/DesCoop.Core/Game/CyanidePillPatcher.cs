@@ -82,8 +82,8 @@ public static class CyanidePillPatcher
             row["equipId"].Value = GoodsId;
             row["value"].Value = 500;
             if (row.Cells.Any(c => c.Def.InternalName == "mtrlId")) row["mtrlId"].Value = -1;
-            if (row.Cells.Any(c => c.Def.InternalName == "eventFlag")) row["eventFlag"].Value = 0;
-            if (row.Cells.Any(c => c.Def.InternalName == "qwcId")) row["qwcId"].Value = 0;
+            if (row.Cells.Any(c => c.Def.InternalName == "eventFlag")) row["eventFlag"].Value = -1; // always shown
+            if (row.Cells.Any(c => c.Def.InternalName == "qwcId")) row["qwcId"].Value = -1;         // no tendency gate
             param.Rows.Add(row);
             param.Rows.Sort((a, b) => a.ID.CompareTo(b.ID));
             file.Bytes = param.Write();

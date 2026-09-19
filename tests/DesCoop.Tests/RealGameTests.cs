@@ -261,8 +261,8 @@ public class RealGameTests(ITestOutputHelper output)
         Assert.Equal(0, shop.GetInt(9009, "equipType"));
         Assert.Equal(30000, shop.GetInt(9009, "value"));
         Assert.Equal(-1, shop.GetInt(9009, "mtrlId"));
-        Assert.Equal(0, shop.GetInt(9009, "qwcId"));      // no world/character-tendency requirement
-        Assert.Equal(0, shop.GetInt(9009, "eventFlag"));  // no event-flag gate
+        Assert.Equal(-1, shop.GetInt(9009, "qwcId"));      // -1 = no world/character-tendency requirement
+        Assert.Equal(-1, shop.GetInt(9009, "eventFlag"));  // -1 = always shown (0 would gate on flag 0)
         // Every added row is inside Boldwin's displayed range.
         Assert.All(shop.RowIds.Where(id => id >= 9009), id => Assert.InRange(id, 9009, 9099));
         // Colorless Demon's Soul (goods) and Pure Bladestone (goods) are on the list.

@@ -28,6 +28,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Ui.DarkTitleBar(this);
+        var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        if (ver != null) TxtVersion.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
         _emu = new Rpcs3Manager(_s.EffectiveRpcs3Dir);
         _game = GameLocator.Resolve(_s.GamePath);
         // First launch straight from the installer: it passes the game folder the user picked, so it is
