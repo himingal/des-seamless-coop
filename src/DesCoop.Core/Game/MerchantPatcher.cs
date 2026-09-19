@@ -3,17 +3,21 @@ using SoulsFormats;
 namespace DesCoop.Game;
 
 /// <summary>
-/// Adds the world-tendency-locked rarities to Blacksmith Ed's shop, so a co-op run never permanently misses
-/// them. Implemented as extra <c>ShopLineupParam</c> rows (SoulsFormats PARAM, since these are NEW rows, not
-/// in-place edits) cloned from one of Ed's own unconditional rows (id 5000) — same shop menu, no tendency
-/// (qwcId) or event-flag gate, paid with souls. Ed's menu already spans ids 5000-5054 with a gap, so the new
-/// rows (5005+) fall inside the range the game displays. Pure param, pristine backup kept, fully reversible.
+/// Adds the world-tendency-locked rarities to Blacksmith Boldwin's Nexus shop, so a co-op run never
+/// permanently misses them. Implemented as extra <c>ShopLineupParam</c> rows (SoulsFormats PARAM, since these
+/// are NEW rows, not in-place edits) cloned from one of Boldwin's own unconditional rows (id 9000) — same
+/// shop menu, no tendency (qwcId) or event-flag gate, paid with souls. His buy menu opens rows [9000, 9099]
+/// (OpenRegularShop in the talk ESD) and only 9000-9008 exist, so the new rows (9009+) are displayed. Pure
+/// param, pristine backup kept, fully reversible.
 /// </summary>
 public static class MerchantPatcher
 {
-    /// <summary>Ed's shop block: real rows sit at 5000-5004 and 5050-5054, so 5005+ is free and in range.</summary>
-    const int ProtoRowId = 5000;
-    const int FirstNewId = 5005;
+    /// <summary>Blacksmith Boldwin's Nexus shop opens rows [9000, 9099] (confirmed in the talk ESD:
+    /// OpenRegularShop(9000, 9099)); only 9000-9008 exist, so 9009+ is free and displayed. Ed's block (5000)
+    /// is a weapon-upgrade menu, not a buy shop, which is why added rows never showed there.</summary>
+    const int ProtoRowId = 9000;
+    const int FirstNewId = 9009;
+    const int LastNewId = 9099;
 
     /// <summary>Extra stock: (equipType 0=weapon/1=protector/3=goods, id, soul price). Ids resolved by the
     /// retail item ids of the NA dump (verified against the game's own name FMGs).</summary>
@@ -78,6 +82,7 @@ public static class MerchantPatcher
         foreach (var (type, itemId, price) in Stock)
         {
             while (param.Rows.Any(r => r.ID == id)) id++; // never collide with a real row
+            if (id > LastNewId) break;                     // stay inside Boldwin's displayed range
             var row = new PARAM.Row(id, null, def);
             foreach (var c in row.Cells)
                 c.Value = proto.Cells.First(p => p.Def.InternalName == c.Def.InternalName).Value;
@@ -92,7 +97,7 @@ public static class MerchantPatcher
         }
         param.Rows.Sort((a, b) => a.ID.CompareTo(b.ID));
         file.Bytes = param.Write();
-        log.Add($"{label}: bonus merchant — {added} rare item(s) added to Blacksmith Ed");
+        log.Add($"{label}: bonus merchant — {added} rare item(s) added to Blacksmith Boldwin");
         return added;
     }
 }

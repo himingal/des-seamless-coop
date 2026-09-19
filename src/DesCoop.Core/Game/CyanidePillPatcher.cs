@@ -15,6 +15,7 @@ public static class CyanidePillPatcher
     const int BehaviorId = 9990, SpEffectId = 9990;
     const int ProtoGoods = 1000, ProtoBehavior = 3000, ProtoSpEffect = 3000; // Crescent Moon Grass' own chain
     const int LethalDamage = 9999;                 // changeHpPoint > 0 = damage (grass heals with a negative)
+    const int PillIcon = 1119;                      // reuse the Black Eye Stone's dark icon (fits a lethal pill)
     public const string PillName = "Cyanide Pill";
 
     static readonly Dictionary<string, Dictionary<string, PARAMDEF>> _defCache = [];
@@ -51,6 +52,7 @@ public static class CyanidePillPatcher
         {
             r["behaviorId"].Value = BehaviorId;
             r["isConsume"].Value = (byte)1;
+            r["iconId"].Value = PillIcon; // a dark, sinister icon (Black Eye Stone's) instead of the grass's
             if (r.Cells.Any(c => c.Def.InternalName == "sortId")) r["sortId"].Value = 9990;
         }, log, label);
         AddToShop(bnd, defs, log, label); // Blacksmith Ed also sells the pill
@@ -68,11 +70,11 @@ public static class CyanidePillPatcher
         {
             var param = PARAM.Read(file.Bytes);
             param.ApplyParamdef(def);
-            var proto = param.Rows.FirstOrDefault(r => r.ID == 5000);
+            var proto = param.Rows.FirstOrDefault(r => r.ID == 9000);
             if (proto == null) return;
-            int id = 5029;
+            int id = 9009;
             while (param.Rows.Any(r => r.ID == id)) id++;
-            if (id > 5049) return; // out of Ed's range
+            if (id > 9099) return; // out of Boldwin's displayed range
             var row = new PARAM.Row(id, null, def);
             foreach (var c in row.Cells)
                 c.Value = proto.Cells.First(p => p.Def.InternalName == c.Def.InternalName).Value;

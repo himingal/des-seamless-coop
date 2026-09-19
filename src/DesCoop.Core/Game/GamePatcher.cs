@@ -43,11 +43,12 @@ public sealed class PatchOptions
     public bool CyanidePill { get; set; } = true;
 
     /// <summary>
-    /// Blacksmith Ed also sells the world-tendency-locked rarities (so a co-op run never misses them):
-    /// Talisman of Beasts, Phosphorescent Pole, Dragon Bone Smasher, Magic Sword "Makoto", Istarelle, Blind,
-    /// Large Sword of Moonlight, Blueblood Sword, Monk's Head Wrappings, Colorless Demon's Soul (10k each) and
-    /// every Pure upgrade stone. Added as extra ShopLineupParam rows in Ed's own menu (ids 5005+), with no
-    /// tendency/flag gate — pure param, pristine backup, reversible, no ESD.
+    /// Blacksmith Boldwin (Nexus) also sells the world-tendency-locked rarities (so a co-op run never misses
+    /// them): Talisman of Beasts, Phosphorescent Pole, Dragon Bone Smasher, Magic Sword "Makoto", Istarelle,
+    /// Blind, Large Sword of Moonlight, Blueblood Sword, Monk's Head Wrappings, Colorless Demon's Soul (10k
+    /// each) and every Pure upgrade stone. Added as extra ShopLineupParam rows in Boldwin's buy menu (ids
+    /// 9009+, inside the [9000,9099] range his shop displays), with no tendency/flag gate — pure param,
+    /// pristine backup, reversible, no ESD.
     /// </summary>
     public bool BonusMerchant { get; set; } = true;
 

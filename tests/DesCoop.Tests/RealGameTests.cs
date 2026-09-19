@@ -232,7 +232,7 @@ public class RealGameTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void Bonus_merchant_adds_the_rare_stock_to_Ed_without_a_tendency_gate()
+    public void Bonus_merchant_adds_the_rare_stock_to_Boldwin_without_a_tendency_gate()
     {
         var usr = Usr();
         if (usr == null) return;
@@ -244,7 +244,9 @@ public class RealGameTests(ITestOutputHelper output)
         }
 
         var bnd = BND3.Read(Pristine(usr));
-        int before = Shop(bnd).RowIds.Count();
+        var shop0 = Shop(bnd);
+        int before = shop0.RowIds.Count();
+        int boldwinRow9000 = shop0.GetInt(9000, "equipId"); // Boldwin's real first row
         var log = new List<string>();
         int added = MerchantPatcher.AddBonusStock(bnd, usr, log, "na");
         Assert.Equal(24, added);
@@ -253,23 +255,25 @@ public class RealGameTests(ITestOutputHelper output)
         var shop = Shop(BND3.Read(bnd.Write()));
         Assert.Equal(before + 24, shop.RowIds.Count());
 
-        // First new row = Talisman of Beasts, soul-paid, no gate.
-        Assert.True(shop.Has(5005));
-        Assert.Equal(90500, shop.GetInt(5005, "equipId"));
-        Assert.Equal(0, shop.GetInt(5005, "equipType"));
-        Assert.Equal(30000, shop.GetInt(5005, "value"));
-        Assert.Equal(-1, shop.GetInt(5005, "mtrlId"));
-        Assert.Equal(0, shop.GetInt(5005, "qwcId"));      // no world/character-tendency requirement
-        Assert.Equal(0, shop.GetInt(5005, "eventFlag"));  // no event-flag gate
+        // First new row (9009 = first free id in Boldwin's [9000,9099] range) = Talisman of Beasts, no gate.
+        Assert.True(shop.Has(9009));
+        Assert.Equal(90500, shop.GetInt(9009, "equipId"));
+        Assert.Equal(0, shop.GetInt(9009, "equipType"));
+        Assert.Equal(30000, shop.GetInt(9009, "value"));
+        Assert.Equal(-1, shop.GetInt(9009, "mtrlId"));
+        Assert.Equal(0, shop.GetInt(9009, "qwcId"));      // no world/character-tendency requirement
+        Assert.Equal(0, shop.GetInt(9009, "eventFlag"));  // no event-flag gate
+        // Every added row is inside Boldwin's displayed range.
+        Assert.All(shop.RowIds.Where(id => id >= 9009), id => Assert.InRange(id, 9009, 9099));
         // Colorless Demon's Soul (goods) and Pure Bladestone (goods) are on the list.
         Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == 34);
         Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == 2023);
-        // Ed's real row 5004 is untouched.
-        Assert.Equal(60600, shop.GetInt(5004, "equipId"));
+        // Boldwin's real row 9000 is untouched.
+        Assert.Equal(boldwinRow9000, shop.GetInt(9000, "equipId"));
     }
 
     [Fact]
-    public void Cyanide_pill_is_a_lethal_consumable_that_Ed_also_sells()
+    public void Cyanide_pill_is_a_lethal_consumable_that_Boldwin_also_sells()
     {
         var usr = Usr();
         if (usr == null) return;
