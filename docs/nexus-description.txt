@@ -1,7 +1,7 @@
 =========================================================
  SHORT DESCRIPTION (the summary field at the top)
 =========================================================
-Brings Demon's Souls online co-op back on RPCS3 — and makes it seamless. Your friend's summon sign appears right next to you in ANY area, the phantom stays through bosses and deaths, and a one-click launcher runs the whole reimplemented server for you. Play the entire game together.
+Brings Demon's Souls online co-op back on RPCS3 — and makes it seamless. Your friend's summon sign appears right next to you in ANY area, re-summoning after every boss is instant, and a one-click launcher runs the whole reimplemented server for you. Play the entire game together.
 
 
 =========================================================
@@ -18,7 +18,7 @@ Demon's Souls' online servers were shut down in 2018. This mod brings co-op back
 [list]
 [*][b]It reimplements the game's online server and runs it inside the host's app.[/b] No VPS to rent, nothing to configure.
 [*][b]Your friend's summon sign is moved right next to you[/b] — in whatever area you're in, not left across the map.
-[*][b]The summoned phantom stays with you[/b] through a boss clear and through the host's death, instead of being sent home.
+[*][b]Instant re-summon[/b] — the sign is already next to the host, so getting back together after a boss is two clicks, not a chore.
 [*][b]Connects you from anywhere[/b] — directly, or through a free relay when your router won't cooperate. No VPN, no port forwarding.
 [/list]
 
@@ -28,8 +28,9 @@ Demon's Souls' online servers were shut down in 2018. This mod brings co-op back
 [list]
 [*][b]Built-in party server[/b] — the Demon's Souls online server, reimplemented, running inside the host's launcher.
 [*][b]Seamless summon signs[/b] — the sign appears right beside the host, in any area.
-[*][b]Persistent co-op[/b] — the phantom is not sent home after a boss or when the host dies.
+[*][b]Instant re-summon[/b] — the sign is already next to the host, so getting back together after a boss is two clicks, not a chore.
 [*][b]Cyanide Pill[/b] — a consumable that kills you on the spot so the helper becomes a soul-form ghost on demand (no more farming a death). Every class starts with one; Blacksmith Boldwin sells more.
+[*][b]RPCS3 tools & 60 FPS[/b] — one-click buttons in the launcher to open RPCS3, set up your controller, and apply the community 60 FPS patch.
 [*][b]Blacksmith carries the rarities[/b] — Boldwin (in the Nexus) also sells the world-tendency-locked weapons, Colorless Demon's Souls and every Pure upgrade stone, so a run never permanently misses them.
 [*][b]10 new starting classes[/b] — two per focus (Strength, Dexterity, Quality, Faith, Intelligence), unisex armour, ready-to-play kits.
 [*][b]Quality-of-life[/b] — full-HP soul form, infinite Stone of Ephemeral Eyes, passive MP regen, half-price merchants, faster upgrade stones and more.
@@ -61,7 +62,7 @@ Demon's Souls' online servers were shut down in 2018. This mod brings co-op back
 [*][b]Both press PLAY.[/b] Online turns on by itself; a short how-to also appears in the game when you connect.
 [*][b]The helper[/b] uses the [b]Cyanide Pill[/b] to die and become a ghost, then places a blue sign with the [b]Blue Eye Stone[/b].
 [*][b]The host[/b] touches the sign — it appears right next to them — and the helper is summoned.
-[*]Play together. After a boss the phantom [b]stays[/b]. Swap who hosts whenever you like.
+[*]Play together. After a boss the phantom returns home — re-summon in two clicks. Swap who hosts whenever you like.
 [/list]
 
 [size=5][b]▶ Notes[/b][/size]
