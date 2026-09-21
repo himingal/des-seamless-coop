@@ -26,9 +26,6 @@ Demon's Souls' online servers were shut down in 2018. This app brings co-op back
 ## Co-op in action
 
 <p align="center">
-  <img src="docs/coop1.webp" width="47%" alt="Summoned into a friend's world"> &nbsp; <img src="docs/coop2.webp" width="47%" alt="Placing a summon sign">
-</p>
-<p align="center">
   <img src="docs/shot1.webp" width="32%" alt="Together in Stonefang"> <img src="docs/shot2.webp" width="32%" alt="Together in Boletaria"> <img src="docs/shot3.webp" width="32%" alt="Fighting side by side">
 </p>
 
