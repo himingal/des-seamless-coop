@@ -203,7 +203,7 @@ public sealed class Rpcs3Manager
         f.Save();
     }
 
-    public async Task EnableQualityPatchesAsync(CancellationToken ct = default)
+    public async Task EnableQualityPatchesAsync(bool sixtyFps = false, CancellationToken ct = default)
     {
         var patchDir = Path.Combine(Root, "patches");
         var patchYml = Path.Combine(patchDir, "patch.yml");
@@ -220,14 +220,26 @@ public sealed class Rpcs3Manager
             }
             catch { /* offline: RPCS3 still runs without patches */ }
         }
+        SetPatches(sixtyFps);
+    }
 
+    /// <summary>Enables "Skip Intro Videos" (always) and the community "Unlock FPS" (60 FPS) patch per the
+    /// on/off flag, in RPCS3's patch_config.yml. Applies immediately (used by the 60 FPS button too).</summary>
+    public void SetPatches(bool sixtyFps)
+    {
         var cfg = new YamlFile(Path.Combine(ConfigDir, "patch_config.yml"));
         foreach (var (hash, serial) in SkipIntroPatches)
         {
-            var node = YamlFile.Map(YamlFile.Map(YamlFile.Map(YamlFile.Map(YamlFile.Map(cfg.Root, hash), "Skip Intro Videos"), "Demon's Souls"), serial), "01.00");
-            YamlFile.Set(node, "Enabled", "true");
+            Enable(cfg, hash, "Skip Intro Videos", serial, true);
+            Enable(cfg, hash, "Unlock FPS", serial, sixtyFps); // 60 FPS, no frameskip (Whatcookie/Gibbed)
         }
         cfg.Save();
+
+        static void Enable(YamlFile cfg, string hash, string title, string serial, bool on)
+        {
+            var node = YamlFile.Map(YamlFile.Map(YamlFile.Map(YamlFile.Map(YamlFile.Map(cfg.Root, hash), title), "Demon's Souls"), serial), "01.00");
+            YamlFile.Set(node, "Enabled", on ? "true" : "false");
+        }
     }
 
     /// <summary>Demon's Souls copies data to the HDD1 cache; clear it so patched params are re-read.</summary>

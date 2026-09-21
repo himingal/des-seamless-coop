@@ -42,6 +42,15 @@ public static class Loc
             ["pt"] = "Baixe o RPCS3 em rpcs3.net e aponte o app para a pasta dele em Procurar.",
             ["es"] = "Descarga RPCS3 de rpcs3.net y apunta la app a su carpeta con Explorar." },
         ["getRpcs3"] = new() { ["en"] = "Get RPCS3", ["pt"] = "Baixar RPCS3", ["es"] = "Obtener RPCS3" },
+        ["rpcs3Tools"] = new() { ["en"] = "RPCS3 TOOLS", ["pt"] = "FERRAMENTAS DO RPCS3", ["es"] = "HERRAMIENTAS DE RPCS3" },
+        ["openRpcs3"] = new() { ["en"] = "Open RPCS3", ["pt"] = "Abrir RPCS3", ["es"] = "Abrir RPCS3" },
+        ["controllerSetup"] = new() { ["en"] = "Controller Setup", ["pt"] = "Configurar Controle", ["es"] = "Configurar Mando" },
+        ["fps60Off"] = new() { ["en"] = "60 FPS: Off", ["pt"] = "60 FPS: Desl.", ["es"] = "60 FPS: No" },
+        ["fps60On"] = new() { ["en"] = "60 FPS: On", ["pt"] = "60 FPS: Lig.", ["es"] = "60 FPS: Sí" },
+        ["st60Fps"] = new() {
+            ["en"] = "Applying the 60 FPS patch…",
+            ["pt"] = "Aplicando o patch de 60 FPS…",
+            ["es"] = "Aplicando el parche de 60 FPS…" },
         ["fwInstalled"] = new() { ["en"] = "Installed.", ["pt"] = "Instalado.", ["es"] = "Instalado." },
         ["fwDownload"] = new() {
             ["en"] = "Downloads the official firmware straight from Sony.",

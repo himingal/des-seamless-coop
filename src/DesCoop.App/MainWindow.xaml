@@ -104,6 +104,16 @@
                                 </StackPanel>
                                 <Button x:Name="BtnRpcn" Grid.Column="2" Content="Create / Sign in" Click="BtnRpcn_Click" VerticalAlignment="Top"/>
                             </Grid>
+
+                            <Border Height="1" Background="{StaticResource Rule}" Margin="0,18,0,10"/>
+                            <TextBlock x:Name="LblTools" Text="RPCS3 TOOLS" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="11" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <WrapPanel HorizontalAlignment="Center">
+                                <Button x:Name="BtnOpenRpcs3" Content="Open RPCS3" Click="BtnOpenRpcs3_Click" Margin="0,0,8,8"/>
+                                <Button x:Name="BtnController" Content="Controller Setup" Click="BtnController_Click" Margin="0,0,8,8"
+                                        ToolTip="Opens RPCS3 — go to Config &gt; Gamepads to set up your controller."/>
+                                <Button x:Name="Btn60Fps" Content="60 FPS: Off" Click="Btn60Fps_Click" Margin="0,0,0,8"
+                                        ToolTip="Applies the community 60 FPS patch to Demon's Souls (physics-safe timestep). Takes effect on PLAY."/>
+                            </WrapPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </DockPanel>
@@ -228,10 +238,6 @@
         <Grid Grid.Row="2" Margin="0,16,0,0">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
             <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <Ellipse x:Name="DotGame2" Width="9" Height="9" Fill="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtGame2" Text="Demon's Souls is closed" FontFamily="{StaticResource Serif}" FontSize="12.5" Foreground="{StaticResource Muted}"/>
-                </StackPanel>
                 <TextBlock x:Name="TxtStatus" Text="Ready." FontSize="12.5" Foreground="{StaticResource Muted}"/>
                 <ProgressBar x:Name="Progress" Margin="0,6,0,0" Visibility="Hidden" Maximum="1"/>
             </StackPanel>

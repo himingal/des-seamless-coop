@@ -23,13 +23,22 @@ Demon's Souls' online servers were shut down in 2018. This app brings co-op back
 
 > **You need your own Demon's Souls disc dump.** This project ships no game files — use the copy you own (`BLUS30443` / `BLES00932` / `BCJS30022`). Don't have it dumped yet? That part is on you, friend. 😉
 
+## Co-op in action
+
+<p align="center">
+  <img src="docs/coop1.webp" width="47%" alt="Summoned into a friend's world"> &nbsp; <img src="docs/coop2.webp" width="47%" alt="Placing a summon sign">
+</p>
+<p align="center">
+  <img src="docs/shot1.webp" width="32%" alt="Together in Stonefang"> <img src="docs/shot2.webp" width="32%" alt="Together in Boletaria"> <img src="docs/shot3.webp" width="32%" alt="Fighting side by side">
+</p>
+
 ## Features
 
 | | |
 |---|---|
 | 🌗 **Built-in party server** | The Demon's Souls online server, reimplemented and running inside the host's app. No VPS to rent, nothing to configure. |
 | 🩸 **Signs that follow the host** | Your friend's blue summon sign is moved right next to you, in whatever area you're in — not left across the map. |
-| ⛓️ **Persistent co-op** | The summoned phantom stays with you through a boss clear and through the host's death, instead of being sent home. |
+| ⚡ **Instant re-summon** | Sign relocated next to the host + a Cyanide Pill (turn ghost on demand) + infinite Ephemeral Eyes — so getting back together after a boss is two clicks, not a chore. |
 | 🌍 **Join from anywhere** | Direct when it can (LAN, VPN, UPnP); otherwise through a free public relay, automatically. No port forwarding. |
 | ♾️ **No level range** | US, EU and JP copies share one world. Messages, bloodstains and wandering ghosts all work. |
 | ⚔️ **10 new starting classes** | Two per focus (Strength, Dexterity, Quality, Faith, Intelligence), unisex armor, ready-to-play kits. |

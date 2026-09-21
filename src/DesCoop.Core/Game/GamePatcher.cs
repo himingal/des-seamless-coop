@@ -57,9 +57,11 @@ public sealed class PatchOptions
     /// instead of being sent home. Implemented by commenting out the single <c>proxy:WarpNextStageKick();</c>
     /// call in the co-op teardown functions of the game's own Lua (<c>BlockClear2_3</c> = boss/area clear,
     /// <c>HostDead_1</c> = host death) in every m*.luabnd. Plain-Lua edit, pristine backup kept, fully
-    /// reversible — no EBOOT memory patching.
+    /// reversible — no EBOOT memory patching. OFF by default: keeping the phantom past a boss or the host's
+    /// death desyncs the session in-game (glitched phantom), so the game's normal "send the phantom home" is
+    /// left in place and re-summoning is instead made instant (sign next to the host + the Cyanide Pill).
     /// </summary>
-    public bool PersistentCoop { get; set; } = true;
+    public bool PersistentCoop { get; set; } = false;
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);

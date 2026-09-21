@@ -20,6 +20,8 @@ public sealed class AppSettings
     public PatchOptions Patch { get; set; } = new();
     public bool Fullscreen { get; set; }
     public bool UseUpnp { get; set; } = true;
+    /// <summary>Enable the community "Unlock FPS" (60 FPS) RPCS3 patch for Demon's Souls.</summary>
+    public bool SixtyFps { get; set; }
     /// <summary>UI language code ("en", "pt", "es"); empty = detect from Windows on first run.</summary>
     public string Language { get; set; } = "";
     /// <summary>Host's world tendency for the party: -200 pure black, 0 normal, +200 pure white.</summary>

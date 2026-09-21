@@ -125,6 +125,10 @@ public partial class MainWindow : Window
         BtnRpcs3Pick.Content = Loc.T("browse");
         BtnGame.Content = Loc.T("browse");
         BtnFw.Content = Loc.T("install");
+        LblTools.Text = Loc.T("rpcs3Tools");
+        BtnOpenRpcs3.Content = Loc.T("openRpcs3");
+        BtnController.Content = Loc.T("controllerSetup");
+        Refresh60Fps();
         RbHost.Content = Loc.T("host");
         RbJoin.Content = Loc.T("join");
         RbPublic.Content = Loc.T("public");
@@ -303,14 +307,30 @@ public partial class MainWindow : Window
     void UpdateGameIndicator()
     {
         bool running = _emu.IsInstalled && _emu.IsRunning();
-        var brush = B(running ? "Ok" : "Muted");
-        DotGameTop.Fill = DotGame2.Fill = brush;
+        DotGameTop.Fill = B(running ? "Ok" : "Muted");
         TxtGameTop.Text = (running ? "▶ " : "● ") + (running ? Loc.T("gameRunning") : Loc.T("gameClosed")).ToUpperInvariant();
         TxtGameTop.Foreground = running ? B("Ok") : B("Muted");
-        TxtGame2.Text = running ? Loc.T("gameRunning") : Loc.T("gameClosed");
-        TxtGame2.Foreground = TxtGameTop.Foreground;
         _gameShown = running;
     }
+
+    void BtnOpenRpcs3_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_emu.IsInstalled) { Ui.Info(this, Loc.T("dgNeedRpcs3")); return; }
+        _emu.OpenGui();
+    }
+
+    void BtnController_Click(object sender, RoutedEventArgs e) => BtnOpenRpcs3_Click(sender, e);
+
+    async void Btn60Fps_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_emu.IsInstalled) { Ui.Info(this, Loc.T("dgNeedRpcs3")); return; }
+        _s.SixtyFps = !_s.SixtyFps;
+        SaveSettings();
+        Refresh60Fps();
+        await RunBusy(Loc.T("st60Fps"), _ => _emu.EnableQualityPatchesAsync(_s.SixtyFps));
+    }
+
+    void Refresh60Fps() => Btn60Fps.Content = Loc.T(_s.SixtyFps ? "fps60On" : "fps60Off");
 
     // The game tweaks are applied automatically when you press PLAY (there is no UI for them).
     void ApplyPatch()
@@ -501,7 +521,7 @@ public partial class MainWindow : Window
             Status(Loc.T("stConfiguring"));
             _emu.ConfigureNetwork(target);
             _emu.RegisterGame(_game);
-            await _emu.EnableQualityPatchesAsync();
+            await _emu.EnableQualityPatchesAsync(_s.SixtyFps);
             Status(Loc.T("stPatch"));
             await Task.Run(ApplyPatch);
             Log($"Launching the game. Server: {target}");

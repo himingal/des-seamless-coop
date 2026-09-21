@@ -1,0 +1,82 @@
+=========================================================
+ SHORT DESCRIPTION (the summary field at the top)
+=========================================================
+Brings Demon's Souls online co-op back on RPCS3 — and makes it seamless. Your friend's summon sign appears right next to you in ANY area, the phantom stays through bosses and deaths, and a one-click launcher runs the whole reimplemented server for you. Play the entire game together.
+
+
+=========================================================
+ FULL DESCRIPTION (paste into the description box — this is Nexus BBCode)
+=========================================================
+[center][size=6][b]DeS SEAMLESS CO-OP[/b][/size]
+[size=4][color=#c4a468][i]Play through the whole of Demon's Souls with a friend — seamlessly — on RPCS3.[/i][/color][/size][/center]
+
+[line]
+
+[size=5][b]▶ What is this?[/b][/size]
+Demon's Souls' online servers were shut down in 2018. This mod brings co-op back on the [url=https://rpcs3.net]RPCS3[/url] PS3 emulator — but instead of the old "summon a random blue phantom for one area" system, it makes co-op [b]seamless[/b]:
+
+[list]
+[*][b]It reimplements the game's online server and runs it inside the host's app.[/b] No VPS to rent, nothing to configure.
+[*][b]Your friend's summon sign is moved right next to you[/b] — in whatever area you're in, not left across the map.
+[*][b]The summoned phantom stays with you[/b] through a boss clear and through the host's death, instead of being sent home.
+[*][b]Connects you from anywhere[/b] — directly, or through a free relay when your router won't cooperate. No VPN, no port forwarding.
+[/list]
+
+[quote]This is co-op — you play it [b]with a friend[/b]. One of you hosts, the other joins. You each need your own PC, your own Demon's Souls dump, and your own free RPCN account.[/quote]
+
+[size=5][b]▶ Features[/b][/size]
+[list]
+[*][b]Built-in party server[/b] — the Demon's Souls online server, reimplemented, running inside the host's launcher.
+[*][b]Seamless summon signs[/b] — the sign appears right beside the host, in any area.
+[*][b]Persistent co-op[/b] — the phantom is not sent home after a boss or when the host dies.
+[*][b]Cyanide Pill[/b] — a consumable that kills you on the spot so the helper becomes a soul-form ghost on demand (no more farming a death). Every class starts with one; Blacksmith Boldwin sells more.
+[*][b]Blacksmith carries the rarities[/b] — Boldwin (in the Nexus) also sells the world-tendency-locked weapons, Colorless Demon's Souls and every Pure upgrade stone, so a run never permanently misses them.
+[*][b]10 new starting classes[/b] — two per focus (Strength, Dexterity, Quality, Faith, Intelligence), unisex armour, ready-to-play kits.
+[*][b]Quality-of-life[/b] — full-HP soul form, infinite Stone of Ephemeral Eyes, passive MP regen, half-price merchants, faster upgrade stones and more.
+[*][b]One world[/b] — US, EU and JP copies share the same pool. Messages, bloodstains and wandering ghosts all work.
+[*][b]Multi-language launcher[/b] — English, Português (BR) and Español, auto-detected and switchable any time.
+[/list]
+
+[size=5][b]▶ Requirements[/b][/size]
+[list]
+[*]Windows 10 or 11.
+[*][url=https://rpcs3.net/download]RPCS3[/url] (the launcher points you to it and helps you set it up).
+[*][b]Your own legally-dumped copy of Demon's Souls[/b] ([color=#c4a468]BLUS30443[/color] / [color=#c4a468]BLES00932[/color] / [color=#c4a468]BCJS30022[/color]). [b]This mod contains no game files.[/b]
+[*]A friend with the same setup — this is a co-op mod.
+[/list]
+
+[size=5][b]▶ Installation & setup (both players)[/b][/size]
+[list=1]
+[*]Download and run [b]DesSeamlessCoop-Setup.exe[/b] and point it at your Demon's Souls folder (the one that contains PS3_GAME).
+[*]The launcher opens. Click [b]Get RPCS3[/b], download it from rpcs3.net, and point the app to that folder with [b]Browse[/b]. The app then downloads the official PS3 firmware for you.
+[*]Create your free [b]RPCN[/b] account inside the app (a token arrives by e-mail; type it to finish). Wrong e-mail? Hit [b]Back[/b] and redo it.
+[*]That's it — the launcher patches your dump (a pristine backup is kept) and configures RPCS3 when you press PLAY.
+[/list]
+
+[size=5][b]▶ How to play together[/b][/size]
+[list=1]
+[*]Decide who leads the run — that player is the [b]HOST[/b].
+[*][b]Host:[/b] choose [b]Host a Party[/b] and send your friend the party name + password it shows.
+[*][b]Friend:[/b] choose [b]Join a Party[/b], type that name + password, click Join.
+[*][b]Both press PLAY.[/b] Online turns on by itself; a short how-to also appears in the game when you connect.
+[*][b]The helper[/b] uses the [b]Cyanide Pill[/b] to die and become a ghost, then places a blue sign with the [b]Blue Eye Stone[/b].
+[*][b]The host[/b] touches the sign — it appears right next to them — and the helper is summoned.
+[*]Play together. After a boss the phantom [b]stays[/b]. Swap who hosts whenever you like.
+[/list]
+
+[size=5][b]▶ Notes[/b][/size]
+[list]
+[*]Every game edit is applied to [b]your own dump[/b] with a pristine backup kept, and is fully reversible.
+[*]The game still ends a session when a boss or the host dies (that logic lives in the PS3 executable), but this mod makes re-joining instant — the sign is already next to the host and you're never forced out of soul form — so it plays seamlessly.
+[*]Not affiliated with FromSoftware, Bluepoint, Sony or the RPCS3 team. Fan project, licensed under GPL-3.0.
+[/list]
+
+[size=5][b]▶ Credits[/b][/size]
+[list]
+[*]Online protocol reference: DeSSE by ymgve, and dessego by danmrichards.
+[*][url=https://rpcs3.net]RPCS3[/url] and [url=https://github.com/RipleyTom/rpcn]RPCN[/url].
+[*]SoulsFormatsNEXT and Paramdex by the soulsmods community.
+[*]Cinzel typeface (SIL OFL 1.1).
+[/list]
+
+[center][size=4][color=#c4a468][b]Good hunting, Slayers of Demons.[/b][/color][/size][/center]
