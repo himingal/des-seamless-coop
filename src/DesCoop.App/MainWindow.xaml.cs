@@ -127,7 +127,7 @@ public partial class MainWindow : Window
         BtnFw.Content = Loc.T("install");
         LblTools.Text = Loc.T("rpcs3Tools");
         BtnOpenRpcs3.Content = Loc.T("openRpcs3");
-        BtnController.Content = Loc.T("controllerSetup");
+        LblGamepadHint.Text = Loc.T("gamepadHint");
         Refresh60Fps();
         RbHost.Content = Loc.T("host");
         RbJoin.Content = Loc.T("join");
@@ -318,8 +318,6 @@ public partial class MainWindow : Window
         if (!_emu.IsInstalled) { Ui.Info(this, Loc.T("dgNeedRpcs3")); return; }
         _emu.OpenGui();
     }
-
-    void BtnController_Click(object sender, RoutedEventArgs e) => BtnOpenRpcs3_Click(sender, e);
 
     async void Btn60Fps_Click(object sender, RoutedEventArgs e)
     {

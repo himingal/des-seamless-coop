@@ -109,11 +109,11 @@
                             <TextBlock x:Name="LblTools" Text="RPCS3 TOOLS" FontFamily="{StaticResource Serif}" Foreground="{StaticResource Gold}" FontSize="11" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                             <WrapPanel HorizontalAlignment="Center">
                                 <Button x:Name="BtnOpenRpcs3" Content="Open RPCS3" Click="BtnOpenRpcs3_Click" Margin="0,0,8,8"/>
-                                <Button x:Name="BtnController" Content="Controller Setup" Click="BtnController_Click" Margin="0,0,8,8"
-                                        ToolTip="Opens RPCS3 — go to Config &gt; Gamepads to set up your controller."/>
                                 <Button x:Name="Btn60Fps" Content="60 FPS: Off" Click="Btn60Fps_Click" Margin="0,0,0,8"
                                         ToolTip="Applies the community 60 FPS patch to Demon's Souls (physics-safe timestep). Takes effect on PLAY."/>
                             </WrapPanel>
+                            <TextBlock x:Name="LblGamepadHint" Style="{StaticResource Small}" HorizontalAlignment="Center" TextAlignment="Center"
+                                       Opacity="0.7" Margin="0,4,0,0" Text="Tip: set your controller up in RPCS3 — Config › Gamepads."/>
                         </StackPanel>
                     </ScrollViewer>
                 </DockPanel>

@@ -44,7 +44,7 @@ public static class Loc
         ["getRpcs3"] = new() { ["en"] = "Get RPCS3", ["pt"] = "Baixar RPCS3", ["es"] = "Obtener RPCS3" },
         ["rpcs3Tools"] = new() { ["en"] = "RPCS3 TOOLS", ["pt"] = "FERRAMENTAS DO RPCS3", ["es"] = "HERRAMIENTAS DE RPCS3" },
         ["openRpcs3"] = new() { ["en"] = "Open RPCS3", ["pt"] = "Abrir RPCS3", ["es"] = "Abrir RPCS3" },
-        ["controllerSetup"] = new() { ["en"] = "Controller Setup", ["pt"] = "Configurar Controle", ["es"] = "Configurar Mando" },
+        ["gamepadHint"] = new() { ["en"] = "Tip: set your controller up in RPCS3 — Config › Gamepads.", ["pt"] = "Dica: configure seu controle no RPCS3 — Config › Gamepads.", ["es"] = "Consejo: configura tu mando en RPCS3 — Config › Gamepads." },
         ["fps60Off"] = new() { ["en"] = "60 FPS: Off", ["pt"] = "60 FPS: Desl.", ["es"] = "60 FPS: No" },
         ["fps60On"] = new() { ["en"] = "60 FPS: On", ["pt"] = "60 FPS: Lig.", ["es"] = "60 FPS: Sí" },
         ["st60Fps"] = new() {
