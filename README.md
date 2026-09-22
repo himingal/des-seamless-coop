@@ -42,6 +42,7 @@ Demon's Souls' online servers were shut down in 2018. This app brings co-op back
 | 🛒 **Blacksmith carries the rarities** | Boldwin (in the Nexus) also sells the world-tendency-locked weapons, Colorless Demon's Souls and every Pure stone, so a co-op run never permanently misses them. |
 | ☠️ **Cyanide Pill** | Every class starts with one (and Boldwin sells more): use it to die on the spot and turn into a soul-form ghost on demand, instead of farming a death to place a summon sign. |
 | ✨ **Quality-of-life tweaks** | Full-HP soul form, infinite Ephemeral Eyes, passive MP regen, half-price merchants, faster upgrade stones and more — applied to your own dump, originals backed up. |
+| 🎮 **One-click RPCS3 tools** | Open RPCS3 and toggle the community **60 FPS** patch straight from the launcher — no menu digging. |
 | 🎌 **Multi-language** | English, Português (BR) and Español. Detected on first run, switchable any time. |
 | 🖱️ **Point-and-play setup** | Get [RPCS3](https://rpcs3.net) and point the app to it; it downloads the official PS3 firmware from Sony, patches the game and configures everything by itself. |
 
@@ -73,7 +74,7 @@ The game still ends the session when a boss or the host dies (that logic lives i
 
 ```powershell
 git clone --recursive https://github.com/himingal/des-seamless-coop
-powershell -File tools/build-release.ps1 -Version 2.0.0   # tests + single-file exe + installer in dist/
+powershell -File tools/build-release.ps1 -Version 3.1.0   # tests + single-file exe + installer in dist/
 ```
 
 .NET 10, WPF, a reimplemented server in a shared library, xUnit tests and an Inno Setup installer.
