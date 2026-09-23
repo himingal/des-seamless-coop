@@ -64,6 +64,18 @@ Located the Lua API in the decrypted EBOOT (PS3 PPU = 32-bit pointers):
   co-op session actually tears down** — which needs two players in-game. So an EBOOT persistence/loot
   patch is only reachable once 2P testing exists (2nd RPCN account, or the friend), not solo/static.
 
+## Per-ask feasibility (checked)
+- **"No ghost appearance" (solid phantom, not translucent):** NOT param-editable. Dumped every field of
+  `SP_EFFECT_PARAM_ST` from the game's own paramdef — it has only ghost *targeting* filters
+  (`effectTargetGhost/WhiteGhost/BlackGhost`), no draw/alpha/material/model field. The soul-form
+  translucency is an engine render state keyed to the network player type (white/grey/black ghost); the
+  only levers (`SetChrType`, `ChangeModel`, `SetChrTypeDataGrey` in Lua) are per-event and would break
+  netcode/state if forced globally. So this is EBOOT/engine-level, same class as persistence/teleport.
+- **"Item that teleports the helper to the host":** the helper already appears next to the host in any
+  area (server sign-relocation). A standalone consumable that force-warps into the host's live session is
+  the summon handshake itself (place sign + host accepts), which is client/EBOOT-gated — an item can't
+  bypass it.
+
 ## Recommendation
 
 Spend the week on the **enhanced co-op** (loot-sharing + instant auto-regroup), not on a blind EBOOT
