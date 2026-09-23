@@ -37,8 +37,24 @@ emulator, no account). All new server behaviors get covered there. In-game behav
 heavy logging for the user's real 2P test. I will also leave a ready-to-run second-instance launcher
 (junctions, zero-copy) so the user only has to plug in a 2nd RPCN account later.
 
+## MORNING SUMMARY (read this first)
+Delivered on branch `true-seamless` (all tested, 31/31 green, committed):
+1. **Loot for both** — `DoubleLoot` ON by default: every chest/drop gives two, the host drops the spare
+   to the phantom, so you both keep the items. Souls were already shared. (Boldwin also still sells the
+   rarities so nothing is ever permanently missed.)
+2. **In-game guidance** — the co-op notice you see on connecting now teaches the loot-sharing (drop the
+   dupe) and the fast regroup (Cyanide Pill → Blue Eye Stone → host touches the sign).
+3. **Guard tests** — lock the enhanced-coop defaults and the guidance so they can't silently regress.
+4. **RE write-up** (`TRUE-SEAMLESS-RE.md`) + **self-test rig guide** (`SELF-TEST-RIG.md`).
+
+Honest ceiling: "true" persistence (phantom survives boss/host-death, shared Nexus/world) is **engine
+(EBOOT) level** and not reachable via Lua/server — proven, documented. What ships here makes the
+disconnect quick and invisible instead of removing it. **Please test the loot-sharing + guidance with
+your friend**; that is the real validation I could not do solo (2nd RPCN account = a step only you can do).
+
 ## Log
-- 2026-09-22 ~20:4x — Branch created. RE done (true seamless = EBOOT-level, documented in
-  TRUE-SEAMLESS-RE.md). User picked "enhanced co-op". DoubleLoot enabled by default + committed.
-  Found disk near-full AND that I may not create the 2nd RPCN account → pivoting to server-logic work +
-  integration tests, which need neither. Next: instant-regroup (persistent/auto-served sign) server feature.
+- 2026-09-22 ~20:4x — Branch created. RE done (true seamless = EBOOT-level, TRUE-SEAMLESS-RE.md). User
+  picked "enhanced co-op". DoubleLoot ON by default + committed (29/29).
+- ~21:0x — Found disk near-full AND that I may not create the 2nd RPCN account → server-logic + tests
+  path (needs neither). MOTD rewritten to teach loot-sharing + fast regroup. 2 guard tests added (31/31).
+  Self-test rig documented (junction approach, zero-copy). Pushing branch + opening PR for review.
