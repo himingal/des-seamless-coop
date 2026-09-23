@@ -30,6 +30,14 @@ public sealed class DesServerOptions
     /// The game pulls its world tendency toward this value whenever it syncs with the server.
     /// </summary>
     public int WorldTendency { get; set; }
+
+    /// <summary>
+    /// Same-machine 2-player test: two DeS instances on one PC point at different loopback addresses
+    /// (host → 127.0.0.1, helper → 127.0.0.2). The server (bound to Any) then keys and advertises each
+    /// client by the loopback address it connected TO, so the two are distinct even though both are
+    /// loopback and neither carries the relay header. Off in normal use (all loopback = "127.0.0.1").
+    /// </summary>
+    public bool LocalTest { get; set; }
 }
 
 public sealed record PartyPlayerStatus(string Name, string Area, int BlockId, bool HasSign, bool InSession, int SecondsAgo);
@@ -138,9 +146,11 @@ public sealed class DesServer : IDisposable
             string path = parts.Length > 1 ? parts[1] : "/";
             byte[] response;
 
-            // Relayed players all arrive from loopback; the friend's forwarder tags them.
+            // Relayed players all arrive from loopback; the friend's forwarder tags them. In same-machine
+            // test mode two loopback clients are told apart by the loopback address they connected to.
             string clientKey = IPAddress.IsLoopback(remote) && headers.TryGetValue(Net.RelayForwarder.ClientHeader, out var relayId)
-                ? "relay:" + relayId : remote.ToString();
+                ? "relay:" + relayId
+                : (_o.LocalTest && IPAddress.IsLoopback(remote) ? "local:" + local : remote.ToString());
 
             if (path.StartsWith("/descoop/", StringComparison.OrdinalIgnoreCase))
                 response = HandleCustom(path, remote);
@@ -219,7 +229,9 @@ public sealed class DesServer : IDisposable
     /// </summary>
     internal string AdvertisedAddress(IPAddress remote, IPAddress local)
     {
-        if (IPAddress.IsLoopback(remote)) return "127.0.0.1";
+        // Same-machine test: advertise the loopback address the client connected to (127.0.0.1 host,
+        // 127.0.0.2 helper), so each keeps talking to its own endpoint and stays distinct.
+        if (IPAddress.IsLoopback(remote)) return _o.LocalTest ? local.ToString() : "127.0.0.1";
         lock (_lock) if (_via.TryGetValue(remote.ToString(), out var via)) return via;
         if (remote.Equals(local)) return local.ToString();
         if (IsPrivate(local) && !IsPrivate(remote)) return _o.PublicAddress ?? _o.FallbackHost; // came through a port forward
