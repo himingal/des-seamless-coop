@@ -37,7 +37,28 @@ emulator, no account). All new server behaviors get covered there. In-game behav
 heavy logging for the user's real 2P test. I will also leave a ready-to-run second-instance launcher
 (junctions, zero-copy) so the user only has to plug in a 2nd RPCN account later.
 
-## MORNING SUMMARY (read this first)
+## MORNING SUMMARY v2 (read this first)
+Your app is now **3.2.0** (installed locally; 3.1.0 still on GitHub if you want to revert). Just press
+**PLAY** to get it all:
+- **SEAMLESS EDITION** on the title screen (game font, above "PRESS START BUTTON") — data-verified on
+  your real menu file; you'll see it the moment you boot.
+- **Loot for both** (DoubleLoot on: chests/drops give two → host drops the spare to the phantom).
+- **In-game guidance** teaching loot-sharing + fast regroup.
+Your dump is already patched with these, and E:\rpcs3-sandbox is a safe offline test copy (own empty
+save — never touches your real save).
+
+**What I could NOT do, honestly:**
+- **Full seamless (no-ghost look, teleport-to-host item, shared boss progress, one-continuous-journey)**
+  is EBOOT-level, behind tolua wrappers/vtables — needs live PPU debugging *with two players*. Not
+  reachable solo/static. The "warp to helper into the host's world wherever he is" you asked for is what
+  the sign-relocation already does (helper's sign shows next to the host in any area); a one-click *item*
+  that force-teleports is EBOOT-level.
+- **2-player self-test:** I cannot create a 2nd RPCN account (prohibited action), and RPCS3 won't render
+  from my automation shell (exits at init) while computer-use needs your approval (you're asleep). So the
+  real co-op validation is still your test with your friend.
+- I did **not** risk your real save (used the E: sandbox's own empty profile for anything emulator-side).
+
+## MORNING SUMMARY (earlier)
 Delivered on branch `true-seamless` (all tested, 31/31 green, committed):
 1. **Loot for both** — `DoubleLoot` ON by default: every chest/drop gives two, the host drops the spare
    to the phantom, so you both keep the items. Souls were already shared. (Boldwin also still sells the
