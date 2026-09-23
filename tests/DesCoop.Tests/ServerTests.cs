@@ -129,6 +129,15 @@ public class ServerTests : IDisposable
     }
 
     [Fact]
+    public void Login_motd_teaches_loot_sharing_and_fast_regroup()
+    {
+        var motd = Encoding.Latin1.GetString(_server.Dispatch("login.spd", P(("ver", "100")), "10.0.0.9", 18666)!.Value.data);
+        Assert.Contains("LOOT", motd);
+        Assert.Contains("Cyanide", motd);   // fast regroup via the pill
+        Assert.Contains("Blue Eye Stone", motd);
+    }
+
+    [Fact]
     public void Red_signs_and_own_signs_are_not_relocated()
     {
         _server.Dispatch("addSosData.spd", Sign("Red0", -10079, 1, isBlack: 1), "10.0.0.3", 18667);

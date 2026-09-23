@@ -14,6 +14,16 @@ public class PatcherTests : IDisposable
 
     public void Dispose() { try { Directory.Delete(_root, true); } catch { } }
 
+    [Fact]
+    public void Enhanced_coop_defaults()
+    {
+        var o = new PatchOptions();
+        Assert.True(o.DoubleLoot, "loot for both: DoubleLoot must be ON so the host can drop the dupe to the phantom");
+        Assert.True(o.CyanidePill, "fast regroup needs the Cyanide Pill");
+        Assert.True(o.BonusMerchant, "Boldwin must sell the rarities so a run never misses them");
+        Assert.False(o.PersistentCoop, "persistent co-op desyncs in-game (engine-level); stays OFF");
+    }
+
     /// <summary>EQUIP_PARAM_GOODS_ST as documented for Demon's Souls (64 bytes per row).</summary>
     internal static PARAMDEF GoodsDef()
     {
