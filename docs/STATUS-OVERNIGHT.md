@@ -102,3 +102,15 @@ your friend**; that is the real validation I could not do solo (2nd RPCN account
   remaining work is gated on 2P (your step), so overnight ticks are mostly quiet holds by design — the
   substantive progress is already committed on this branch + PR #1. I did NOT run the emulator on your
   save (single save slot; refused to risk your co-op progress unattended).
+
+## Update 3 — sandbox BOOTS + renders (major)
+- Root cause of every failed emulator launch was **missing `qt6/` (Qt platform plugin)** in the sandbox,
+  not session isolation. After junctioning `qt6` (+ sounds/GuiConfigs/patches/etc.), the E: sandbox
+  **boots Demon's Souls and renders** from the automation side (captured the boot dialog at 1920x1080,
+  Vulkan, 60 FPS). PPU compile from cold cache took ~4-5 min on the Xeon; warm now.
+- Confirms the patched game loads. Next: advance past the boot auto-save dialog to the title to
+  screenshot SEAMLESS EDITION (input: P1 is XInput/controller; either the user presses A, or switch the
+  sandbox to a Keyboard handler and drive via PostMessage).
+- 2P self-test is now more plausible than thought, BUT RAM is tight (~2 GB free with ONE instance of
+  15.84 GB total) — two concurrent DeS instances may not fit; to be assessed. Still needs the user's 2nd
+  RPCN account (his action) for real co-op.
