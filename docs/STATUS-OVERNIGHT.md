@@ -114,3 +114,17 @@ your friend**; that is the real validation I could not do solo (2nd RPCN account
 - 2P self-test is now more plausible than thought, BUT RAM is tight (~2 GB free with ONE instance of
   15.84 GB total) — two concurrent DeS instances may not fit; to be assessed. Still needs the user's 2nd
   RPCN account (his action) for real co-op.
+
+## Update 4 — in-game verification (live, user awake)
+- **SEAMLESS EDITION** re-done: the press-start `\n` approach garbled (overlap), so it now prepends
+  "SEAMLESS EDITION" to the copyright block (FMG 30101, multi-line-safe). **Verified in-game** on the
+  main menu, clean, game font (screenshot sent to user). 32/32 tests.
+- **Custom classes verified in-game** (character creation showed "Berserker", STR 18) — the class revamp
+  and patched dump load correctly in the emulator.
+- **Emulator automation now works end-to-end** from the shell: boot (qt6 junction was the blocker),
+  keyboard input via PostMessage (sandbox Player 1 switched to Keyboard handler; Cross=Enter, Start=Space,
+  Circle=Backspace; xinput backup kept), and PrintWindow capture. Cold PPU compile ~4-5 min, warm ~1 min.
+- **Co-op test blocker (not RAM):** RAM is fine (~2.8 GB/instance, two fit). The block is the **mingalDES3
+  RPCN login** — the account was registered but its credentials are not saved in the sandbox rpcn.yml, and
+  logging in requires **entering the password**, which the assistant may not do. So the online co-op test
+  needs the user to log in mingalDES3 once (or use his friend). Everything else is staged and ready.
