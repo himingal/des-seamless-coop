@@ -11,12 +11,13 @@ namespace DesCoop.Game;
 public static class MsgPatcher
 {
     public const int FirstClassTag = 201001, LastClassTag = 201010;
-    /// <summary>Menu FMG entry rendered on the title/start screen. Id 30000 is reused by other FMGs
-    /// (dialog, key guide, one-line help) for unrelated text, so the title is matched by its exact
-    /// original string, never by id alone.</summary>
-    public const int TitleEntryId = 30000;
-    public const string TitleOriginal = "PRESS START BUTTON";
-    public const string TitleBranded = "SEAMLESS EDITION\nPRESS START BUTTON";
+    /// <summary>The copyright block (menu FMG entry 30101) renders as a clean multi-line text box on both
+    /// the press-start screen and the main menu, so "SEAMLESS EDITION" is prepended there. The old approach
+    /// (entry 30000 "PRESS START BUTTON") is NOT used: that prompt is a single-line widget that ignores the
+    /// newline and drew both lines on top of each other (garbled). Matched by the copyright text, not id.</summary>
+    public const int CopyrightEntryId = 30101;
+    public const string CopyrightMarker = "Sony Computer Entertainment";
+    public const string BrandLine = "SEAMLESS EDITION";
 
     public static IEnumerable<string> FindMenuBnds(string usrDir)
     {
@@ -66,7 +67,8 @@ public static class MsgPatcher
         return changed;
     }
 
-    /// <summary>Sets the title-screen entry to the branded text in whichever FMG holds it; true if changed.</summary>
+    /// <summary>Prepends "SEAMLESS EDITION" as its own line above the copyright block (a multi-line text box
+    /// that renders cleanly on the start screen and main menu); true if changed.</summary>
     public static bool BrandTitle(BND3 bnd)
     {
         bool any = false;
@@ -74,10 +76,9 @@ public static class MsgPatcher
         {
             FMG fmg;
             try { fmg = FMG.Read(f.Bytes); } catch { continue; }
-            // Match by the exact original title text: id 30000 is shared by other, unrelated FMGs.
-            var e = fmg.Entries.FirstOrDefault(x => x.ID == TitleEntryId && x.Text?.Trim() == TitleOriginal);
-            if (e == null) continue;
-            e.Text = TitleBranded;
+            var e = fmg.Entries.FirstOrDefault(x => x.ID == CopyrightEntryId && x.Text != null && x.Text.Contains(CopyrightMarker));
+            if (e == null || e.Text!.StartsWith(BrandLine)) continue;
+            e.Text = BrandLine + "\n\n" + e.Text;
             f.Bytes = WriteLikeOriginal(fmg, f.Bytes.Length);
             any = true;
         }

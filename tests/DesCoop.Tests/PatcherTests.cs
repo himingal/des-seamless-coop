@@ -15,22 +15,26 @@ public class PatcherTests : IDisposable
     public void Dispose() { try { Directory.Delete(_root, true); } catch { } }
 
     [Fact]
-    public void BrandTitle_only_touches_the_press_start_entry()
+    public void BrandTitle_prepends_seamless_edition_to_the_copyright()
     {
-        // Two FMGs both use id 30000 for unrelated text; only the real title string must change.
-        var title = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.TitleEntryId, "PRESS START BUTTON")] };
-        var help = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.TitleEntryId, "Please select an item.")] };
+        const string copyright = "©2009 Sony Computer Entertainment Inc.\nLicensed to and published by Atlus U.S.A., Inc.";
+        var misc = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.CopyrightEntryId, copyright)] };
+        // Same id in another FMG but without the copyright marker must be left alone.
+        var help = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.CopyrightEntryId, "Please select an item.")] };
         var bnd = new BND3 { Version = "07D7R6", Format = Binder.Format.IDs | Binder.Format.Names1 | Binder.Format.Names2, BigEndian = true };
-        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 0, "menu_misc.fmg", title.Write()));
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 0, "menu_misc.fmg", misc.Write()));
         bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1, "help.fmg", help.Write()));
 
         Assert.True(MsgPatcher.BrandTitle(bnd));
 
-        var t = FMG.Read(bnd.Files[0].Bytes).Entries.First(e => e.ID == MsgPatcher.TitleEntryId).Text;
-        var h = FMG.Read(bnd.Files[1].Bytes).Entries.First(e => e.ID == MsgPatcher.TitleEntryId).Text;
-        Assert.Equal(MsgPatcher.TitleBranded, t);
-        Assert.Contains("SEAMLESS EDITION", t);
-        Assert.Equal("Please select an item.", h); // untouched
+        var t = FMG.Read(bnd.Files[0].Bytes).Entries.First(e => e.ID == MsgPatcher.CopyrightEntryId).Text;
+        var h = FMG.Read(bnd.Files[1].Bytes).Entries.First(e => e.ID == MsgPatcher.CopyrightEntryId).Text;
+        Assert.StartsWith("SEAMLESS EDITION", t);
+        Assert.Contains("Sony Computer Entertainment", t); // original copyright preserved
+        Assert.Equal("Please select an item.", h);         // untouched (no copyright marker)
+
+        // Idempotent: a second pass does not stack the brand.
+        Assert.False(MsgPatcher.BrandTitle(bnd));
     }
 
     [Fact]
