@@ -57,4 +57,11 @@ your friend**; that is the real validation I could not do solo (2nd RPCN account
   picked "enhanced co-op". DoubleLoot ON by default + committed (29/29).
 - ~21:0x — Found disk near-full AND that I may not create the 2nd RPCN account → server-logic + tests
   path (needs neither). MOTD rewritten to teach loot-sharing + fast regroup. 2 guard tests added (31/31).
-  Self-test rig documented (junction approach, zero-copy). Pushing branch + opening PR for review.
+  Self-test rig documented (junction approach, zero-copy). Pushed branch + opened PR #1.
+- ~21:1x — EBOOT groundwork: located the Lua API name table; binding is tolua-style, native session
+  logic behind wrappers/vtables (same wall as LBP2). An EBOOT persistence/loot patch needs live PPU
+  debugging during a real 2P teardown — not doable solo/static. Documented in TRUE-SEAMLESS-RE.md.
+- Autopilot: entering a self-paced loop (survives the hourly usage limit; picks up your reply). Genuine
+  remaining work is gated on 2P (your step), so overnight ticks are mostly quiet holds by design — the
+  substantive progress is already committed on this branch + PR #1. I did NOT run the emulator on your
+  save (single save slot; refused to risk your co-op progress unattended).

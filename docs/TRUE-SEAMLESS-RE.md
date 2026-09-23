@@ -51,6 +51,19 @@ An **"enhanced co-op"** that makes the disconnect invisible instead of removing 
 
 This is robust, testable in small pieces, and won't reproduce the "zoado" state.
 
+## EBOOT groundwork (for a future, testable attempt)
+
+Located the Lua API in the decrypted EBOOT (PS3 PPU = 32-bit pointers):
+- Method-name strings sit in `.rodata` ~`0x16d_xxx`–`0x16e_xxx` (e.g. `WarpNextStageKick`@`0x16e2838`,
+  `WarpNextStage`@`0x16e1748`, `SummonSuccess`@`0x16dc258`), each referenced once from a **name table in
+  `.data`** (~`0x18d_xxx`). The entry after the name pointer points at *another rodata string*, not a
+  function descriptor — i.e. this is a **tolua-style binding**: names in one table, dispatch through
+  generated wrappers, and the real C++ session/warp logic behind them (very likely virtual dispatch).
+- This is the **same wall the LBP2 RE hit**: static analysis can't cross the wrappers/vtables. Pinning
+  the native teardown/warp/loot functions needs a **live breakpoint in RPCS3's PPU debugger while a
+  co-op session actually tears down** — which needs two players in-game. So an EBOOT persistence/loot
+  patch is only reachable once 2P testing exists (2nd RPCN account, or the friend), not solo/static.
+
 ## Recommendation
 
 Spend the week on the **enhanced co-op** (loot-sharing + instant auto-regroup), not on a blind EBOOT
