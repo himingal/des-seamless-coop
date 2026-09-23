@@ -386,12 +386,14 @@ public sealed class DesServer : IDisposable
         motd.Append($"{Ascii(_o.ServerName)}  -  Seamless Co-op\r\n\r\n");
         motd.Append("HOW TO PLAY TOGETHER\r\n");
         motd.Append("1) Pick who leads: that player is the HOST.\r\n");
-        motd.Append("2) The HELPER dies once to become a ghost,\r\n");
-        motd.Append("   then uses the Blue Eye Stone to place a sign.\r\n");
-        motd.Append("3) The HOST stays human (Stone of Ephemeral\r\n");
-        motd.Append("   Eyes) and touches the sign - it appears\r\n");
-        motd.Append("   right next to you, in any area.\r\n");
-        motd.Append("4) After a boss, do it again. Swap roles any time.\r\n");
+        motd.Append("2) HELPER: take the Cyanide Pill to become a\r\n");
+        motd.Append("   ghost, then the Blue Eye Stone to place a sign.\r\n");
+        motd.Append("3) HOST: stay human (Stone of Ephemeral Eyes)\r\n");
+        motd.Append("   and touch the sign - it appears right next\r\n");
+        motd.Append("   to you, in any area.\r\n");
+        motd.Append("4) LOOT: chests and drops give two - the HOST\r\n");
+        motd.Append("   drops the spare for the HELPER. Souls are shared.\r\n");
+        motd.Append("5) After a boss or death, repeat - it is quick.\r\n");
         var motd2 = new StringBuilder();
         motd2.Append($"Players online: {st.Players.Length}\r\n");
         foreach (var pl in st.Players.Take(8))

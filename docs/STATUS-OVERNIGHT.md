@@ -25,7 +25,20 @@ This file is updated every loop iteration so there is a readable trail by mornin
 5. Fallbacks if the rig is infeasible (disk/perf): finish all code + in-game tutorial improvements and
    stage everything with heavy logging for the user's own 2P test with his friend.
 
+## Rig reality check (important)
+Two-emulator self-testing needs **two RPCN accounts** (two online identities). **Creating an account is
+a prohibited action for me** — I will not sign up the 2nd RPCN account even with permission. So true
+in-emulator 2P testing needs the user (a 2nd RPCN account, or his friend). Combined with the near-full
+disk, I am NOT booting two DeS emulators tonight.
+
+**What I CAN test solo (and will):** the party-server / co-op *logic*, via the in-process integration
+tests (`SignEndToEndTests` spins a real `DesServer` and drives host+friend over loopback — no RPCN, no
+emulator, no account). All new server behaviors get covered there. In-game behavior is staged with
+heavy logging for the user's real 2P test. I will also leave a ready-to-run second-instance launcher
+(junctions, zero-copy) so the user only has to plug in a 2nd RPCN account later.
+
 ## Log
 - 2026-09-22 ~20:4x — Branch created. RE done (true seamless = EBOOT-level, documented in
   TRUE-SEAMLESS-RE.md). User picked "enhanced co-op". DoubleLoot enabled by default + committed.
-  Found disk near-full; rig will use junctions. Starting rig setup.
+  Found disk near-full AND that I may not create the 2nd RPCN account → pivoting to server-logic work +
+  integration tests, which need neither. Next: instant-regroup (persistent/auto-served sign) server feature.
