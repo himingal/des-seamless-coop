@@ -15,6 +15,25 @@ public class PatcherTests : IDisposable
     public void Dispose() { try { Directory.Delete(_root, true); } catch { } }
 
     [Fact]
+    public void BrandTitle_only_touches_the_press_start_entry()
+    {
+        // Two FMGs both use id 30000 for unrelated text; only the real title string must change.
+        var title = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.TitleEntryId, "PRESS START BUTTON")] };
+        var help = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.TitleEntryId, "Please select an item.")] };
+        var bnd = new BND3 { Version = "07D7R6", Format = Binder.Format.IDs | Binder.Format.Names1 | Binder.Format.Names2, BigEndian = true };
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 0, "menu_misc.fmg", title.Write()));
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1, "help.fmg", help.Write()));
+
+        Assert.True(MsgPatcher.BrandTitle(bnd));
+
+        var t = FMG.Read(bnd.Files[0].Bytes).Entries.First(e => e.ID == MsgPatcher.TitleEntryId).Text;
+        var h = FMG.Read(bnd.Files[1].Bytes).Entries.First(e => e.ID == MsgPatcher.TitleEntryId).Text;
+        Assert.Equal(MsgPatcher.TitleBranded, t);
+        Assert.Contains("SEAMLESS EDITION", t);
+        Assert.Equal("Please select an item.", h); // untouched
+    }
+
+    [Fact]
     public void Enhanced_coop_defaults()
     {
         var o = new PatchOptions();

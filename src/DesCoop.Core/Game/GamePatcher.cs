@@ -18,6 +18,9 @@ public sealed class PatchOptions
     public bool StartWithBlueEyeStone { get; set; } = true;
     /// <summary>Ten new starting classes (names, stats and kits) replace the vanilla ones.</summary>
     public bool RevampedClasses { get; set; } = true;
+    /// <summary>Brand the title screen: the "PRESS START BUTTON" text (menu FMG entry 30000) becomes
+    /// "SEAMLESS EDITION / PRESS START BUTTON", shown in the game's own font on the start screen.</summary>
+    public bool SeamlessEditionTitle { get; set; } = true;
     /// <summary>Everything sold by NPCs costs half.</summary>
     public bool CheaperShops { get; set; } = true;
     /// <summary>Pure Bladestone drops from the Shrine of Storms skeletons 15% of the time instead of 0.5%.</summary>
@@ -242,7 +245,7 @@ public static class GamePatcher
             }
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
-        if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, log)) changed = true;
+        if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, opt.SeamlessEditionTitle, log)) changed = true;
         if (opt.CyanidePill && CyanidePillPatcher.AddName(game.UsrDir, log)) changed = true;
         if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, log)) changed = true;
         return new PatchReport(changed, log);
