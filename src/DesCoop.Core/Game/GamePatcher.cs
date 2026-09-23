@@ -36,8 +36,10 @@ public sealed class PatchOptions
     public bool ManaRegen { get; set; } = true;
     /// <summary>Seconds between each +1 MP tick of the passive regen (1 = 1 MP/s; 2 = 1 MP every 2 s).</summary>
     public int ManaRegenIntervalSeconds { get; set; } = 2;
-    /// <summary>Every world pickup and drop gives twice as much. Off: co-op keeps raw single pickups.</summary>
-    public bool DoubleLoot { get; set; } = false;
+    /// <summary>Every world pickup, chest and enemy drop gives two of the item instead of one, so in co-op the
+    /// host can hand the duplicate to the summoned phantom — both players walk away with the loot. ON by default
+    /// for seamless co-op (souls are already shared by the game; this covers items on the ground and in chests).</summary>
+    public bool DoubleLoot { get; set; } = true;
     /// <summary>Every starting class carries a "Cyanide Pill" that kills you instantly, so the helper turns
     /// into a soul-form ghost on demand instead of having to farm a death to place a summon sign.</summary>
     public bool CyanidePill { get; set; } = true;
