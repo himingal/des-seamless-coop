@@ -52,6 +52,22 @@ Honest ceiling: "true" persistence (phantom survives boss/host-death, shared Nex
 disconnect quick and invisible instead of removing it. **Please test the loot-sharing + guidance with
 your friend**; that is the real validation I could not do solo (2nd RPCN account = a step only you can do).
 
+## Update 2 — E: sandbox + SEAMLESS EDITION (user unblocked disk E:)
+- **E: offline sandbox built** (`E:\rpcs3-sandbox`): binaries copied, `dev_flash`/`fonts`/`Icons`
+  junctioned from C: (zero copy), own profile, **network Disconnected** (never touches your RPCN
+  account, never risks your save — its own empty `dev_hdd0`).
+- **SEAMLESS EDITION on the title screen** — implemented in the patcher: menu FMG entry 30000
+  ("PRESS START BUTTON") becomes "SEAMLESS EDITION / PRESS START BUTTON", matched by exact original
+  text so the same id in other FMGs (dialog/keyguide/help) is left intact. Verified on the real
+  `menu.msgbnd` + a guard test (32/32). Built branch installer **3.2.0** (dist/, NOT published over your
+  frozen 3.1.0).
+- **Branch patcher applied to your dump** so it is live: title branded (4 menu binders), 1092 loot
+  stacks doubled, all enhanced-coop patches. Booting the E: sandbox offline to screenshot the title.
+- Still walled (unchanged, honest): true persistence / teleport-to-host / no-ghost / shared-boss =
+  EBOOT-level; and I cannot create a 2nd RPCN account, so full 2P co-op still needs you/your friend.
+  The "warp to host" you asked for IS essentially the sign-relocation the app already does (helper's
+  sign appears next to the host in any area); a one-click *item* that force-teleports is EBOOT-level.
+
 ## Log
 - 2026-09-22 ~20:4x — Branch created. RE done (true seamless = EBOOT-level, TRUE-SEAMLESS-RE.md). User
   picked "enhanced co-op". DoubleLoot ON by default + committed (29/29).
