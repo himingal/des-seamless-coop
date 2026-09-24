@@ -76,6 +76,40 @@ public class SeamlessItemsTests(ITestOutputHelper output) : IDisposable
     }
 
     [Fact]
+    public void Treasure_and_npcs_are_opened_up_for_the_helper_in_the_real_params()
+    {
+        var root = Environment.GetEnvironmentVariable("DESCOOP_GAME") ?? @"C:\ROM RPCS3\Demons Souls (USA)";
+        var usr = Path.Combine(root, "PS3_GAME", "USRDIR");
+        var pb = Path.Combine(usr, "param", "gameparam", "gameparamna.parambnd.dcx");
+        if (!File.Exists(pb)) return;
+        var defs = GamePatcher.LoadParamdefs(usr)!;
+        var bnd = BND3.Read(File.Exists(pb + GamePatcher.BackupSuffix) ? pb + GamePatcher.BackupSuffix : pb);
+        RawParam Open(string n, string t) => new(bnd.Files.First(f => f.Name.EndsWith(n + ".param")).Bytes, defs[t]);
+
+        var before = Open("ItemLotParam", "ITEMLOT_PARAM_ST");
+        var lot50Item = before.GetInt(50, "hostOnlyItemId");           // a ring, host-only in the retail game
+        Assert.True(lot50Item > 0);
+
+        var log = new List<string>();
+        GamePatcher.PatchBinder(bnd, new PatchOptions(), GamePatcher.FindIds(usr), defs, log, "na");
+        foreach (var l in log.Where(l => l.Contains("host-only") || l.Contains("NPC"))) output.WriteLine(l);
+
+        var lots = Open("ItemLotParam", "ITEMLOT_PARAM_ST");
+        Assert.Equal(lot50Item, lots.GetInt(50, "lotItemId01"));        // now in the shared draw...
+        Assert.Equal(100, lots.GetInt(50, "lotItemBasePoint01"));       // ...guaranteed
+        Assert.Equal(0, lots.GetInt(50, "hostOnlyItemId"));             // and no longer host-only (no double for the host)
+        int pureLeft = lots.RowIds.Count(id => lots.GetInt(id, "hostOnlyItemId") > 0
+            && Enumerable.Range(1, 8).All(k => lots.GetInt(id, $"lotItemId{k:00}") <= 0));
+        Assert.Equal(0, pureLeft);
+
+        var npc = Open("NpcParam", "NPC_PARAM_ST");
+        Assert.DoesNotContain(npc.RowIds, id => npc.GetInt(id, "isChangeWanderGhost") != 0);
+
+        var goods = Open("EquipParamGoods", "EQUIP_PARAM_GOODS_ST");
+        Assert.Equal(1, goods.GetInt(1021, "enable_live"));             // Host Sigil usable in body form too
+    }
+
+    [Fact]
     public void Sigil_icons_are_written_into_the_real_menu_atlas()
     {
         var root = Environment.GetEnvironmentVariable("DESCOOP_GAME") ?? @"C:\ROM RPCS3\Demons Souls (USA)";

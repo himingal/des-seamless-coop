@@ -136,9 +136,9 @@ public static class Loc
             ["es"] = "Nadie aún. Los jugadores aparecen aquí cuando el juego se conecta." },
         ["howTo"] = new() { ["en"] = "HOW TO PLAY TOGETHER", ["pt"] = "COMO JOGAR JUNTOS", ["es"] = "CÓMO JUGAR JUNTOS" },
         ["howToLines"] = new() {
-            ["en"] = "I.   Both press PLAY. Online turns on by itself.\nII.  Helper: Cyanide Pill, then the Join Sigil.\nIII. Host: Host Sigil, then touch the sign at your side.\nIV.  Bosses count for both. Loot comes in pairs — share it.",
-            ["pt"] = "I.   Os dois apertam PLAY. O online liga sozinho.\nII.  Ajudante: Cyanide Pill e depois o Join Sigil.\nIII. Host: Host Sigil e toque no sinal do seu lado.\nIV.  Chefes contam pros dois. Loot vem em dobro — divida.",
-            ["es"] = "I.   Ambos pulsan PLAY. El online se activa solo.\nII.  Ayudante: Cyanide Pill y luego el Join Sigil.\nIII. Host: Host Sigil y toca la señal a tu lado.\nIV.  Los jefes cuentan para ambos. El botín viene doble." },
+            ["en"] = "I.   Both press PLAY. Online turns on by itself.\nII.  Helper: Cyanide Pill, then the Join Sigil.\nIII. Host: Host Sigil, then touch the sign at your side.\nIV.  Bosses, treasure and NPCs count for both of you.",
+            ["pt"] = "I.   Os dois apertam PLAY. O online liga sozinho.\nII.  Ajudante: Cyanide Pill e depois o Join Sigil.\nIII. Host: Host Sigil e toque no sinal do seu lado.\nIV.  Chefes, baús e NPCs valem pros dois.",
+            ["es"] = "I.   Ambos pulsan PLAY. El online se activa solo.\nII.  Ayudante: Cyanide Pill y luego el Join Sigil.\nIII. Host: Host Sigil y toca la señal a tu lado.\nIV.  Jefes, tesoros y NPCs cuentan para ambos." },
 
         // ---- Host info panel -------------------------------------------------
         ["relayOn"] = new() {

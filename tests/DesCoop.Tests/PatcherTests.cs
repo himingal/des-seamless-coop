@@ -41,7 +41,9 @@ public class PatcherTests : IDisposable
     public void Enhanced_coop_defaults()
     {
         var o = new PatchOptions();
-        Assert.True(o.DoubleLoot, "loot for both: DoubleLoot must be ON so the host can drop the dupe to the phantom");
+        Assert.False(o.DoubleLoot, "loot is shared natively now; no doubling");
+        Assert.True(o.SharedLoot, "host-only treasures go to the shared draw");
+        Assert.True(o.NpcsForHelper, "NPCs stay real for the helper");
         Assert.True(o.CyanidePill, "fast regroup needs the Cyanide Pill");
         Assert.True(o.BonusMerchant, "Boldwin must sell the rarities so a run never misses them");
         Assert.False(o.PersistentCoop, "persistent co-op desyncs in-game (engine-level); stays OFF");
@@ -206,7 +208,7 @@ public class PatcherTests : IDisposable
             Assert.Equal(1, Cell(p, BlueId, "enable_gray"));
             Assert.Equal(0, Cell(p, BlueId, "isConsume"));
             Assert.Equal(0, Cell(p, EphId, "isConsume"));
-            Assert.Equal(0, Cell(p, EphId, "enable_live"));
+            Assert.Equal(1, Cell(p, EphId, "enable_live"));   // Host Sigil: usable in body form too (SeamlessItems)
             Assert.Equal(1, Cell(p, OtherId, "isConsume"));
             Assert.Equal(90000, (int)p[9000]!["sortId"].Value);
         }

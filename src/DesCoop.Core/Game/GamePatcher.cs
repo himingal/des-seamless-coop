@@ -39,10 +39,20 @@ public sealed class PatchOptions
     public bool ManaRegen { get; set; } = true;
     /// <summary>Seconds between each +1 MP tick of the passive regen (1 = 1 MP/s; 2 = 1 MP every 2 s).</summary>
     public int ManaRegenIntervalSeconds { get; set; } = 2;
-    /// <summary>Every world pickup, chest and enemy drop gives two of the item instead of one, so in co-op the
-    /// host can hand the duplicate to the summoned phantom — both players walk away with the loot. ON by default
-    /// for seamless co-op (souls are already shared by the game; this covers items on the ground and in chests).</summary>
-    public bool DoubleLoot { get; set; } = true;
+    /// <summary>Every world pickup, chest and enemy drop gives two of the item instead of one. OFF: loot is shared
+    /// natively instead (see <see cref="SharedLoot"/>), so nothing has to be handed over manually.</summary>
+    public bool DoubleLoot { get; set; } = false;
+    /// <summary>
+    /// Map treasure for both players. 115 world treasures keep their item in ItemLotParam's hostOnlyItem slot
+    /// ("only the single player / multiplay host can obtain it") while the shared draw is a guaranteed nothing.
+    /// The item is moved into the shared draw at 100%, so whoever opens the treasure — host or helper — gets it.
+    /// </summary>
+    public bool SharedLoot { get; set; } = true;
+    /// <summary>
+    /// NPCs for the helper too: NpcParam.isChangeWanderGhost makes 28 friendly NPCs turn into non-interactive
+    /// wandering ghosts when the player is a guest (client) in someone else's world. Cleared, they stay real.
+    /// </summary>
+    public bool NpcsForHelper { get; set; } = true;
     /// <summary>Every starting class carries a "Cyanide Pill" that kills you instantly, so the helper turns
     /// into a soul-form ghost on demand instead of having to farm a death to place a summon sign.</summary>
     public bool CyanidePill { get; set; } = true;
@@ -327,6 +337,11 @@ public static class GamePatcher
         if (opt.EasierPureBladestone) BoostDrop(c, ids.PureBladestone.Count > 0 ? ids.PureBladestone : [2023], PureBladestoneChance, "Pure Bladestone");
         if (opt.EasierUpgradeMaterials) BoostDrop(c, [.. UpgradeStones], UpgradeMaterialChance, "upgrade stones");
         if (opt.DoubleLoot) DoubleLoot(c);
+        if (opt.SharedLoot) ShareHostOnlyLoot(c);
+        if (opt.NpcsForHelper) NpcsStayReal(c);
+        // The Host Sigil works from any living form, so "use it to be the host" never fails in body form.
+        if (goods != null && opt.SeamlessItems)
+            foreach (var id in ids.Ephemeral.Where(goods.Has)) c.Set(goods, id, "enable_live", 1);
         if (opt.OneHitCrystalLizards || opt.WeakerDragons || opt.MoreSouls) TweakEnemies(c, opt);
         if (opt.ManaRegen) ManaRegen(c, opt.ManaRegenIntervalSeconds);
 
@@ -437,6 +452,45 @@ public static class GamePatcher
                 if (num >= 1 && num < 99 && c.Set(lots, lot, $"lotItemNum{i:00}", Math.Min(99, num * 2))) n++;
             }
         c.Log.Add($"{c.Label}: {n} loot stack(s) doubled");
+    }
+
+    /// <summary>Moves each pure host-only treasure item into the shared draw (slot 1, 100%).</summary>
+    static void ShareHostOnlyLoot(Ctx c)
+    {
+        var lots = c.Param("ItemLotParam");
+        if (lots == null || !lots.HasField("hostOnlyItemId")) { c.Log.Add($"{c.Label}: ItemLotParam has no hostOnly layout"); return; }
+        // What "no host-only item" looks like in this dump (most common category among lots without one).
+        int noneCate = lots.RowIds.Where(id => lots.GetInt(id, "hostOnlyItemId") <= 0)
+            .GroupBy(id => lots.GetInt(id, "hostOnlyItemCate")).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault(-1);
+        int n = 0;
+        foreach (var lot in lots.RowIds)
+        {
+            int item = lots.GetInt(lot, "hostOnlyItemId");
+            if (item <= 0) continue;
+            // Only "pure" treasures: every shared slot is empty or the "nothing" outcome.
+            bool sharedIsEmpty = Enumerable.Range(1, 8).All(k => lots.GetInt(lot, $"lotItemId{k:00}") <= 0);
+            if (!sharedIsEmpty) continue;
+            c.Set(lots, lot, "lotItemCategory01", lots.GetInt(lot, "hostOnlyItemCate"));
+            c.Set(lots, lot, "lotItemId01", item);
+            c.Set(lots, lot, "lotItemNum01", Math.Max(1, lots.GetInt(lot, "hostOnlyItemNum")));
+            for (int k = 2; k <= 8; k++) c.Set(lots, lot, $"lotItemBasePoint{k:00}", 0);
+            c.Set(lots, lot, "lotItemBasePoint01", 100);
+            c.Set(lots, lot, "hostOnlyItemId", 0);
+            c.Set(lots, lot, "hostOnlyItemNum", 0);
+            c.Set(lots, lot, "hostOnlyItemCate", noneCate);
+            n++;
+        }
+        c.Log.Add($"{c.Label}: {n} host-only treasure(s) shared with the helper");
+    }
+
+    static void NpcsStayReal(Ctx c)
+    {
+        var npc = c.Param("NpcParam");
+        if (npc == null || !npc.HasField("isChangeWanderGhost")) { c.Log.Add($"{c.Label}: NpcParam has no isChangeWanderGhost"); return; }
+        int n = 0;
+        foreach (var id in npc.RowIds)
+            if (npc.GetInt(id, "isChangeWanderGhost") != 0 && c.Set(npc, id, "isChangeWanderGhost", 0)) n++;
+        c.Log.Add($"{c.Label}: {n} NPC(s) stay real (talkable) for the helper");
     }
 
     static void TweakEnemies(Ctx c, PatchOptions opt)

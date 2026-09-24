@@ -132,7 +132,7 @@ public class ServerTests : IDisposable
     public void Login_motd_teaches_loot_sharing_and_fast_regroup()
     {
         var motd = Encoding.Latin1.GetString(_server.Dispatch("login.spd", P(("ver", "100")), "10.0.0.9", 18666)!.Value.data);
-        Assert.Contains("LOOT", motd);
+        Assert.Contains("TREASURE and NPCs work for both", motd);
         Assert.Contains("Cyanide", motd);   // fast regroup via the pill
         Assert.Contains("JOIN SIGIL", motd);   // the seamless item names
         Assert.Contains("HOST SIGIL", motd);

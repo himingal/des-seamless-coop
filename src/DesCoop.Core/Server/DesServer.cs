@@ -403,8 +403,7 @@ public sealed class DesServer : IDisposable
         motd.Append("3) HOST: use the HOST SIGIL to be human, then\r\n");
         motd.Append("   touch the sign - it appears right next to\r\n");
         motd.Append("   you, in any area.\r\n");
-        motd.Append("4) LOOT: chests and drops give two - the HOST\r\n");
-        motd.Append("   drops the spare for the HELPER. Souls are shared.\r\n");
+        motd.Append("4) TREASURE and NPCs work for both of you.\r\n");
         motd.Append("5) BOSSES count for both. Then repeat 2-3.\r\n");
         var motd2 = new StringBuilder();
         motd2.Append($"Players online: {st.Players.Length}\r\n");
