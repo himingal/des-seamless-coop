@@ -41,9 +41,21 @@ public static class ScriptPatcher
     static readonly string[] PersistFunctions = ["BlockClear2_3", "HostDead_1"];
     const string KickCall = "proxy:WarpNextStageKick();";
 
+    /// <summary>
+    /// Shared boss progression (experimental). When a boss dies the summoned blue phantom goes home through
+    /// <c>BlockClear2_3</c>, which calls <c>SetFlagInitState(2)</c> — the "roll back everything from this
+    /// session" mode also used for disconnects and PvP deaths — so the kill never reaches the helper's world.
+    /// Mode 1 is what an ordinary solo death uses (world progress is kept). Switching that single call to mode
+    /// 1 makes the boss count for the helper too. Host death, disconnects and invasions keep their rollback.
+    /// </summary>
+    const string BossClearFunction = "BlockClear2_3";
+    const string RollbackCall = "proxy:SetFlagInitState(2);";
+    const string KeepProgressCall = "proxy:SetFlagInitState(1);";
+
     /// <summary>Comments out the automatic revive statements (and, when <paramref name="persistentCoop"/> is
-    /// set, the co-op teardown kick); returns the new text and how many lines changed.</summary>
-    public static (byte[] bytes, int changed) PatchGlobalEvent(byte[] source, bool persistentCoop = false)
+    /// set, the co-op teardown kick; with <paramref name="sharedBossProgress"/>, the boss-clear flag rollback
+    /// of the phantom); returns the new text and how many lines changed.</summary>
+    public static (byte[] bytes, int changed) PatchGlobalEvent(byte[] source, bool persistentCoop = false, bool sharedBossProgress = false)
     {
         // Shift-JIS file: split on raw bytes and only touch pure-ASCII statements.
         var lines = Split(source);
@@ -57,6 +69,13 @@ public static class ScriptPatcher
 
             // Seamless persistence: disable the lone kick call, only inside the two teardown functions.
             if (persistentCoop && fn != null && PersistFunctions.Contains(fn) && CommentStatement(lines, i, text, t, KickCall))
+            {
+                changed++;
+                continue;
+            }
+
+            // Shared boss progression: keep the session's world progress when the phantom leaves after a boss.
+            if (sharedBossProgress && fn == BossClearFunction && ReplaceStatement(lines, i, text, t, RollbackCall, KeepProgressCall))
             {
                 changed++;
                 continue;
@@ -80,22 +99,37 @@ public static class ScriptPatcher
         return true;
     }
 
-    /// <summary>Patches global_event.lua in a script binder; returns the number of disabled statements.</summary>
-    public static int PatchBinder(BND3 bnd, bool persistentCoop = false)
+    /// <summary>Replaces the line in place if it is exactly <paramref name="stmt"/>, keeping the indentation.</summary>
+    static bool ReplaceStatement(List<byte[]> lines, int i, string text, string t, string stmt, string with)
+    {
+        if (!t.StartsWith(stmt)) return false;
+        var rest = t[stmt.Length..].Trim();
+        if (rest.Length > 0 && !rest.StartsWith("--")) return false;
+        int indent = text.Length - text.TrimStart().Length;
+        string eol = text.EndsWith("\r\n") ? "\r\n" : text.EndsWith('\n') ? "\n" : "";
+        lines[i] = Encoding.Latin1.GetBytes(text[..indent] + with + " --[DeS Co-op] shared boss progress (was " + stmt + ")" + eol);
+        return true;
+    }
+
+    /// <summary>Patches global_event.lua in a script binder; returns the number of changed statements.</summary>
+    public static int PatchBinder(BND3 bnd, bool persistentCoop = false, bool sharedBossProgress = false)
     {
         int n = 0;
         foreach (var f in bnd.Files.Where(f => Path.GetFileName(f.Name ?? "").Equals(ScriptName, StringComparison.OrdinalIgnoreCase)))
         {
-            var (bytes, changed) = PatchGlobalEvent(f.Bytes, persistentCoop);
+            var (bytes, changed) = PatchGlobalEvent(f.Bytes, persistentCoop, sharedBossProgress);
             f.Bytes = bytes;
             n += changed;
         }
         return n;
     }
 
-    public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, List<string> log)
+    public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, List<string> log) =>
+        Apply(usrDir, stayInSoulForm, persistentCoop, false, log);
+
+    public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, bool sharedBossProgress, List<string> log)
     {
-        bool doPatch = stayInSoulForm || persistentCoop;
+        bool doPatch = stayInSoulForm || persistentCoop || sharedBossProgress;
         bool changed = false;
         foreach (var path in FindScriptBnds(usrDir))
         {
@@ -123,9 +157,9 @@ public static class ScriptPatcher
                         File.Copy(source, sourceBackup);
                     }
                     var bnd = BND3.Read(sdat ? sourceBackup : backup);
-                    int n = PatchBinder(bnd, persistentCoop);
+                    int n = PatchBinder(bnd, persistentCoop, sharedBossProgress);
                     if (n == 0) { log.Add($"{name}: script calls not found, left alone"); fresh = File.ReadAllBytes(backup); }
-                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) disabled{(persistentCoop ? " (incl. co-op teardown)" : "")}"); }
+                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) changed{(persistentCoop ? " (incl. co-op teardown)" : "")}{(sharedBossProgress ? " (incl. shared boss progress)" : "")}"); }
                 }
                 if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
                 {

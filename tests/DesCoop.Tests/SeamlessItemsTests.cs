@@ -1,0 +1,109 @@
+using DesCoop.Game;
+using SoulsFormats;
+using Xunit.Abstractions;
+
+namespace DesCoop.Tests;
+
+/// <summary>Host/Join Sigils (text + icons) and the experimental shared boss progression.</summary>
+public class SeamlessItemsTests(ITestOutputHelper output) : IDisposable
+{
+    readonly string _dir = Path.Combine(Path.GetTempPath(), "descoop-sigils-" + Guid.NewGuid().ToString("N"));
+    public void Dispose() { try { Directory.Delete(_dir, true); } catch { } }
+
+    static BND3 NewBinder() => new() { Version = "07D7R6", Format = Binder.Format.IDs | Binder.Format.Names1 | Binder.Format.Names2, BigEndian = true };
+
+    [Fact]
+    public void Shared_boss_progress_only_changes_the_phantoms_boss_clear_rollback()
+    {
+        // Same rollback call in three places; only the phantom's boss clear (BlockClear2_3) may keep progress.
+        const string lua =
+            "function HostDead_1(proxy, param)\n\tproxy:SetFlagInitState(2);\nend\n" +
+            "function BlockClear2_3(proxy,param)\n\tif proxy:IsWhiteGhost() == true then\n\t\tproxy:SetFlagInitState(2);\n\tend\nend\n" +
+            "function OnIrregularLeaveSession_1(proxy,param)\n\tproxy:SetFlagInitState(2);\nend\n";
+        var src = System.Text.Encoding.Latin1.GetBytes(lua);
+
+        Assert.Equal(0, ScriptPatcher.PatchGlobalEvent(src).changed);
+        var (bytes, changed) = ScriptPatcher.PatchGlobalEvent(src, sharedBossProgress: true);
+        var outLua = System.Text.Encoding.Latin1.GetString(bytes);
+        Assert.Equal(1, changed);
+        Assert.Equal(2, outLua.Split('\n').Count(l => l.Trim() == "proxy:SetFlagInitState(2);")); // host death + disconnect keep rollback
+        Assert.Single(outLua.Split('\n'), l => l.Trim().StartsWith("proxy:SetFlagInitState(1);"));
+        Assert.Contains("\t\tproxy:SetFlagInitState(1);", outLua);                              // indentation kept
+        Assert.Equal(0, ScriptPatcher.PatchGlobalEvent(bytes, sharedBossProgress: true).changed); // idempotent
+    }
+
+    [Fact]
+    public void Item_text_goes_to_goods_fmgs_only()
+    {
+        var bnd = NewBinder();
+        void Add(int id, params (int id, string text)[] entries) =>
+            bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, id, $"{id}.fmg",
+                new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [.. entries.Select(e => new FMG.Entry(e.id, e.text))] }.Write()));
+        Add(ItemTextPatcher.NameFmg, (1021, "Stone of Ephemeral Eyes"), (9997, "Blue Eye Stone"));
+        Add(ItemTextPatcher.InfoFmg, (1021, "Resurrect user's body"), (9997, "Soul Sign"));
+        Add(ItemTextPatcher.CaptionFmg, (1021, "An eye stone..."), (9997, "Proof you have been accepted..."));
+        Add(14, (1021, "Firestorm"));   // spell names reuse id 1021 and must stay untouched
+
+        int n = ItemTextPatcher.PatchBinder(bnd, [ItemTextPatcher.HostSigil, ItemTextPatcher.JoinSigil, ItemTextPatcher.CyanidePill]);
+        Assert.Equal(9, n);
+
+        string Get(int fmg, int id) => FMG.Read(bnd.Files.First(f => f.ID == fmg).Bytes).Entries.First(e => e.ID == id).Text;
+        Assert.Equal("Host Sigil", Get(ItemTextPatcher.NameFmg, 1021));
+        Assert.Equal("Join Sigil", Get(ItemTextPatcher.NameFmg, 9997));
+        Assert.Equal("Cyanide Pill", Get(ItemTextPatcher.NameFmg, CyanidePillPatcher.GoodsId));
+        Assert.Equal(ItemTextPatcher.JoinSigil.Info, Get(ItemTextPatcher.InfoFmg, 9997));
+        Assert.Equal(ItemTextPatcher.CyanidePill.Caption, Get(ItemTextPatcher.CaptionFmg, CyanidePillPatcher.GoodsId));
+        Assert.Equal("Firestorm", Get(14, 1021));
+    }
+
+    [Fact]
+    public void Sigil_icons_are_embedded_and_land_in_the_right_atlas_cell()
+    {
+        var host = IconPatcher.Asset("host_sigil.bc3");
+        var join = IconPatcher.Asset("join_sigil.bc3");
+        Assert.Equal(6144, host.Length);   // 64x96 BC3 = 16x24 blocks x 16 bytes
+        Assert.Equal(6144, join.Length);
+        Assert.NotEqual(host, join);
+
+        const int W = 256, H = 192;       // fake DXT5 atlas: 64x48 blocks
+        var atlas = new byte[W * H];
+        Assert.True(IconPatcher.WriteCell(atlas, W, H, 64, 96, host));
+        // First block row of the cell starts at block (16, 24); last at (16, 47).
+        Assert.Equal(host.AsSpan(0, 256).ToArray(), atlas.AsSpan((24 * 64 + 16) * 16, 256).ToArray());
+        Assert.Equal(host.AsSpan(23 * 256, 256).ToArray(), atlas.AsSpan((47 * 64 + 16) * 16, 256).ToArray());
+        Assert.False(IconPatcher.WriteCell(atlas, W, H, 200, 96, host)); // would overflow the atlas
+        Assert.False(IconPatcher.WriteCell(atlas, W, H, 2, 0, host));   // not block aligned
+    }
+
+    [Fact]
+    public void Sigil_icons_are_written_into_the_real_menu_atlas()
+    {
+        var root = Environment.GetEnvironmentVariable("DESCOOP_GAME") ?? @"C:\ROM RPCS3\Demons Souls (USA)";
+        var src = Path.Combine(root, "PS3_GAME", "USRDIR", "menu");
+        if (!File.Exists(Path.Combine(src, "menu.drb"))) return;
+
+        // Work on copies (pristine when a backup exists).
+        var menu = Path.Combine(_dir, "menu");
+        Directory.CreateDirectory(menu);
+        foreach (var f in new[] { "menu.drb", "menu.tpf", "icon.drb", "icon.tpf" })
+        {
+            var p = Path.Combine(src, f);
+            File.Copy(File.Exists(p + GamePatcher.BackupSuffix) ? p + GamePatcher.BackupSuffix : p, Path.Combine(menu, f));
+        }
+        var log = new List<string>();
+        Assert.True(IconPatcher.Apply(_dir, true, log));
+        foreach (var l in log) output.WriteLine(l);
+
+        var host = IconPatcher.Asset("host_sigil.bc3");
+        var join = IconPatcher.Asset("join_sigil.bc3");
+        var icon10 = TPF.Read(Path.Combine(menu, "menu.tpf")).Textures.First(t => t.Name == "Icon10");
+        byte[] Cell(byte[] atlas, int x, int y) =>
+            [.. Enumerable.Range(0, 24).SelectMany(by => atlas.AsSpan(((y / 4 + by) * 256 + x / 4) * 16, 256).ToArray())];
+        Assert.Equal(host, Cell(icon10.Bytes, 512, 288));   // Host Sigil replaces icon 1056
+        Assert.Equal(join, Cell(icon10.Bytes, 192, 672));   // Join Sigil replaces icon 1115
+
+        // Turning the option off restores the originals byte for byte.
+        Assert.True(IconPatcher.Apply(_dir, false, log));
+        Assert.Equal(File.ReadAllBytes(Path.Combine(menu, "menu.tpf") + GamePatcher.BackupSuffix), File.ReadAllBytes(Path.Combine(menu, "menu.tpf")));
+    }
+}

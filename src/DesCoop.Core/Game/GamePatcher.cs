@@ -46,6 +46,14 @@ public sealed class PatchOptions
     /// <summary>Every starting class carries a "Cyanide Pill" that kills you instantly, so the helper turns
     /// into a soul-form ghost on demand instead of having to farm a death to place a summon sign.</summary>
     public bool CyanidePill { get; set; } = true;
+    /// <summary>The two co-op items get their own identity and icon: the Stone of Ephemeral Eyes becomes the
+    /// "Host Sigil" (restore your body = be the host) and the Blue Eye Stone the "Join Sigil" (in soul form,
+    /// your sign is carried to your host's side). Same items, same mechanics — new names, text and icons.</summary>
+    public bool SeamlessItems { get; set; } = true;
+    /// <summary>EXPERIMENTAL shared boss progression: a boss killed together also counts in the helper's world
+    /// (the phantom's boss-clear flag rollback is switched to the keep-progress mode). Pairs with DoubleLoot,
+    /// which gives the host two Demon's Souls to share. Back up saves before testing.</summary>
+    public bool SharedBossProgress { get; set; } = true;
 
     /// <summary>
     /// Blacksmith Boldwin (Nexus) also sells the world-tendency-locked rarities (so a co-op run never misses
@@ -97,8 +105,9 @@ public static class GamePatcher
     /// so MP regen is added there for medium/heavy armor without removing the stamina penalty.</summary>
     public static readonly int[] BodyStaminaEffects = [6210, 6211, 6212, 6213];
 
-    static readonly string[] BlueEyeNames = ["Blue Eye Stone"];
-    static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes"];
+    // The seamless names are listed too: item text is rewritten in place, so a second PLAY reads the new names.
+    static readonly string[] BlueEyeNames = ["Blue Eye Stone", "Join Sigil"];
+    static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes", "Host Sigil"];
     const string PureBladestoneName = "Pure Bladestone";
     const int GoodsCategory = 0x40000000;
 
@@ -246,8 +255,9 @@ public static class GamePatcher
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
         if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, opt.SeamlessEditionTitle, log)) changed = true;
-        if (opt.CyanidePill && CyanidePillPatcher.AddName(game.UsrDir, log)) changed = true;
-        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, log)) changed = true;
+        if (ItemTextPatcher.Apply(game.UsrDir, opt.CyanidePill, opt.SeamlessItems, log)) changed = true;
+        if (IconPatcher.Apply(game.UsrDir, opt.SeamlessItems, log)) changed = true;
+        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, opt.SharedBossProgress, log)) changed = true;
         return new PatchReport(changed, log);
     }
 
@@ -502,7 +512,8 @@ public static class GamePatcher
 
     public static bool IsPatched(GameInfo game) =>
         FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix))
-        || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir);
+        || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir)
+        || ItemTextPatcher.IsPatched(game.UsrDir) || IconPatcher.IsPatched(game.UsrDir);
 
     public static void Restore(GameInfo game)
     {
@@ -513,6 +524,8 @@ public static class GamePatcher
         }
         MsgPatcher.Restore(game.UsrDir);
         ScriptPatcher.Restore(game.UsrDir);
+        ItemTextPatcher.Restore(game.UsrDir);
+        IconPatcher.Restore(game.UsrDir);
     }
 
     static bool FilesEqual(string a, string b) => File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));

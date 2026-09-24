@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\blocknames.txt" LogicalName="DesCoop.blocknames.txt" />
+    <EmbeddedResource Include="Game\Assets\host_sigil.bc3" LogicalName="DesCoop.host_sigil.bc3" />
+    <EmbeddedResource Include="Game\Assets\join_sigil.bc3" LogicalName="DesCoop.join_sigil.bc3" />
   </ItemGroup>
 
   <ItemGroup>

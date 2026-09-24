@@ -136,9 +136,9 @@ public static class Loc
             ["es"] = "Nadie aún. Los jugadores aparecen aquí cuando el juego se conecta." },
         ["howTo"] = new() { ["en"] = "HOW TO PLAY TOGETHER", ["pt"] = "COMO JOGAR JUNTOS", ["es"] = "CÓMO JUGAR JUNTOS" },
         ["howToLines"] = new() {
-            ["en"] = "I.   Both press PLAY. Online turns on by itself.\nII.  The helper dies once, then uses the Blue Eye Stone.\nIII. The sign appears right next to the host. Touch it.\nIV.  Boss down? Do it again and keep going.",
-            ["pt"] = "I.   Os dois apertam PLAY. O online liga sozinho.\nII.  O ajudante morre uma vez e usa a Blue Eye Stone.\nIII. O sinal aparece do lado do host. Toque nele.\nIV.  Matou o chefe? Repita e continue.",
-            ["es"] = "I.   Ambos pulsan PLAY. El online se activa solo.\nII.  El ayudante muere una vez y usa la Blue Eye Stone.\nIII. La señal aparece junto al host. Tócala.\nIV.  ¿Jefe muerto? Repite y sigan." },
+            ["en"] = "I.   Both press PLAY. Online turns on by itself.\nII.  Helper: Cyanide Pill, then the Join Sigil.\nIII. Host: Host Sigil, then touch the sign at your side.\nIV.  Bosses count for both. Loot comes in pairs — share it.",
+            ["pt"] = "I.   Os dois apertam PLAY. O online liga sozinho.\nII.  Ajudante: Cyanide Pill e depois o Join Sigil.\nIII. Host: Host Sigil e toque no sinal do seu lado.\nIV.  Chefes contam pros dois. Loot vem em dobro — divida.",
+            ["es"] = "I.   Ambos pulsan PLAY. El online se activa solo.\nII.  Ayudante: Cyanide Pill y luego el Join Sigil.\nIII. Host: Host Sigil y toca la señal a tu lado.\nIV.  Los jefes cuentan para ambos. El botín viene doble." },
 
         // ---- Host info panel -------------------------------------------------
         ["relayOn"] = new() {
