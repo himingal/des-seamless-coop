@@ -22,8 +22,8 @@ public static class ItemTextPatcher
         "In body form you are the host: your\ncompanions' signs are carried to your side,\nwherever you stand.\n\nNever consumed.");
 
     public static readonly ItemText JoinSigil = new(BlueEyeGoods, "Join Sigil",
-        "In soul form, join your host's world",
-        "A cold blue sigil marked with a gate.\nUse it in soul form to offer your aid.\n\n" +
+        "In any form, join your host's world",
+        "A cold blue sigil marked with a gate.\nUse it, human or soul, to offer your aid.\n\n" +
         "Your sign is carried to your host's side,\nwherever they stand. One touch and you are\ndrawn into their world.\n\n" +
         "Host and helper, bound by the same road.");
 

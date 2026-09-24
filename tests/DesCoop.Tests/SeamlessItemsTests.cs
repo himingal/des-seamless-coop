@@ -130,6 +130,31 @@ public class SeamlessItemsTests(ITestOutputHelper output) : IDisposable
 
         var goods = Open("EquipParamGoods", "EQUIP_PARAM_GOODS_ST");
         Assert.Equal(1, goods.GetInt(1021, "enable_live"));             // Host Sigil usable in body form too
+        Assert.Equal(1, goods.GetInt(9997, "enable_live"));             // Join Sigil usable in body form...
+        var sp = Open("SpEffectParam", "SP_EFFECT_PARAM_ST");
+        Assert.Equal(1, sp.GetInt(4, "requestSOS"));
+        Assert.Equal(1, sp.GetInt(4, "effectTargetLive"));              // ...and its sign effect applies there
+        Assert.Contains(log, l => l.Contains("sign effect 4"));
+    }
+
+    [Fact]
+    public void Join_sigil_sign_effect_is_closed_to_the_living_in_retail()
+    {
+        // Guards the finding behind BlueEyeStoneInBodyForm: goods 9997 -> behavior 7 -> SpEffect 4 (requestSOS)
+        // ships with effectTargetLive = 0, so a human using the stone places no sign.
+        var root = Environment.GetEnvironmentVariable("DESCOOP_GAME") ?? @"C:\ROM RPCS3\Demons Souls (USA)";
+        var usr = Path.Combine(root, "PS3_GAME", "USRDIR");
+        var pb = Path.Combine(usr, "param", "gameparam", "gameparamna.parambnd.dcx");
+        if (!File.Exists(pb + GamePatcher.BackupSuffix)) return;
+        var defs = GamePatcher.LoadParamdefs(usr)!;
+        var bnd = BND3.Read(pb + GamePatcher.BackupSuffix);
+        RawParam Open(string n, string t) => new(bnd.Files.First(f => f.Name.EndsWith(n + ".param")).Bytes, defs[t]);
+        var beh = Open("BehaviorParam", "BEHAVIOR_PARAM_ST").GetInt(Open("EquipParamGoods", "EQUIP_PARAM_GOODS_ST").GetInt(9997, "behaviorId"), "spEffectId");
+        var sp = Open("SpEffectParam", "SP_EFFECT_PARAM_ST");
+        Assert.Equal(4, beh);
+        Assert.Equal(1, sp.GetInt(beh, "requestSOS"));
+        Assert.Equal(0, sp.GetInt(beh, "effectTargetLive"));
+        Assert.Equal(1, sp.GetInt(beh, "effectTargetGhost"));
     }
 
     [Fact]

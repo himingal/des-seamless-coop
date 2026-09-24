@@ -60,9 +60,9 @@ public class RealGameTests(ITestOutputHelper output)
 
         var goods = Open(bnd, "EquipParamGoods");
         var goods0 = Open(original, "EquipParamGoods");
-        // Body-form Blue Eye Stone stays OFF (a body-form sign is only visible to its owner); the Stone of
-        // Ephemeral Eyes is infinite by default now.
-        Assert.Equal(goods0.Get(9997, "enable_live"), goods.Get(9997, "enable_live"));
+        // The Blue Eye Stone (Join Sigil) works in body form; the Stone of Ephemeral Eyes is infinite.
+        Assert.Equal(0, goods0.Get(9997, "enable_live"));
+        Assert.Equal(1, goods.Get(9997, "enable_live"));
         Assert.Equal(0, goods.Get(1021, "isConsume"));
         Assert.Equal(goods0.Get(1000, "weight") / 1.5, goods.Get(1000, "weight"), 4);
 

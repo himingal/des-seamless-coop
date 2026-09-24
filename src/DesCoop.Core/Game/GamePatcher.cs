@@ -5,9 +5,11 @@ namespace DesCoop.Game;
 
 public sealed class PatchOptions
 {
-    /// <summary>Blue Eye Stone usable in body form. OFF by default: the game only shows a body-form sign to
-    /// its owner, so a sign placed while human never reaches the host. Co-op needs the helper in soul form.</summary>
-    public bool BlueEyeStoneInBodyForm { get; set; } = false;
+    /// <summary>Blue Eye Stone (Join Sigil) works in any form. Two gates: the item's enable_live flag, and its
+    /// sign effect (SpEffectParam row with requestSOS, reached through BehaviorParam) whose effectTargetLive is 0
+    /// in retail — used while human, the stone played its animation but never placed the sign. Both are opened,
+    /// so the helper no longer has to die first.</summary>
+    public bool BlueEyeStoneInBodyForm { get; set; } = true;
     /// <summary>Stone of Ephemeral Eyes is never consumed, so you can turn human any time to host.</summary>
     public bool InfiniteEphemeralEyes { get; set; } = true;
     /// <summary>Soul form keeps 100% max HP instead of 50%: dying costs nothing, it plays like body form.</summary>
@@ -323,7 +325,12 @@ public static class GamePatcher
         if (goods == null) log.Add($"{label}: EquipParamGoods.param not found");
 
         if (goods != null && opt.BlueEyeStoneInBodyForm)
-            foreach (var id in ids.Blue.Where(goods.Has)) { c.Set(goods, id, "enable_live", 1); log.Add($"{label}: item {id} -> Blue Eye Stone usable in body form"); }
+            foreach (var id in ids.Blue.Where(goods.Has))
+            {
+                c.Set(goods, id, "enable_live", 1);
+                log.Add($"{label}: item {id} -> Blue Eye Stone usable in body form");
+                SignEffectForAnyForm(c, goods, id);
+            }
 
         if (goods != null && opt.InfiniteEphemeralEyes)
             foreach (var id in ids.Ephemeral.Where(goods.Has)) { c.Set(goods, id, "isConsume", 0); log.Add($"{label}: item {id} -> Stone of Ephemeral Eyes is never consumed"); }
@@ -484,6 +491,22 @@ public static class GamePatcher
             n++;
         }
         c.Log.Add($"{c.Label}: {n} host-only treasure(s) shared with the helper");
+    }
+
+    /// <summary>Lets the sign effect of an item (goods.behaviorId -> BehaviorParam.spEffectId -> SpEffectParam with
+    /// requestSOS) apply to a living player too; retail only targets soul-form ghosts.</summary>
+    static void SignEffectForAnyForm(Ctx c, RawParam goods, int goodsId)
+    {
+        var beh = c.Param("BehaviorParam");
+        var sp = c.Param("SpEffectParam");
+        if (beh == null || sp == null || !goods.HasField("behaviorId") || !beh.HasField("spEffectId")
+            || !sp.HasField("requestSOS") || !sp.HasField("effectTargetLive")) return;
+        int behId = goods.GetInt(goodsId, "behaviorId");
+        if (!beh.Has(behId)) return;
+        int effect = beh.GetInt(behId, "spEffectId");
+        if (!sp.Has(effect) || sp.GetInt(effect, "requestSOS") != 1) return;
+        if (c.Set(sp, effect, "effectTargetLive", 1))
+            c.Log.Add($"{c.Label}: sign effect {effect} -> works in body form");
     }
 
     static void NpcsStayReal(Ctx c)

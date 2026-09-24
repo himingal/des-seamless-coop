@@ -398,8 +398,8 @@ public sealed class DesServer : IDisposable
         motd.Append($"{Ascii(_o.ServerName)}  -  Seamless Co-op\r\n\r\n");
         motd.Append("HOW TO PLAY TOGETHER\r\n");
         motd.Append("1) Pick who leads: that player is the HOST.\r\n");
-        motd.Append("2) HELPER: take the Cyanide Pill to become a\r\n");
-        motd.Append("   ghost, then use the JOIN SIGIL.\r\n");
+        motd.Append("2) HELPER: use the JOIN SIGIL - human or\r\n");
+        motd.Append("   ghost, no need to die first.\r\n");
         motd.Append("3) HOST: use the HOST SIGIL to be human, then\r\n");
         motd.Append("   touch the sign - it appears right next to\r\n");
         motd.Append("   you, in any area.\r\n");
