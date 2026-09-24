@@ -23,6 +23,8 @@ public sealed class PatchOptions
     /// <summary>Brand the title screen: the "PRESS START BUTTON" text (menu FMG entry 30000) becomes
     /// "SEAMLESS EDITION / PRESS START BUTTON", shown in the game's own font on the start screen.</summary>
     public bool SeamlessEditionTitle { get; set; } = true;
+    /// <summary>The summoned helper is drawn like a normal character instead of a blue phantom (see PhantomLookPatcher).</summary>
+    public bool NoBluePhantom { get; set; } = true;
     /// <summary>Everything sold by NPCs costs half.</summary>
     public bool CheaperShops { get; set; } = true;
     /// <summary>Pure Bladestone drops from the Shrine of Storms skeletons 15% of the time instead of 0.5%.</summary>
@@ -272,6 +274,7 @@ public static class GamePatcher
         if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, opt.SeamlessEditionTitle, log)) changed = true;
         if (ItemTextPatcher.Apply(game.UsrDir, opt.CyanidePill, opt.SeamlessItems, log)) changed = true;
         if (IconPatcher.Apply(game.UsrDir, opt.SeamlessItems, log)) changed = true;
+        if (PhantomLookPatcher.Apply(game.UsrDir, opt.NoBluePhantom, log)) changed = true;
         if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, opt.SharedBossProgress, opt.OpenSession, log)) changed = true;
         return new PatchReport(changed, log);
     }
@@ -593,7 +596,8 @@ public static class GamePatcher
     public static bool IsPatched(GameInfo game) =>
         FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix))
         || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir)
-        || ItemTextPatcher.IsPatched(game.UsrDir) || IconPatcher.IsPatched(game.UsrDir);
+        || ItemTextPatcher.IsPatched(game.UsrDir) || IconPatcher.IsPatched(game.UsrDir)
+        || PhantomLookPatcher.IsPatched(game.UsrDir);
 
     public static void Restore(GameInfo game)
     {
@@ -606,6 +610,7 @@ public static class GamePatcher
         ScriptPatcher.Restore(game.UsrDir);
         ItemTextPatcher.Restore(game.UsrDir);
         IconPatcher.Restore(game.UsrDir);
+        PhantomLookPatcher.Restore(game.UsrDir);
     }
 
     static bool FilesEqual(string a, string b) => File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));

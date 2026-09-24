@@ -138,6 +138,35 @@ public class SeamlessItemsTests(ITestOutputHelper output) : IDisposable
     }
 
     [Fact]
+    public void Helper_loses_the_blue_phantom_tint_but_soul_form_and_invaders_keep_theirs()
+    {
+        var root = Environment.GetEnvironmentVariable("DESCOOP_GAME") ?? @"C:\ROM RPCS3\Demons Souls (USA)";
+        var src = Path.Combine(root, "PS3_GAME", "USRDIR", "mtd", "mtd.mtdbnd.dcx");
+        if (!File.Exists(src)) return;
+        var mtdDir = Path.Combine(_dir, "mtd");
+        Directory.CreateDirectory(mtdDir);
+        File.Copy(File.Exists(src + GamePatcher.BackupSuffix) ? src + GamePatcher.BackupSuffix : src, Path.Combine(mtdDir, "mtd.mtdbnd.dcx"));
+
+        var log = new List<string>();
+        Assert.True(PhantomLookPatcher.Apply(_dir, true, log));
+        foreach (var l in log) output.WriteLine(l);
+
+        float[] Color(string file, string param) => (float[])MTD.Read(BND3.Read(Path.Combine(mtdDir, "mtd.mtdbnd.dcx")).Files
+            .First(f => f.Name.EndsWith(file, StringComparison.OrdinalIgnoreCase)).Bytes).Params.First(p => p.Name == param).Value;
+        foreach (var white in new[] { "Ps_Ghost_Param_White.mtd", "Cs_Ghost_Param_White.mtd" })
+        {
+            Assert.Equal([0f, 0f, 0f, 0f], Color(white, "g_GhostEdgeColor"));   // no blue rim
+            Assert.Equal([0f, 0f, 0f, 1f], Color(white, "g_GhostTexColor"));    // no blue overlay, solid
+        }
+        Assert.Equal(0.35f, Color("Ps_Ghost_Param_Grey.mtd", "g_GhostEdgeColor")[3], 3);   // soul form untouched
+        Assert.Equal(0.785f, Color("Ps_Ghost_Param_Black.mtd", "g_GhostEdgeColor")[3], 3); // invaders stay red
+
+        Assert.False(PhantomLookPatcher.Apply(_dir, true, log));                         // idempotent
+        Assert.True(PhantomLookPatcher.Apply(_dir, false, log));                         // and reversible
+        Assert.False(PhantomLookPatcher.IsPatched(_dir));
+    }
+
+    [Fact]
     public void Join_sigil_sign_effect_is_closed_to_the_living_in_retail()
     {
         // Guards the finding behind BlueEyeStoneInBodyForm: goods 9997 -> behavior 7 -> SpEffect 4 (requestSOS)
