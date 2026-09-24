@@ -53,6 +53,9 @@ public sealed class PatchOptions
     /// wandering ghosts when the player is a guest (client) in someone else's world. Cleared, they stay real.
     /// </summary>
     public bool NpcsForHelper { get; set; } = true;
+    /// <summary>The co-op room is never locked (boss death / boss fog gate), so the helper can join at any time,
+    /// including in an area whose boss is already dead. See ScriptPatcher.OpenSessionIn.</summary>
+    public bool OpenSession { get; set; } = true;
     /// <summary>Every starting class carries a "Cyanide Pill" that kills you instantly, so the helper turns
     /// into a soul-form ghost on demand instead of having to farm a death to place a summon sign.</summary>
     public bool CyanidePill { get; set; } = true;
@@ -267,7 +270,7 @@ public static class GamePatcher
         if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, opt.SeamlessEditionTitle, log)) changed = true;
         if (ItemTextPatcher.Apply(game.UsrDir, opt.CyanidePill, opt.SeamlessItems, log)) changed = true;
         if (IconPatcher.Apply(game.UsrDir, opt.SeamlessItems, log)) changed = true;
-        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, opt.SharedBossProgress, log)) changed = true;
+        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, opt.SharedBossProgress, opt.OpenSession, log)) changed = true;
         return new PatchReport(changed, log);
     }
 

@@ -111,25 +111,56 @@ public static class ScriptPatcher
         return true;
     }
 
-    /// <summary>Patches global_event.lua in a script binder; returns the number of changed statements.</summary>
-    public static int PatchBinder(BND3 bnd, bool persistentCoop = false, bool sharedBossProgress = false)
+    /// <summary>
+    /// Open session: the game locks the co-op room (<c>proxy:LockSession();</c>) when a boss dies (BlockClear2,
+    /// global_event.lua) and when the local player walks through a boss fog gate (OnEvent_*_1 in the map scripts),
+    /// so nobody can join a cleared area or a boss fight. Every lock is commented out: the helper can (re)join
+    /// at any time, including right after the boss is dead.
+    /// </summary>
+    const string LockCall = "proxy:LockSession();";
+
+    public static (byte[] bytes, int changed) OpenSessionIn(byte[] source)
+    {
+        var lines = Split(source);
+        int changed = 0;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var text = Encoding.Latin1.GetString(lines[i]);
+            if (CommentStatement(lines, i, text, text.Trim(), LockCall)) changed++;
+        }
+        return (Join(lines), changed);
+    }
+
+    /// <summary>Patches the scripts of a binder (global_event.lua, plus every map script for the open session);
+    /// returns the number of changed statements.</summary>
+    public static int PatchBinder(BND3 bnd, bool persistentCoop = false, bool sharedBossProgress = false, bool openSession = false)
     {
         int n = 0;
-        foreach (var f in bnd.Files.Where(f => Path.GetFileName(f.Name ?? "").Equals(ScriptName, StringComparison.OrdinalIgnoreCase)))
+        foreach (var f in bnd.Files)
         {
-            var (bytes, changed) = PatchGlobalEvent(f.Bytes, persistentCoop, sharedBossProgress);
-            f.Bytes = bytes;
-            n += changed;
+            var file = Path.GetFileName(f.Name ?? "");
+            if (file.Equals(ScriptName, StringComparison.OrdinalIgnoreCase))
+            {
+                var (bytes, changed) = PatchGlobalEvent(f.Bytes, persistentCoop, sharedBossProgress);
+                f.Bytes = bytes;
+                n += changed;
+            }
+            if (openSession && file.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
+            {
+                var (bytes, changed) = OpenSessionIn(f.Bytes);
+                f.Bytes = bytes;
+                n += changed;
+            }
         }
         return n;
     }
 
     public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, List<string> log) =>
-        Apply(usrDir, stayInSoulForm, persistentCoop, false, log);
+        Apply(usrDir, stayInSoulForm, persistentCoop, false, false, log);
 
-    public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, bool sharedBossProgress, List<string> log)
+    public static bool Apply(string usrDir, bool stayInSoulForm, bool persistentCoop, bool sharedBossProgress, bool openSession, List<string> log)
     {
-        bool doPatch = stayInSoulForm || persistentCoop || sharedBossProgress;
+        bool doPatch = stayInSoulForm || persistentCoop || sharedBossProgress || openSession;
         bool changed = false;
         foreach (var path in FindScriptBnds(usrDir))
         {
@@ -157,9 +188,9 @@ public static class ScriptPatcher
                         File.Copy(source, sourceBackup);
                     }
                     var bnd = BND3.Read(sdat ? sourceBackup : backup);
-                    int n = PatchBinder(bnd, persistentCoop, sharedBossProgress);
+                    int n = PatchBinder(bnd, persistentCoop, sharedBossProgress, openSession);
                     if (n == 0) { log.Add($"{name}: script calls not found, left alone"); fresh = File.ReadAllBytes(backup); }
-                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) changed{(persistentCoop ? " (incl. co-op teardown)" : "")}{(sharedBossProgress ? " (incl. shared boss progress)" : "")}"); }
+                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) changed{(persistentCoop ? " (incl. co-op teardown)" : "")}{(sharedBossProgress ? " (incl. shared boss progress)" : "")}{(openSession ? " (session stays open)" : "")}"); }
                 }
                 if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
                 {

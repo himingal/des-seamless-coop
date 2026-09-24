@@ -33,6 +33,29 @@ public class SeamlessItemsTests(ITestOutputHelper output) : IDisposable
     }
 
     [Fact]
+    public void Open_session_unlocks_the_room_in_every_script_of_the_binder()
+    {
+        // Boss death lock (global_event.lua) and a fog-gate lock with a Shift-JIS comment (map script).
+        var sjisComment = System.Text.Encoding.Latin1.GetString([0x83, 0x8B, 0x81, 0x5B, 0x83, 0x80]);
+        var global = "function BlockClear2(proxy,param)\n\tproxy:LockSession();\nend\n";
+        var map = $"function OnEvent_111_1(proxy,param)\n\t\telse\n\t\t\tproxy:LockSession();--{sjisComment}\n\t\tend\nend\n";
+        var bnd = NewBinder();
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 0, @"N:\script\global_event.lua", System.Text.Encoding.Latin1.GetBytes(global)));
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1, @"N:\script\m02_00_00_00.lua", System.Text.Encoding.Latin1.GetBytes(map)));
+
+        Assert.Equal(0, ScriptPatcher.PatchBinder(bnd, openSession: false) - ScriptPatcher.PatchBinder(NewBinder()));
+        int n = ScriptPatcher.PatchBinder(bnd, openSession: true);
+        Assert.Equal(2, n);
+        foreach (var f in bnd.Files)
+        {
+            var lua = System.Text.Encoding.Latin1.GetString(f.Bytes);
+            Assert.DoesNotContain(lua.Split('\n'), l => l.Trim().StartsWith("proxy:LockSession();"));
+            Assert.Contains("--[DeS Co-op] proxy:LockSession();", lua);
+        }
+        Assert.Equal(0, ScriptPatcher.PatchBinder(bnd, openSession: true)); // idempotent
+    }
+
+    [Fact]
     public void Item_text_goes_to_goods_fmgs_only()
     {
         var bnd = NewBinder();
