@@ -52,3 +52,36 @@ public class SeamlessCoopScriptTests
         Assert.Contains("proxy:SetEventSpecialEffect( 10000, 4 );", block);
     }
 }
+
+/// <summary>Co-op in the Nexus: its collisions become an online block.</summary>
+public class NexusPatcherTests : IDisposable
+{
+    readonly string _dir = Path.Combine(Path.GetTempPath(), "descoop-nexus-" + Guid.NewGuid().ToString("N"));
+    public void Dispose() { try { Directory.Delete(_dir, true); } catch { } }
+
+    [Fact]
+    public void Nexus_collisions_become_online_block_10079_and_revert()
+    {
+        var root = Environment.GetEnvironmentVariable("DESCOOP_GAME") ?? @"C:\ROM RPCS3\Demons Souls (USA)";
+        var src = Path.Combine(root, "PS3_GAME", "USRDIR", "map", "mapstudio", "m01_00_00_00.msb");
+        if (!File.Exists(src)) return;
+        var dir = Path.Combine(_dir, "map", "mapstudio");
+        Directory.CreateDirectory(dir);
+        var msb = Path.Combine(dir, "m01_00_00_00.msb");
+        File.Copy(File.Exists(src + GamePatcher.BackupSuffix) ? src + GamePatcher.BackupSuffix : src, msb);
+
+        var retail = SoulsFormats.MSBD.Read(msb).Parts.Collisions;
+        Assert.Equal(40, retail.Count(c => c.MapNameID == -10079 && c.UnkT38 == -1));   // no multiplayer in retail
+
+        var log = new List<string>();
+        Assert.True(NexusPatcher.Apply(_dir, true, log));
+        var open = SoulsFormats.MSBD.Read(msb).Parts.Collisions;
+        Assert.Equal(40, open.Count(c => c.MapNameID == 10079 && c.UnkT38 == 0));
+        Assert.DoesNotContain(open, c => c.MapNameID == -10079);
+        Assert.Equal(retail.Count, open.Count);
+
+        Assert.False(NexusPatcher.Apply(_dir, true, log));   // idempotent
+        Assert.True(NexusPatcher.Apply(_dir, false, log));   // reversible
+        Assert.Equal(File.ReadAllBytes(msb + GamePatcher.BackupSuffix), File.ReadAllBytes(msb));
+    }
+}

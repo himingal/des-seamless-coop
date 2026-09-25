@@ -25,6 +25,8 @@ public sealed class PatchOptions
     public bool SeamlessEditionTitle { get; set; } = true;
     /// <summary>The summoned helper is drawn like a normal character instead of a blue phantom (see PhantomLookPatcher).</summary>
     public bool NoBluePhantom { get; set; } = true;
+    /// <summary>The Nexus becomes an online block, so the helper can be summoned there too (see NexusPatcher).</summary>
+    public bool CoopInNexus { get; set; } = true;
     /// <summary>Everything sold by NPCs costs half.</summary>
     public bool CheaperShops { get; set; } = true;
     /// <summary>Pure Bladestone drops from the Shrine of Storms skeletons 15% of the time instead of 0.5%.</summary>
@@ -272,6 +274,7 @@ public static class GamePatcher
         if (ItemTextPatcher.Apply(game.UsrDir, opt.CyanidePill, opt.SeamlessItems, log)) changed = true;
         if (IconPatcher.Apply(game.UsrDir, opt.SeamlessItems, log)) changed = true;
         if (PhantomLookPatcher.Apply(game.UsrDir, opt.NoBluePhantom, log)) changed = true;
+        if (NexusPatcher.Apply(game.UsrDir, opt.CoopInNexus, log)) changed = true;
         if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, opt.SharedBossProgress, opt.OpenSession, log)) changed = true;
         return new PatchReport(changed, log);
     }
@@ -594,7 +597,7 @@ public static class GamePatcher
         FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix))
         || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir)
         || ItemTextPatcher.IsPatched(game.UsrDir) || IconPatcher.IsPatched(game.UsrDir)
-        || PhantomLookPatcher.IsPatched(game.UsrDir);
+        || PhantomLookPatcher.IsPatched(game.UsrDir) || NexusPatcher.IsPatched(game.UsrDir);
 
     public static void Restore(GameInfo game)
     {
@@ -608,6 +611,7 @@ public static class GamePatcher
         ItemTextPatcher.Restore(game.UsrDir);
         IconPatcher.Restore(game.UsrDir);
         PhantomLookPatcher.Restore(game.UsrDir);
+        NexusPatcher.Restore(game.UsrDir);
     }
 
     static bool FilesEqual(string a, string b) => File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));

@@ -11,6 +11,8 @@ public sealed class DesServerOptions
 {
     public string ServerName { get; set; } = "DeS Seamless Co-op";
     public string DataDir { get; set; } = "server-data";
+    /// <summary>Log every game request (command, character, block) to the server log file — for debugging.</summary>
+    public bool TraceRequests { get; set; }
     /// <summary>Show every party member's co-op sign right next to whoever is looking for signs, in any area.</summary>
     public bool PartySigns { get; set; } = true;
     /// <summary>US/EU/JP clients share one pool (RPCN already redirects the NP comm IDs to one).</summary>
@@ -323,6 +325,7 @@ public sealed class DesServer : IDisposable
                 _ipToChar[ip] = cid;
             string me = _ipToChar.TryGetValue(ip, out var known) ? known : $"[{ip}]";
             var live = Touch(me, ip, port);
+            if (_o.TraceRequests) Write($"trace {cmd} {me} block {(p.TryGetValue("blockID", out var tb) ? Protocol.ToSigned(tb) : 0)}", false);
             if (p.TryGetValue("blockID", out var blk) && cmd is "getSosData.spd" or "getBloodMessage.spd" or "getWanderingGhost.spd" or "getReplayList.spd")
                 live.LastBlock = Protocol.ToSigned(blk);
 
@@ -402,7 +405,7 @@ public sealed class DesServer : IDisposable
         motd.Append("   ghost, no need to die first.\r\n");
         motd.Append("3) HOST: use the HOST SIGIL to be human, then\r\n");
         motd.Append("   touch the sign - it appears right next to\r\n");
-        motd.Append("   you, in any area.\r\n");
+        motd.Append("   you, in any area - even the Nexus.\r\n");
         motd.Append("4) TREASURE and NPCs work for both of you.\r\n");
         motd.Append("5) BOSSES count for both, and you STAY\r\n");
         motd.Append("   TOGETHER after the kill. Split up? The\r\n");
