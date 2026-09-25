@@ -83,15 +83,12 @@ public sealed class PatchOptions
     public bool BonusMerchant { get; set; } = true;
 
     /// <summary>
-    /// Keep the summoned blue phantom in the host's world through a boss clear and through the host's death,
-    /// instead of being sent home. Implemented by commenting out the single <c>proxy:WarpNextStageKick();</c>
-    /// call in the co-op teardown functions of the game's own Lua (<c>BlockClear2_3</c> = boss/area clear,
-    /// <c>HostDead_1</c> = host death) in every m*.luabnd. Plain-Lua edit, pristine backup kept, fully
-    /// reversible — no EBOOT memory patching. OFF by default: keeping the phantom past a boss or the host's
-    /// death desyncs the session in-game (glitched phantom), so the game's normal "send the phantom home" is
-    /// left in place and re-summoning is instead made instant (sign next to the host + the Cyanide Pill).
+    /// Seamless co-op: after a boss both players stay in the same world (no dissolve, hide, frozen menu or room
+    /// teardown for the helper), the helper's world keeps the shared progress whenever it does go home, and the
+    /// helper's sign is placed again automatically once home. A Lua block appended to global_event.lua (see
+    /// ScriptPatcher / Game/Assets/seamless_coop.lua); pristine backup kept, fully reversible.
     /// </summary>
-    public bool PersistentCoop { get; set; } = false;
+    public bool PersistentCoop { get; set; } = true;
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);

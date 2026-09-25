@@ -35,11 +35,23 @@ public static class ScriptPatcher
                     || f.EndsWith(".luabnd.dcx.sdat", StringComparison.OrdinalIgnoreCase)));
     }
 
-    /// <summary>Functions whose single <c>proxy:WarpNextStageKick();</c> sends the summoned blue phantom home
-    /// on a boss/area clear and on the host's death. Disabling only these keeps co-op going (seamless), while
-    /// the phantom's own death, PvP and "leave" paths still kick as normal.</summary>
-    static readonly string[] PersistFunctions = ["BlockClear2_3", "HostDead_1"];
-    const string KickCall = "proxy:WarpNextStageKick();";
+    /// <summary>
+    /// Persistent co-op: a Lua block (embedded seamless_coop.lua) appended to global_event.lua. In Lua the last
+    /// definition wins, so it replaces the boss-clear teardown for the summoned helper (no dissolve/hide/load-wait,
+    /// no room teardown for anyone), keeps the shared progress when the helper does go home, and re-places the
+    /// helper's sign once it is home. Commenting out only the final kick (the first attempt) left the helper
+    /// hidden with a frozen menu, because the rest of the teardown still ran.
+    /// </summary>
+    internal const string SeamlessMarker = "--[DeS Co-op] Seamless co-op, appended by DeS Seamless Co-op.";
+
+    internal static byte[] SeamlessBlock()
+    {
+        using var s = typeof(ScriptPatcher).Assembly.GetManifestResourceStream("DesCoop.seamless_coop.lua")
+            ?? throw new InvalidOperationException("missing embedded seamless_coop.lua");
+        using var ms = new MemoryStream();
+        s.CopyTo(ms);
+        return ms.ToArray();
+    }
 
     /// <summary>
     /// Shared boss progression (experimental). When a boss dies the summoned blue phantom goes home through
@@ -52,9 +64,9 @@ public static class ScriptPatcher
     const string RollbackCall = "proxy:SetFlagInitState(2);";
     const string KeepProgressCall = "proxy:SetFlagInitState(1);";
 
-    /// <summary>Comments out the automatic revive statements (and, when <paramref name="persistentCoop"/> is
-    /// set, the co-op teardown kick; with <paramref name="sharedBossProgress"/>, the boss-clear flag rollback
-    /// of the phantom); returns the new text and how many lines changed.</summary>
+    /// <summary>Comments out the automatic revive statements (with <paramref name="sharedBossProgress"/>, also the
+    /// boss-clear flag rollback of the phantom) and, when <paramref name="persistentCoop"/> is set, appends the
+    /// seamless co-op block; returns the new text and how many statements/blocks changed.</summary>
     public static (byte[] bytes, int changed) PatchGlobalEvent(byte[] source, bool persistentCoop = false, bool sharedBossProgress = false)
     {
         // Shift-JIS file: split on raw bytes and only touch pure-ASCII statements.
@@ -67,13 +79,6 @@ public static class ScriptPatcher
             var t = text.Trim();
             if (t.StartsWith("function ")) fn = t[9..].Split('(')[0].Trim();
 
-            // Seamless persistence: disable the lone kick call, only inside the two teardown functions.
-            if (persistentCoop && fn != null && PersistFunctions.Contains(fn) && CommentStatement(lines, i, text, t, KickCall))
-            {
-                changed++;
-                continue;
-            }
-
             // Shared boss progression: keep the session's world progress when the phantom leaves after a boss.
             if (sharedBossProgress && fn == BossClearFunction && ReplaceStatement(lines, i, text, t, RollbackCall, KeepProgressCall))
             {
@@ -85,7 +90,15 @@ public static class ScriptPatcher
             foreach (var stmt in Disabled)
                 if (CommentStatement(lines, i, text, t, stmt)) { changed++; break; }
         }
-        return (Join(lines), changed);
+        var result = Join(lines);
+        if (persistentCoop && !Encoding.Latin1.GetString(result).Contains(SeamlessMarker))
+        {
+            var block = SeamlessBlock();
+            byte[] sep = result.Length > 0 && result[^1] != (byte)'\n' ? [(byte)'\r', (byte)'\n'] : [];
+            result = [.. result, .. sep, .. block];
+            changed++;
+        }
+        return (result, changed);
     }
 
     /// <summary>Comments the line in place if it is exactly <paramref name="stmt"/> (nothing else after it).</summary>
@@ -190,7 +203,7 @@ public static class ScriptPatcher
                     var bnd = BND3.Read(sdat ? sourceBackup : backup);
                     int n = PatchBinder(bnd, persistentCoop, sharedBossProgress, openSession);
                     if (n == 0) { log.Add($"{name}: script calls not found, left alone"); fresh = File.ReadAllBytes(backup); }
-                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) changed{(persistentCoop ? " (incl. co-op teardown)" : "")}{(sharedBossProgress ? " (incl. shared boss progress)" : "")}{(openSession ? " (session stays open)" : "")}"); }
+                    else { fresh = bnd.Write(); log.Add($"{name}: {n} script line(s) changed{(persistentCoop ? " (incl. seamless co-op block)" : "")}{(sharedBossProgress ? " (incl. shared boss progress)" : "")}{(openSession ? " (session stays open)" : "")}"); }
                 }
                 if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
                 {

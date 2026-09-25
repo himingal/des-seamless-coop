@@ -46,7 +46,7 @@ public class PatcherTests : IDisposable
         Assert.True(o.NpcsForHelper, "NPCs stay real for the helper");
         Assert.True(o.CyanidePill, "fast regroup needs the Cyanide Pill");
         Assert.True(o.BonusMerchant, "Boldwin must sell the rarities so a run never misses them");
-        Assert.False(o.PersistentCoop, "persistent co-op desyncs in-game (engine-level); stays OFF");
+        Assert.True(o.PersistentCoop, "seamless co-op: stay together after a boss");
         Assert.True(o.SeamlessItems, "Host / Join Sigils (names, text, icons)");
         Assert.True(o.SharedBossProgress, "experimental shared boss progression is on in this build");
     }
