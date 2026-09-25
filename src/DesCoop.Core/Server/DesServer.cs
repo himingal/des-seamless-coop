@@ -15,6 +15,13 @@ public sealed class DesServerOptions
     public bool TraceRequests { get; set; }
     /// <summary>Show every party member's co-op sign right next to whoever is looking for signs, in any area.</summary>
     public bool PartySigns { get; set; } = true;
+    /// <summary>
+    /// Auto-join: the helper's co-op sign is handed to its host as an invasion-type sign (3), which the host's
+    /// game summons by itself (retail invasions work this way), so using the Join Sigil is enough — nobody
+    /// touches a sign. Only for the helper's host: the last host that summoned it, or the only human host online.
+    /// The helper's own game still joins as a regular helper (its sign is blue). Verified host side in RPCS3.
+    /// </summary>
+    public bool AutoJoin { get; set; } = true;
     /// <summary>US/EU/JP clients share one pool (RPCN already redirects the NP comm IDs to one).</summary>
     public bool MergeRegions { get; set; } = true;
     /// <summary>Seconds between ghost uploads; lower = fresher host position for party signs.</summary>
@@ -64,6 +71,15 @@ public sealed class DesServer : IDisposable
     readonly Dictionary<string, SosSign> _sos = [];
     readonly Dictionary<string, string> _pendingSummon = [];
     readonly Dictionary<string, string> _pendingMonk = [];
+    readonly Dictionary<string, string> _partner = [];            // helper -> the host that last summoned it
+    readonly Dictionary<string, DateTime> _hostPolls = [];        // who polls getSosData (only human players do)
+    readonly Dictionary<string, DateTime> _summonedAt = [];       // helper -> when a host last summoned it
+    /// <summary>After a summon the helper's sign is held back this long, so the host does not summon it again
+    /// while it is already joining (if the join fails, the sign comes back afterwards).</summary>
+    static readonly TimeSpan SummonHold = TimeSpan.FromSeconds(90);
+    /// <summary>Id offset for signs sent as auto-join: a different id makes the host treat it as a new sign.</summary>
+    internal const uint AutoJoinIdBit = 0x40000000;
+    static readonly TimeSpan HostActive = TimeSpan.FromSeconds(60);
     readonly Dictionary<string, Ghost> _ghosts = [];
     readonly Dictionary<string, string> _via = [];
     readonly Random _rng = new();
@@ -403,9 +419,9 @@ public sealed class DesServer : IDisposable
         motd.Append("1) Pick who leads: that player is the HOST.\r\n");
         motd.Append("2) HELPER: use the JOIN SIGIL - human or\r\n");
         motd.Append("   ghost, no need to die first.\r\n");
-        motd.Append("3) HOST: use the HOST SIGIL to be human, then\r\n");
-        motd.Append("   touch the sign - it appears right next to\r\n");
-        motd.Append("   you, in any area - even the Nexus.\r\n");
+        motd.Append("3) HOST: use the HOST SIGIL to be human. Your\r\n");
+        motd.Append("   friend joins you BY HIMSELF, in any area -\r\n");
+        motd.Append("   even the Nexus. No sign to touch.\r\n");
         motd.Append("4) TREASURE and NPCs work for both of you.\r\n");
         motd.Append("5) BOSSES count for both, and you STAY\r\n");
         motd.Append("   TOGETHER after the kill. Split up? The\r\n");
@@ -652,6 +668,7 @@ public sealed class DesServer : IDisposable
     {
         PurgeSigns();
         int block = Protocol.ToSigned(p["blockID"]);
+        _hostPolls[me] = DateTime.UtcNow;
         // The reference server (desse) ignores the client's sosNum and returns every matching sign; the game
         // often asks for 0, so honouring it would return nothing (this was why signs never appeared). Cap only
         // to keep the response sane.
@@ -670,6 +687,7 @@ public sealed class DesServer : IDisposable
             if (known.Count + fresh.Count >= max) break;
             if (!SameRegion(s.Port, port)) { skipped++; continue; }
             considered++;
+            if (_summonedAt.TryGetValue(s.CharacterId, out var sAt) && DateTime.UtcNow - sAt < SummonHold) { skipped++; continue; }
             bool sameBlock = s.BlockId == block;
             bool mine = s.CharacterId == me;
 
@@ -684,13 +702,16 @@ public sealed class DesServer : IDisposable
             }
             if (!place) { skipped++; if (!mine) Write($"getSosData {me} block {block}: {s.CharacterId}'s sign in block {s.BlockId} NOT shown (no anchor to move it here)", false); continue; }
 
-            if (knownIds.Contains(s.SosId.ToString())) { known.Add(s.SosId); continue; }
+            bool auto = doRelocate && _o.AutoJoin && IsHostOf(me, s.CharacterId);
+            uint sendId = auto ? s.SosId | AutoJoinIdBit : s.SosId;
+            if (knownIds.Contains(sendId.ToString())) { known.Add(sendId); continue; }
             if (doRelocate)
             {
                 double yaw = anchor.AngY + (slot - 0.5) * 0.6;
                 float x = anchor.X + (float)(Math.Sin(yaw) * 1.2);
                 float z = anchor.Z + (float)(Math.Cos(yaw) * 1.2);
-                fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ));
+                fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ, sendId, auto ? 3 : null));
+                if (auto) Write($"getSosData {me}: {s.CharacterId} joins you automatically", false);
                 slot++; relocated++;
                 if (!mine) Write($"getSosData {me} block {block}: showing {s.CharacterId}'s sign next to you (from block {s.BlockId})", false);
             }
@@ -732,6 +753,7 @@ public sealed class DesServer : IDisposable
         s.TotalSessions = st.Sessions;
         _sos[s.CharacterId] = s;
         _pendingSummon.Remove(s.CharacterId);
+        _summonedAt.Remove(s.CharacterId);   // a fresh sign is available right away
         UpdatePosition(s.CharacterId, s.BlockId, s.PosX, s.PosY, s.PosZ, s.AngX, s.AngY, s.AngZ);
         Write($"{s.CharacterId} placed a {(s.IsCoopSign ? "blue" : "red")} sign in {BlockNames.Get(s.BlockId)}");
         return (0x0a, [1]);
@@ -760,9 +782,19 @@ public sealed class DesServer : IDisposable
         return (0x15, [1]);
     }
 
+    /// <summary>Whether <paramref name="me"/> is the host <paramref name="helper"/> should join automatically: the
+    /// host it was last summoned by (if that host is still around), else the only human host polling for signs.</summary>
+    bool IsHostOf(string me, string helper)
+    {
+        var now = DateTime.UtcNow;
+        bool Active(string h) => h != helper && _hostPolls.TryGetValue(h, out var t) && now - t < HostActive;
+        if (_partner.TryGetValue(helper, out var host) && Active(host)) return host == me;
+        return _hostPolls.Keys.Where(Active).Take(2).SequenceEqual([me]);
+    }
+
     (byte, byte[]) SummonOtherCharacter(Dictionary<string, string> p, string me)
     {
-        uint ghostId = (uint)Protocol.ToSigned(p["ghostID"]);
+        uint ghostId = (uint)Protocol.ToSigned(p["ghostID"]) & ~AutoJoinIdBit;
         string room = p.GetValueOrDefault("NPRoomID", "");
         var s = _sos.Values.FirstOrDefault(x => x.SosId == ghostId);
         if (s == null)
@@ -771,6 +803,8 @@ public sealed class DesServer : IDisposable
             return (0x0a, [0]);
         }
         _pendingSummon[s.CharacterId] = room;
+        _partner[s.CharacterId] = me;
+        _summonedAt[s.CharacterId] = DateTime.UtcNow;
         Write($"{me} is summoning {s.CharacterId}", false);
         return (0x0a, [1]);
     }
