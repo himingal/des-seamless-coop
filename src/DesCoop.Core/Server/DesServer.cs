@@ -79,6 +79,7 @@ public sealed class DesServer : IDisposable
     static readonly TimeSpan SummonHold = TimeSpan.FromSeconds(90);
     /// <summary>Id offset for signs sent as auto-join: a different id makes the host treat it as a new sign.</summary>
     internal const uint AutoJoinIdBit = 0x40000000;
+    internal const uint GuessedSpotIdBit = 0x20000000;
     static readonly TimeSpan HostActive = TimeSpan.FromSeconds(60);
     readonly Dictionary<string, Ghost> _ghosts = [];
     readonly Dictionary<string, string> _via = [];
@@ -647,13 +648,17 @@ public sealed class DesServer : IDisposable
     }
 
     /// <summary>Where to put a party member's sign so the player at <paramref name="block"/> sees it.</summary>
-    bool TryAnchor(string me, int block, out WorldPos anchor)
+    /// <remarks><paramref name="live"/> is false when the player's own position is not known yet (no ghost upload in
+    /// this block) and a remembered spot of the block is used instead.</remarks>
+    bool TryAnchor(string me, int block, out WorldPos anchor, out bool live)
     {
+        live = true;
         if (_live.TryGetValue(me, out var l) && l.LastPos is { } lp && lp.BlockId == block && DateTime.UtcNow - lp.At < TimeSpan.FromMinutes(15))
         {
             anchor = lp;
             return true;
         }
+        live = false;
         if (_store.KnownPositions.TryGetValue(block, out var list) && list.Count > 0)
         {
             var k = list[^1];
@@ -678,7 +683,7 @@ public sealed class DesServer : IDisposable
         var known = new List<uint>();
         var fresh = new List<byte[]>();
         WorldPos anchor = default;
-        bool hasAnchor = false;
+        bool hasAnchor = false, liveAnchor = false;
         int slot = 0;
 
         int considered = 0, relocated = 0, skipped = 0;
@@ -698,12 +703,15 @@ public sealed class DesServer : IDisposable
             bool doRelocate = false;
             if (!mine && s.IsCoopSign && _o.PartySigns)
             {
-                if (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor))) { place = true; doRelocate = true; }
+                if (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor, out liveAnchor))) { place = true; doRelocate = true; }
             }
             if (!place) { skipped++; if (!mine) Write($"getSosData {me} block {block}: {s.CharacterId}'s sign in block {s.BlockId} NOT shown (no anchor to move it here)", false); continue; }
 
             bool auto = doRelocate && _o.AutoJoin && IsHostOf(me, s.CharacterId);
             uint sendId = auto ? s.SosId | AutoJoinIdBit : s.SosId;
+            // A sign put at a remembered spot (host's own position not known yet) gets another id, so it is sent
+            // again — right next to the host — as soon as the host's position arrives; the old one then drops out.
+            if (doRelocate && !liveAnchor) sendId |= GuessedSpotIdBit;
             if (knownIds.Contains(sendId.ToString())) { known.Add(sendId); continue; }
             if (doRelocate)
             {
@@ -794,7 +802,7 @@ public sealed class DesServer : IDisposable
 
     (byte, byte[]) SummonOtherCharacter(Dictionary<string, string> p, string me)
     {
-        uint ghostId = (uint)Protocol.ToSigned(p["ghostID"]) & ~AutoJoinIdBit;
+        uint ghostId = (uint)Protocol.ToSigned(p["ghostID"]) & ~(AutoJoinIdBit | GuessedSpotIdBit);
         string room = p.GetValueOrDefault("NPRoomID", "");
         var s = _sos.Values.FirstOrDefault(x => x.SosId == ghostId);
         if (s == null)
