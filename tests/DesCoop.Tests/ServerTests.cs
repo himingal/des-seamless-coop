@@ -137,6 +137,7 @@ public class ServerTests : IDisposable
         Assert.Contains("JOIN SIGIL", motd);   // the seamless item names
         Assert.Contains("HOST SIGIL", motd);
         Assert.Contains("BOSSES count for both", motd);
+        Assert.Contains("STAY", motd);
     }
 
     [Fact]

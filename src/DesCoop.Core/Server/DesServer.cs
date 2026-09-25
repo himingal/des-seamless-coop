@@ -404,8 +404,9 @@ public sealed class DesServer : IDisposable
         motd.Append("   touch the sign - it appears right next to\r\n");
         motd.Append("   you, in any area.\r\n");
         motd.Append("4) TREASURE and NPCs work for both of you.\r\n");
-        motd.Append("5) BOSSES count for both. Rejoin anytime,\r\n");
-        motd.Append("   even with the boss already dead.\r\n");
+        motd.Append("5) BOSSES count for both, and you STAY\r\n");
+        motd.Append("   TOGETHER after the kill. Split up? The\r\n");
+        motd.Append("   sign comes back by itself - just touch it.\r\n");
         var motd2 = new StringBuilder();
         motd2.Append($"Players online: {st.Players.Length}\r\n");
         foreach (var pl in st.Players.Take(8))
