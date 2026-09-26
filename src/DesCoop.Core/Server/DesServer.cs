@@ -16,12 +16,12 @@ public sealed class DesServerOptions
     /// <summary>Show every party member's co-op sign right next to whoever is looking for signs, in any area.</summary>
     public bool PartySigns { get; set; } = true;
     /// <summary>
-    /// Auto-join: the helper's co-op sign is handed to its host as an invasion-type sign (3), which the host's
-    /// game summons by itself (retail invasions work this way), so using the Join Sigil is enough — nobody
-    /// touches a sign. Only for the helper's host: the last host that summoned it, or the only human host online.
-    /// The helper's own game still joins as a regular helper (its sign is blue). Verified host side in RPCS3.
+    /// Auto-join (OFF): hands the helper's co-op sign to its host as an invasion-type sign (3), which the host's
+    /// game summons by itself. Tested with real players: the helper then arrives as an INVADER (red phantom,
+    /// hostile, only while the area boss is alive, no item pickup or progress) - the invasion path, not co-op.
+    /// Kept only for experiments; seamless co-op uses the normal blue-sign summon.
     /// </summary>
-    public bool AutoJoin { get; set; } = true;
+    public bool AutoJoin { get; set; }
     /// <summary>US/EU/JP clients share one pool (RPCN already redirects the NP comm IDs to one).</summary>
     public bool MergeRegions { get; set; } = true;
     /// <summary>Seconds between ghost uploads; lower = fresher host position for party signs.</summary>
@@ -420,9 +420,9 @@ public sealed class DesServer : IDisposable
         motd.Append("1) Pick who leads: that player is the HOST.\r\n");
         motd.Append("2) HELPER: use the JOIN SIGIL - human or\r\n");
         motd.Append("   ghost, no need to die first.\r\n");
-        motd.Append("3) HOST: use the HOST SIGIL to be human. Your\r\n");
-        motd.Append("   friend joins you BY HIMSELF, in any area -\r\n");
-        motd.Append("   even the Nexus. No sign to touch.\r\n");
+        motd.Append("3) HOST: use the HOST SIGIL to be human, then\r\n");
+        motd.Append("   touch the sign - it appears right next to\r\n");
+        motd.Append("   you, in any area - even the Nexus.\r\n");
         motd.Append("4) TREASURE and NPCs work for both of you.\r\n");
         motd.Append("5) BOSSES count for both, and you STAY\r\n");
         motd.Append("   TOGETHER after the kill. Split up? The\r\n");

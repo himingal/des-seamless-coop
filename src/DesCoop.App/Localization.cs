@@ -136,9 +136,9 @@ public static class Loc
             ["es"] = "Nadie aún. Los jugadores aparecen aquí cuando el juego se conecta." },
         ["howTo"] = new() { ["en"] = "HOW TO PLAY TOGETHER", ["pt"] = "COMO JOGAR JUNTOS", ["es"] = "CÓMO JUGAR JUNTOS" },
         ["howToLines"] = new() {
-            ["en"] = "I.   Both press PLAY. Online turns on by itself.\nII.  Helper: use the Join Sigil, in any form - you enter by yourself.\nIII. Host: use the Host Sigil - your friend joins by himself (Nexus too).\nIV.  Bosses, treasure and NPCs count for both - and you stay together.",
-            ["pt"] = "I.   Os dois apertam PLAY. O online liga sozinho.\nII.  Ajudante: use o Join Sigil, em qualquer forma - entra sozinho.\nIII. Host: use o Host Sigil - o amigo entra sozinho (até no Nexus).\nIV.  Chefes, baús e NPCs valem pros dois - e vocês continuam juntos.",
-            ["es"] = "I.   Ambos pulsan PLAY. El online se activa solo.\nII.  Ayudante: usa el Join Sigil, en cualquier forma - entras solo.\nIII. Host: usa el Host Sigil - tu amigo entra solo (también en el Nexus).\nIV.  Jefes, tesoros y NPCs cuentan para ambos - y siguen juntos." },
+            ["en"] = "I.   Both press PLAY. Online turns on by itself.\nII.  Helper: use the Join Sigil, in any form.\nIII. Host: Host Sigil, then touch the sign at your side (Nexus too).\nIV.  Bosses, treasure and NPCs count for both - and you stay together.",
+            ["pt"] = "I.   Os dois apertam PLAY. O online liga sozinho.\nII.  Ajudante: use o Join Sigil, em qualquer forma.\nIII. Host: Host Sigil e toque no sinal do seu lado (até no Nexus).\nIV.  Chefes, baús e NPCs valem pros dois - e vocês continuam juntos.",
+            ["es"] = "I.   Ambos pulsan PLAY. El online se activa solo.\nII.  Ayudante: usa el Join Sigil, en cualquier forma.\nIII. Host: Host Sigil y toca la señal a tu lado (también en el Nexus).\nIV.  Jefes, tesoros y NPCs cuentan para ambos - y siguen juntos." },
 
         // ---- Host info panel -------------------------------------------------
         ["relayOn"] = new() {

@@ -134,6 +134,7 @@ public class ServerTests : IDisposable
     [Fact]
     public void Join_sigil_alone_is_enough_the_only_host_summons_the_helper_by_itself()
     {
+        _server.Options.AutoJoin = true;   // experimental path, off by default (it makes the helper an invader)
         _server.Dispatch("initializeCharacter.spd", P(("characterID", "Friend"), ("index", "0")), "10.0.0.2", 18667);
         _server.Dispatch("addSosData.spd", Sign("Friend0", 10079, 1), "10.0.0.2", 18667);
         Host("Host", "10.0.0.1");
@@ -154,8 +155,21 @@ public class ServerTests : IDisposable
     }
 
     [Fact]
+    public void By_default_the_helper_sign_stays_a_blue_coop_sign()
+    {
+        // Auto-join turned the helper into an invader in real tests; co-op must keep the blue (type 2) sign.
+        _server.Dispatch("initializeCharacter.spd", P(("characterID", "Friend"), ("index", "0")), "10.0.0.2", 18667);
+        _server.Dispatch("addSosData.spd", Sign("Friend0", 20070, 1), "10.0.0.2", 18667);
+        Host("Host", "10.0.0.1");
+        var (id, type) = SignFor("Host0", "10.0.0.1");
+        Assert.Equal(2, type);
+        Assert.Equal(0u, id & DesServer.AutoJoinIdBit);
+    }
+
+    [Fact]
     public void With_two_hosts_the_helper_only_auto_joins_its_own_host()
     {
+        _server.Options.AutoJoin = true;   // experimental path, off by default (it makes the helper an invader)
         _server.Dispatch("initializeCharacter.spd", P(("characterID", "Friend"), ("index", "0")), "10.0.0.2", 18667);
         _server.Dispatch("addSosData.spd", Sign("Friend0", 20070, 1), "10.0.0.2", 18667);
         Host("HostA", "10.0.0.1");
@@ -196,7 +210,7 @@ public class ServerTests : IDisposable
         Assert.Contains("HOST SIGIL", motd);
         Assert.Contains("BOSSES count for both", motd);
         Assert.Contains("STAY", motd);
-        Assert.Contains("BY HIMSELF", motd);
+        Assert.Contains("touch the sign", motd);
     }
 
     [Fact]
