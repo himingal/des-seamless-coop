@@ -115,56 +115,5 @@ public static class CyanidePillPatcher
         }
         catch (Exception ex) { log.Add($"{label}: {paramType} not changed ({ex.Message})"); return 0; }
     }
-
-    static IEnumerable<string> FindItemBnds(string usrDir)
-    {
-        var dir = Path.Combine(usrDir, "msg");
-        if (!Directory.Exists(dir)) return [];
-        return Directory.EnumerateFiles(dir, "item.msgbnd*", SearchOption.AllDirectories)
-            .Where(f => !f.EndsWith(GamePatcher.BackupSuffix, StringComparison.OrdinalIgnoreCase)
-                && (f.EndsWith(".msgbnd", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".msgbnd.dcx", StringComparison.OrdinalIgnoreCase)));
-    }
-
-    /// <summary>Adds the pill's name (id 9990) to the item-name text (every item.msgbnd, from its backup).</summary>
-    public static bool AddName(string usrDir, List<string> log)
-    {
-        bool changed = false;
-        foreach (var path in FindItemBnds(usrDir))
-        {
-            var backup = path + GamePatcher.BackupSuffix;
-            var name = Path.GetRelativePath(Path.Combine(usrDir, "msg"), path);
-            try
-            {
-                if (!File.Exists(backup)) File.Copy(path, backup);
-                var bnd = BND3.Read(backup);
-                int n = 0;
-                foreach (var f in bnd.Files)
-                {
-                    FMG fmg;
-                    try { fmg = FMG.Read(f.Bytes); } catch { continue; }
-                    // The item-name FMG is the one that already holds goods names (e.g. Pure Bladestone = 2023).
-                    if (!fmg.Entries.Any(e => e.ID == 2023)) continue;
-                    var existing = fmg.Entries.FirstOrDefault(e => e.ID == GoodsId);
-                    if (existing != null) existing.Text = PillName;
-                    else fmg.Entries.Add(new FMG.Entry(GoodsId, PillName));
-                    f.Bytes = MsgPatcher.WriteLikeOriginal(fmg, f.Bytes.Length);
-                    n++;
-                }
-                if (n == 0) continue;
-                var fresh = bnd.Write();
-                if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh)) { File.WriteAllBytes(path, fresh); changed = true; }
-            }
-            catch (Exception ex) { log.Add($"{name}: cyanide pill name not added ({ex.Message})"); }
-        }
-        return changed;
-    }
-
-    public static void Restore(string usrDir)
-    {
-        foreach (var p in FindItemBnds(usrDir))
-        {
-            var b = p + GamePatcher.BackupSuffix;
-            if (File.Exists(b)) File.Copy(b, p, true);
-        }
-    }
+    // The pill's name and descriptions are written by ItemTextPatcher (one pass over item.msgbnd).
 }

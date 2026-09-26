@@ -5,9 +5,11 @@ namespace DesCoop.Game;
 
 public sealed class PatchOptions
 {
-    /// <summary>Blue Eye Stone usable in body form. OFF by default: the game only shows a body-form sign to
-    /// its owner, so a sign placed while human never reaches the host. Co-op needs the helper in soul form.</summary>
-    public bool BlueEyeStoneInBodyForm { get; set; } = false;
+    /// <summary>Blue Eye Stone (Join Sigil) works in any form. Two gates: the item's enable_live flag, and its
+    /// sign effect (SpEffectParam row with requestSOS, reached through BehaviorParam) whose effectTargetLive is 0
+    /// in retail — used while human, the stone played its animation but never placed the sign. Both are opened,
+    /// so the helper no longer has to die first.</summary>
+    public bool BlueEyeStoneInBodyForm { get; set; } = true;
     /// <summary>Stone of Ephemeral Eyes is never consumed, so you can turn human any time to host.</summary>
     public bool InfiniteEphemeralEyes { get; set; } = true;
     /// <summary>Soul form keeps 100% max HP instead of 50%: dying costs nothing, it plays like body form.</summary>
@@ -18,6 +20,13 @@ public sealed class PatchOptions
     public bool StartWithBlueEyeStone { get; set; } = true;
     /// <summary>Ten new starting classes (names, stats and kits) replace the vanilla ones.</summary>
     public bool RevampedClasses { get; set; } = true;
+    /// <summary>Brand the title screen: the "PRESS START BUTTON" text (menu FMG entry 30000) becomes
+    /// "SEAMLESS EDITION / PRESS START BUTTON", shown in the game's own font on the start screen.</summary>
+    public bool SeamlessEditionTitle { get; set; } = true;
+    /// <summary>The summoned helper is drawn like a normal character instead of a blue phantom (see PhantomLookPatcher).</summary>
+    public bool NoBluePhantom { get; set; } = true;
+    /// <summary>The Nexus becomes an online block, so the helper can be summoned there too (see NexusPatcher).</summary>
+    public bool CoopInNexus { get; set; } = true;
     /// <summary>Everything sold by NPCs costs half.</summary>
     public bool CheaperShops { get; set; } = true;
     /// <summary>Pure Bladestone drops from the Shrine of Storms skeletons 15% of the time instead of 0.5%.</summary>
@@ -36,11 +45,34 @@ public sealed class PatchOptions
     public bool ManaRegen { get; set; } = true;
     /// <summary>Seconds between each +1 MP tick of the passive regen (1 = 1 MP/s; 2 = 1 MP every 2 s).</summary>
     public int ManaRegenIntervalSeconds { get; set; } = 2;
-    /// <summary>Every world pickup and drop gives twice as much. Off: co-op keeps raw single pickups.</summary>
+    /// <summary>Every world pickup, chest and enemy drop gives two of the item instead of one. OFF: loot is shared
+    /// natively instead (see <see cref="SharedLoot"/>), so nothing has to be handed over manually.</summary>
     public bool DoubleLoot { get; set; } = false;
+    /// <summary>
+    /// Map treasure for both players. 115 world treasures keep their item in ItemLotParam's hostOnlyItem slot
+    /// ("only the single player / multiplay host can obtain it") while the shared draw is a guaranteed nothing.
+    /// The item is moved into the shared draw at 100%, so whoever opens the treasure — host or helper — gets it.
+    /// </summary>
+    public bool SharedLoot { get; set; } = true;
+    /// <summary>
+    /// NPCs for the helper too: NpcParam.isChangeWanderGhost makes 28 friendly NPCs turn into non-interactive
+    /// wandering ghosts when the player is a guest (client) in someone else's world. Cleared, they stay real.
+    /// </summary>
+    public bool NpcsForHelper { get; set; } = true;
+    /// <summary>The co-op room is never locked (boss death / boss fog gate), so the helper can join at any time,
+    /// including in an area whose boss is already dead. See ScriptPatcher.OpenSessionIn.</summary>
+    public bool OpenSession { get; set; } = true;
     /// <summary>Every starting class carries a "Cyanide Pill" that kills you instantly, so the helper turns
     /// into a soul-form ghost on demand instead of having to farm a death to place a summon sign.</summary>
     public bool CyanidePill { get; set; } = true;
+    /// <summary>The two co-op items get their own identity and icon: the Stone of Ephemeral Eyes becomes the
+    /// "Host Sigil" (restore your body = be the host) and the Blue Eye Stone the "Join Sigil" (in soul form,
+    /// your sign is carried to your host's side). Same items, same mechanics — new names, text and icons.</summary>
+    public bool SeamlessItems { get; set; } = true;
+    /// <summary>EXPERIMENTAL shared boss progression: a boss killed together also counts in the helper's world
+    /// (the phantom's boss-clear flag rollback is switched to the keep-progress mode). Pairs with DoubleLoot,
+    /// which gives the host two Demon's Souls to share. Back up saves before testing.</summary>
+    public bool SharedBossProgress { get; set; } = true;
 
     /// <summary>
     /// Blacksmith Boldwin (Nexus) also sells the world-tendency-locked rarities (so a co-op run never misses
@@ -53,15 +85,12 @@ public sealed class PatchOptions
     public bool BonusMerchant { get; set; } = true;
 
     /// <summary>
-    /// Keep the summoned blue phantom in the host's world through a boss clear and through the host's death,
-    /// instead of being sent home. Implemented by commenting out the single <c>proxy:WarpNextStageKick();</c>
-    /// call in the co-op teardown functions of the game's own Lua (<c>BlockClear2_3</c> = boss/area clear,
-    /// <c>HostDead_1</c> = host death) in every m*.luabnd. Plain-Lua edit, pristine backup kept, fully
-    /// reversible — no EBOOT memory patching. OFF by default: keeping the phantom past a boss or the host's
-    /// death desyncs the session in-game (glitched phantom), so the game's normal "send the phantom home" is
-    /// left in place and re-summoning is instead made instant (sign next to the host + the Cyanide Pill).
+    /// Seamless co-op: after a boss both players stay in the same world (no dissolve, hide, frozen menu or room
+    /// teardown for the helper), the helper's world keeps the shared progress whenever it does go home, and the
+    /// helper's sign is placed again automatically once home. A Lua block appended to global_event.lua (see
+    /// ScriptPatcher / Game/Assets/seamless_coop.lua); pristine backup kept, fully reversible.
     /// </summary>
-    public bool PersistentCoop { get; set; } = false;
+    public bool PersistentCoop { get; set; } = true;
 }
 
 public sealed record PatchReport(bool Changed, List<string> Lines);
@@ -92,8 +121,9 @@ public static class GamePatcher
     /// so MP regen is added there for medium/heavy armor without removing the stamina penalty.</summary>
     public static readonly int[] BodyStaminaEffects = [6210, 6211, 6212, 6213];
 
-    static readonly string[] BlueEyeNames = ["Blue Eye Stone"];
-    static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes"];
+    // The seamless names are listed too: item text is rewritten in place, so a second PLAY reads the new names.
+    static readonly string[] BlueEyeNames = ["Blue Eye Stone", "Join Sigil"];
+    static readonly string[] EphemeralNames = ["Stone of Ephemeral Eyes", "Host Sigil"];
     const string PureBladestoneName = "Pure Bladestone";
     const int GoodsCategory = 0x40000000;
 
@@ -240,9 +270,12 @@ public static class GamePatcher
             }
             log.Add($"{Path.GetFileName(path)}: {n} change(s)");
         }
-        if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, log)) changed = true;
-        if (opt.CyanidePill && CyanidePillPatcher.AddName(game.UsrDir, log)) changed = true;
-        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, log)) changed = true;
+        if (MsgPatcher.Apply(game.UsrDir, opt.RevampedClasses ? ClassRevamp.Renames : null, opt.SeamlessEditionTitle, log)) changed = true;
+        if (ItemTextPatcher.Apply(game.UsrDir, opt.CyanidePill, opt.SeamlessItems, log)) changed = true;
+        if (IconPatcher.Apply(game.UsrDir, opt.SeamlessItems, log)) changed = true;
+        if (PhantomLookPatcher.Apply(game.UsrDir, opt.NoBluePhantom, log)) changed = true;
+        if (NexusPatcher.Apply(game.UsrDir, opt.CoopInNexus, log)) changed = true;
+        if (ScriptPatcher.Apply(game.UsrDir, opt.StayInSoulForm, opt.PersistentCoop, opt.SharedBossProgress, opt.OpenSession, log)) changed = true;
         return new PatchReport(changed, log);
     }
 
@@ -295,7 +328,12 @@ public static class GamePatcher
         if (goods == null) log.Add($"{label}: EquipParamGoods.param not found");
 
         if (goods != null && opt.BlueEyeStoneInBodyForm)
-            foreach (var id in ids.Blue.Where(goods.Has)) { c.Set(goods, id, "enable_live", 1); log.Add($"{label}: item {id} -> Blue Eye Stone usable in body form"); }
+            foreach (var id in ids.Blue.Where(goods.Has))
+            {
+                c.Set(goods, id, "enable_live", 1);
+                log.Add($"{label}: item {id} -> Blue Eye Stone usable in body form");
+                SignEffectForAnyForm(c, goods, id);
+            }
 
         if (goods != null && opt.InfiniteEphemeralEyes)
             foreach (var id in ids.Ephemeral.Where(goods.Has)) { c.Set(goods, id, "isConsume", 0); log.Add($"{label}: item {id} -> Stone of Ephemeral Eyes is never consumed"); }
@@ -312,6 +350,11 @@ public static class GamePatcher
         if (opt.EasierPureBladestone) BoostDrop(c, ids.PureBladestone.Count > 0 ? ids.PureBladestone : [2023], PureBladestoneChance, "Pure Bladestone");
         if (opt.EasierUpgradeMaterials) BoostDrop(c, [.. UpgradeStones], UpgradeMaterialChance, "upgrade stones");
         if (opt.DoubleLoot) DoubleLoot(c);
+        if (opt.SharedLoot) ShareHostOnlyLoot(c);
+        if (opt.NpcsForHelper) NpcsStayReal(c);
+        // The Host Sigil works from any living form, so "use it to be the host" never fails in body form.
+        if (goods != null && opt.SeamlessItems)
+            foreach (var id in ids.Ephemeral.Where(goods.Has)) c.Set(goods, id, "enable_live", 1);
         if (opt.OneHitCrystalLizards || opt.WeakerDragons || opt.MoreSouls) TweakEnemies(c, opt);
         if (opt.ManaRegen) ManaRegen(c, opt.ManaRegenIntervalSeconds);
 
@@ -424,6 +467,61 @@ public static class GamePatcher
         c.Log.Add($"{c.Label}: {n} loot stack(s) doubled");
     }
 
+    /// <summary>Moves each pure host-only treasure item into the shared draw (slot 1, 100%).</summary>
+    static void ShareHostOnlyLoot(Ctx c)
+    {
+        var lots = c.Param("ItemLotParam");
+        if (lots == null || !lots.HasField("hostOnlyItemId")) { c.Log.Add($"{c.Label}: ItemLotParam has no hostOnly layout"); return; }
+        // What "no host-only item" looks like in this dump (most common category among lots without one).
+        int noneCate = lots.RowIds.Where(id => lots.GetInt(id, "hostOnlyItemId") <= 0)
+            .GroupBy(id => lots.GetInt(id, "hostOnlyItemCate")).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault(-1);
+        int n = 0;
+        foreach (var lot in lots.RowIds)
+        {
+            int item = lots.GetInt(lot, "hostOnlyItemId");
+            if (item <= 0) continue;
+            // Only "pure" treasures: every shared slot is empty or the "nothing" outcome.
+            bool sharedIsEmpty = Enumerable.Range(1, 8).All(k => lots.GetInt(lot, $"lotItemId{k:00}") <= 0);
+            if (!sharedIsEmpty) continue;
+            c.Set(lots, lot, "lotItemCategory01", lots.GetInt(lot, "hostOnlyItemCate"));
+            c.Set(lots, lot, "lotItemId01", item);
+            c.Set(lots, lot, "lotItemNum01", Math.Max(1, lots.GetInt(lot, "hostOnlyItemNum")));
+            for (int k = 2; k <= 8; k++) c.Set(lots, lot, $"lotItemBasePoint{k:00}", 0);
+            c.Set(lots, lot, "lotItemBasePoint01", 100);
+            c.Set(lots, lot, "hostOnlyItemId", 0);
+            c.Set(lots, lot, "hostOnlyItemNum", 0);
+            c.Set(lots, lot, "hostOnlyItemCate", noneCate);
+            n++;
+        }
+        c.Log.Add($"{c.Label}: {n} host-only treasure(s) shared with the helper");
+    }
+
+    /// <summary>Lets the sign effect of an item (goods.behaviorId -> BehaviorParam.spEffectId -> SpEffectParam with
+    /// requestSOS) apply to a living player too; retail only targets soul-form ghosts.</summary>
+    static void SignEffectForAnyForm(Ctx c, RawParam goods, int goodsId)
+    {
+        var beh = c.Param("BehaviorParam");
+        var sp = c.Param("SpEffectParam");
+        if (beh == null || sp == null || !goods.HasField("behaviorId") || !beh.HasField("spEffectId")
+            || !sp.HasField("requestSOS") || !sp.HasField("effectTargetLive")) return;
+        int behId = goods.GetInt(goodsId, "behaviorId");
+        if (!beh.Has(behId)) return;
+        int effect = beh.GetInt(behId, "spEffectId");
+        if (!sp.Has(effect) || sp.GetInt(effect, "requestSOS") != 1) return;
+        if (c.Set(sp, effect, "effectTargetLive", 1))
+            c.Log.Add($"{c.Label}: sign effect {effect} -> works in body form");
+    }
+
+    static void NpcsStayReal(Ctx c)
+    {
+        var npc = c.Param("NpcParam");
+        if (npc == null || !npc.HasField("isChangeWanderGhost")) { c.Log.Add($"{c.Label}: NpcParam has no isChangeWanderGhost"); return; }
+        int n = 0;
+        foreach (var id in npc.RowIds)
+            if (npc.GetInt(id, "isChangeWanderGhost") != 0 && c.Set(npc, id, "isChangeWanderGhost", 0)) n++;
+        c.Log.Add($"{c.Label}: {n} NPC(s) stay real (talkable) for the helper");
+    }
+
     static void TweakEnemies(Ctx c, PatchOptions opt)
     {
         var npc = c.Param("NpcParam");
@@ -497,7 +595,9 @@ public static class GamePatcher
 
     public static bool IsPatched(GameInfo game) =>
         FindParamBnds(game.UsrDir).Any(p => File.Exists(p + BackupSuffix) && !FilesEqual(p, p + BackupSuffix))
-        || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir);
+        || MsgPatcher.IsPatched(game.UsrDir) || ScriptPatcher.IsPatched(game.UsrDir)
+        || ItemTextPatcher.IsPatched(game.UsrDir) || IconPatcher.IsPatched(game.UsrDir)
+        || PhantomLookPatcher.IsPatched(game.UsrDir) || NexusPatcher.IsPatched(game.UsrDir);
 
     public static void Restore(GameInfo game)
     {
@@ -508,6 +608,10 @@ public static class GamePatcher
         }
         MsgPatcher.Restore(game.UsrDir);
         ScriptPatcher.Restore(game.UsrDir);
+        ItemTextPatcher.Restore(game.UsrDir);
+        IconPatcher.Restore(game.UsrDir);
+        PhantomLookPatcher.Restore(game.UsrDir);
+        NexusPatcher.Restore(game.UsrDir);
     }
 
     static bool FilesEqual(string a, string b) => File.ReadAllBytes(a).AsSpan().SequenceEqual(File.ReadAllBytes(b));

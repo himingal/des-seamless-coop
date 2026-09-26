@@ -11,8 +11,17 @@ public sealed class DesServerOptions
 {
     public string ServerName { get; set; } = "DeS Seamless Co-op";
     public string DataDir { get; set; } = "server-data";
+    /// <summary>Log every game request (command, character, block) to the server log file — for debugging.</summary>
+    public bool TraceRequests { get; set; }
     /// <summary>Show every party member's co-op sign right next to whoever is looking for signs, in any area.</summary>
     public bool PartySigns { get; set; } = true;
+    /// <summary>
+    /// Auto-join (OFF): hands the helper's co-op sign to its host as an invasion-type sign (3), which the host's
+    /// game summons by itself. Tested with real players: the helper then arrives as an INVADER (red phantom,
+    /// hostile, only while the area boss is alive, no item pickup or progress) - the invasion path, not co-op.
+    /// Kept only for experiments; seamless co-op uses the normal blue-sign summon.
+    /// </summary>
+    public bool AutoJoin { get; set; }
     /// <summary>US/EU/JP clients share one pool (RPCN already redirects the NP comm IDs to one).</summary>
     public bool MergeRegions { get; set; } = true;
     /// <summary>Seconds between ghost uploads; lower = fresher host position for party signs.</summary>
@@ -30,6 +39,14 @@ public sealed class DesServerOptions
     /// The game pulls its world tendency toward this value whenever it syncs with the server.
     /// </summary>
     public int WorldTendency { get; set; }
+
+    /// <summary>
+    /// Same-machine 2-player test: two DeS instances on one PC point at different loopback addresses
+    /// (host → 127.0.0.1, helper → 127.0.0.2). The server (bound to Any) then keys and advertises each
+    /// client by the loopback address it connected TO, so the two are distinct even though both are
+    /// loopback and neither carries the relay header. Off in normal use (all loopback = "127.0.0.1").
+    /// </summary>
+    public bool LocalTest { get; set; }
 }
 
 public sealed record PartyPlayerStatus(string Name, string Area, int BlockId, bool HasSign, bool InSession, int SecondsAgo);
@@ -54,6 +71,16 @@ public sealed class DesServer : IDisposable
     readonly Dictionary<string, SosSign> _sos = [];
     readonly Dictionary<string, string> _pendingSummon = [];
     readonly Dictionary<string, string> _pendingMonk = [];
+    readonly Dictionary<string, string> _partner = [];            // helper -> the host that last summoned it
+    readonly Dictionary<string, DateTime> _hostPolls = [];        // who polls getSosData (only human players do)
+    readonly Dictionary<string, DateTime> _summonedAt = [];       // helper -> when a host last summoned it
+    /// <summary>After a summon the helper's sign is held back this long, so the host does not summon it again
+    /// while it is already joining (if the join fails, the sign comes back afterwards).</summary>
+    static readonly TimeSpan SummonHold = TimeSpan.FromSeconds(90);
+    /// <summary>Id offset for signs sent as auto-join: a different id makes the host treat it as a new sign.</summary>
+    internal const uint AutoJoinIdBit = 0x40000000;
+    internal const uint GuessedSpotIdBit = 0x20000000;
+    static readonly TimeSpan HostActive = TimeSpan.FromSeconds(60);
     readonly Dictionary<string, Ghost> _ghosts = [];
     readonly Dictionary<string, string> _via = [];
     readonly Random _rng = new();
@@ -138,9 +165,11 @@ public sealed class DesServer : IDisposable
             string path = parts.Length > 1 ? parts[1] : "/";
             byte[] response;
 
-            // Relayed players all arrive from loopback; the friend's forwarder tags them.
+            // Relayed players all arrive from loopback; the friend's forwarder tags them. In same-machine
+            // test mode two loopback clients are told apart by the loopback address they connected to.
             string clientKey = IPAddress.IsLoopback(remote) && headers.TryGetValue(Net.RelayForwarder.ClientHeader, out var relayId)
-                ? "relay:" + relayId : remote.ToString();
+                ? "relay:" + relayId
+                : (_o.LocalTest && IPAddress.IsLoopback(remote) ? "local:" + local : remote.ToString());
 
             if (path.StartsWith("/descoop/", StringComparison.OrdinalIgnoreCase))
                 response = HandleCustom(path, remote);
@@ -219,7 +248,9 @@ public sealed class DesServer : IDisposable
     /// </summary>
     internal string AdvertisedAddress(IPAddress remote, IPAddress local)
     {
-        if (IPAddress.IsLoopback(remote)) return "127.0.0.1";
+        // Same-machine test: advertise the loopback address the client connected to (127.0.0.1 host,
+        // 127.0.0.2 helper), so each keeps talking to its own endpoint and stays distinct.
+        if (IPAddress.IsLoopback(remote)) return _o.LocalTest ? local.ToString() : "127.0.0.1";
         lock (_lock) if (_via.TryGetValue(remote.ToString(), out var via)) return via;
         if (remote.Equals(local)) return local.ToString();
         if (IsPrivate(local) && !IsPrivate(remote)) return _o.PublicAddress ?? _o.FallbackHost; // came through a port forward
@@ -311,6 +342,7 @@ public sealed class DesServer : IDisposable
                 _ipToChar[ip] = cid;
             string me = _ipToChar.TryGetValue(ip, out var known) ? known : $"[{ip}]";
             var live = Touch(me, ip, port);
+            if (_o.TraceRequests) Write($"trace {cmd} {me} block {(p.TryGetValue("blockID", out var tb) ? Protocol.ToSigned(tb) : 0)}", false);
             if (p.TryGetValue("blockID", out var blk) && cmd is "getSosData.spd" or "getBloodMessage.spd" or "getWanderingGhost.spd" or "getReplayList.spd")
                 live.LastBlock = Protocol.ToSigned(blk);
 
@@ -386,12 +418,15 @@ public sealed class DesServer : IDisposable
         motd.Append($"{Ascii(_o.ServerName)}  -  Seamless Co-op\r\n\r\n");
         motd.Append("HOW TO PLAY TOGETHER\r\n");
         motd.Append("1) Pick who leads: that player is the HOST.\r\n");
-        motd.Append("2) The HELPER dies once to become a ghost,\r\n");
-        motd.Append("   then uses the Blue Eye Stone to place a sign.\r\n");
-        motd.Append("3) The HOST stays human (Stone of Ephemeral\r\n");
-        motd.Append("   Eyes) and touches the sign - it appears\r\n");
-        motd.Append("   right next to you, in any area.\r\n");
-        motd.Append("4) After a boss, do it again. Swap roles any time.\r\n");
+        motd.Append("2) HELPER: use the JOIN SIGIL - human or\r\n");
+        motd.Append("   ghost, no need to die first.\r\n");
+        motd.Append("3) HOST: use the HOST SIGIL to be human, then\r\n");
+        motd.Append("   touch the sign - it appears right next to\r\n");
+        motd.Append("   you, in any area - even the Nexus.\r\n");
+        motd.Append("4) TREASURE and NPCs work for both of you.\r\n");
+        motd.Append("5) BOSSES count for both, and you STAY\r\n");
+        motd.Append("   TOGETHER after the kill. Split up? The\r\n");
+        motd.Append("   sign comes back by itself - just touch it.\r\n");
         var motd2 = new StringBuilder();
         motd2.Append($"Players online: {st.Players.Length}\r\n");
         foreach (var pl in st.Players.Take(8))
@@ -613,13 +648,17 @@ public sealed class DesServer : IDisposable
     }
 
     /// <summary>Where to put a party member's sign so the player at <paramref name="block"/> sees it.</summary>
-    bool TryAnchor(string me, int block, out WorldPos anchor)
+    /// <remarks><paramref name="live"/> is false when the player's own position is not known yet (no ghost upload in
+    /// this block) and a remembered spot of the block is used instead.</remarks>
+    bool TryAnchor(string me, int block, out WorldPos anchor, out bool live)
     {
+        live = true;
         if (_live.TryGetValue(me, out var l) && l.LastPos is { } lp && lp.BlockId == block && DateTime.UtcNow - lp.At < TimeSpan.FromMinutes(15))
         {
             anchor = lp;
             return true;
         }
+        live = false;
         if (_store.KnownPositions.TryGetValue(block, out var list) && list.Count > 0)
         {
             var k = list[^1];
@@ -634,6 +673,7 @@ public sealed class DesServer : IDisposable
     {
         PurgeSigns();
         int block = Protocol.ToSigned(p["blockID"]);
+        _hostPolls[me] = DateTime.UtcNow;
         // The reference server (desse) ignores the client's sosNum and returns every matching sign; the game
         // often asks for 0, so honouring it would return nothing (this was why signs never appeared). Cap only
         // to keep the response sane.
@@ -643,7 +683,7 @@ public sealed class DesServer : IDisposable
         var known = new List<uint>();
         var fresh = new List<byte[]>();
         WorldPos anchor = default;
-        bool hasAnchor = false;
+        bool hasAnchor = false, liveAnchor = false;
         int slot = 0;
 
         int considered = 0, relocated = 0, skipped = 0;
@@ -652,6 +692,7 @@ public sealed class DesServer : IDisposable
             if (known.Count + fresh.Count >= max) break;
             if (!SameRegion(s.Port, port)) { skipped++; continue; }
             considered++;
+            if (_summonedAt.TryGetValue(s.CharacterId, out var sAt) && DateTime.UtcNow - sAt < SummonHold) { skipped++; continue; }
             bool sameBlock = s.BlockId == block;
             bool mine = s.CharacterId == me;
 
@@ -662,17 +703,23 @@ public sealed class DesServer : IDisposable
             bool doRelocate = false;
             if (!mine && s.IsCoopSign && _o.PartySigns)
             {
-                if (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor))) { place = true; doRelocate = true; }
+                if (hasAnchor || (hasAnchor = TryAnchor(me, block, out anchor, out liveAnchor))) { place = true; doRelocate = true; }
             }
             if (!place) { skipped++; if (!mine) Write($"getSosData {me} block {block}: {s.CharacterId}'s sign in block {s.BlockId} NOT shown (no anchor to move it here)", false); continue; }
 
-            if (knownIds.Contains(s.SosId.ToString())) { known.Add(s.SosId); continue; }
+            bool auto = doRelocate && _o.AutoJoin && IsHostOf(me, s.CharacterId);
+            uint sendId = auto ? s.SosId | AutoJoinIdBit : s.SosId;
+            // A sign put at a remembered spot (host's own position not known yet) gets another id, so it is sent
+            // again — right next to the host — as soon as the host's position arrives; the old one then drops out.
+            if (doRelocate && !liveAnchor) sendId |= GuessedSpotIdBit;
+            if (knownIds.Contains(sendId.ToString())) { known.Add(sendId); continue; }
             if (doRelocate)
             {
                 double yaw = anchor.AngY + (slot - 0.5) * 0.6;
                 float x = anchor.X + (float)(Math.Sin(yaw) * 1.2);
                 float z = anchor.Z + (float)(Math.Cos(yaw) * 1.2);
-                fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ));
+                fresh.Add(s.Serialize(x, anchor.Y, z, anchor.AngX, anchor.AngY, anchor.AngZ, sendId, auto ? 3 : null));
+                if (auto) Write($"getSosData {me}: {s.CharacterId} joins you automatically", false);
                 slot++; relocated++;
                 if (!mine) Write($"getSosData {me} block {block}: showing {s.CharacterId}'s sign next to you (from block {s.BlockId})", false);
             }
@@ -714,6 +761,7 @@ public sealed class DesServer : IDisposable
         s.TotalSessions = st.Sessions;
         _sos[s.CharacterId] = s;
         _pendingSummon.Remove(s.CharacterId);
+        _summonedAt.Remove(s.CharacterId);   // a fresh sign is available right away
         UpdatePosition(s.CharacterId, s.BlockId, s.PosX, s.PosY, s.PosZ, s.AngX, s.AngY, s.AngZ);
         Write($"{s.CharacterId} placed a {(s.IsCoopSign ? "blue" : "red")} sign in {BlockNames.Get(s.BlockId)}");
         return (0x0a, [1]);
@@ -742,9 +790,19 @@ public sealed class DesServer : IDisposable
         return (0x15, [1]);
     }
 
+    /// <summary>Whether <paramref name="me"/> is the host <paramref name="helper"/> should join automatically: the
+    /// host it was last summoned by (if that host is still around), else the only human host polling for signs.</summary>
+    bool IsHostOf(string me, string helper)
+    {
+        var now = DateTime.UtcNow;
+        bool Active(string h) => h != helper && _hostPolls.TryGetValue(h, out var t) && now - t < HostActive;
+        if (_partner.TryGetValue(helper, out var host) && Active(host)) return host == me;
+        return _hostPolls.Keys.Where(Active).Take(2).SequenceEqual([me]);
+    }
+
     (byte, byte[]) SummonOtherCharacter(Dictionary<string, string> p, string me)
     {
-        uint ghostId = (uint)Protocol.ToSigned(p["ghostID"]);
+        uint ghostId = (uint)Protocol.ToSigned(p["ghostID"]) & ~(AutoJoinIdBit | GuessedSpotIdBit);
         string room = p.GetValueOrDefault("NPRoomID", "");
         var s = _sos.Values.FirstOrDefault(x => x.SosId == ghostId);
         if (s == null)
@@ -753,6 +811,8 @@ public sealed class DesServer : IDisposable
             return (0x0a, [0]);
         }
         _pendingSummon[s.CharacterId] = room;
+        _partner[s.CharacterId] = me;
+        _summonedAt[s.CharacterId] = DateTime.UtcNow;
         Write($"{me} is summoning {s.CharacterId}", false);
         return (0x0a, [1]);
     }

@@ -14,6 +14,43 @@ public class PatcherTests : IDisposable
 
     public void Dispose() { try { Directory.Delete(_root, true); } catch { } }
 
+    [Fact]
+    public void BrandTitle_prepends_seamless_edition_to_the_copyright()
+    {
+        const string copyright = "©2009 Sony Computer Entertainment Inc.\nLicensed to and published by Atlus U.S.A., Inc.";
+        var misc = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.CopyrightEntryId, copyright)] };
+        // Same id in another FMG but without the copyright marker must be left alone.
+        var help = new FMG(FMG.FMGVersion.DemonsSouls) { Entries = [new(MsgPatcher.CopyrightEntryId, "Please select an item.")] };
+        var bnd = new BND3 { Version = "07D7R6", Format = Binder.Format.IDs | Binder.Format.Names1 | Binder.Format.Names2, BigEndian = true };
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 0, "menu_misc.fmg", misc.Write()));
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1, "help.fmg", help.Write()));
+
+        Assert.True(MsgPatcher.BrandTitle(bnd));
+
+        var t = FMG.Read(bnd.Files[0].Bytes).Entries.First(e => e.ID == MsgPatcher.CopyrightEntryId).Text;
+        var h = FMG.Read(bnd.Files[1].Bytes).Entries.First(e => e.ID == MsgPatcher.CopyrightEntryId).Text;
+        Assert.StartsWith("SEAMLESS EDITION", t);
+        Assert.Contains("Sony Computer Entertainment", t); // original copyright preserved
+        Assert.Equal("Please select an item.", h);         // untouched (no copyright marker)
+
+        // Idempotent: a second pass does not stack the brand.
+        Assert.False(MsgPatcher.BrandTitle(bnd));
+    }
+
+    [Fact]
+    public void Enhanced_coop_defaults()
+    {
+        var o = new PatchOptions();
+        Assert.False(o.DoubleLoot, "loot is shared natively now; no doubling");
+        Assert.True(o.SharedLoot, "host-only treasures go to the shared draw");
+        Assert.True(o.NpcsForHelper, "NPCs stay real for the helper");
+        Assert.True(o.CyanidePill, "fast regroup needs the Cyanide Pill");
+        Assert.True(o.BonusMerchant, "Boldwin must sell the rarities so a run never misses them");
+        Assert.True(o.PersistentCoop, "seamless co-op: stay together after a boss");
+        Assert.True(o.SeamlessItems, "Host / Join Sigils (names, text, icons)");
+        Assert.True(o.SharedBossProgress, "experimental shared boss progression is on in this build");
+    }
+
     /// <summary>EQUIP_PARAM_GOODS_ST as documented for Demon's Souls (64 bytes per row).</summary>
     internal static PARAMDEF GoodsDef()
     {
@@ -171,7 +208,7 @@ public class PatcherTests : IDisposable
             Assert.Equal(1, Cell(p, BlueId, "enable_gray"));
             Assert.Equal(0, Cell(p, BlueId, "isConsume"));
             Assert.Equal(0, Cell(p, EphId, "isConsume"));
-            Assert.Equal(0, Cell(p, EphId, "enable_live"));
+            Assert.Equal(1, Cell(p, EphId, "enable_live"));   // Host Sigil: usable in body form too (SeamlessItems)
             Assert.Equal(1, Cell(p, OtherId, "isConsume"));
             Assert.Equal(90000, (int)p[9000]!["sortId"].Value);
         }

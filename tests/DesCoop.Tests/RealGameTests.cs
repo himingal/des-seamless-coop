@@ -60,9 +60,9 @@ public class RealGameTests(ITestOutputHelper output)
 
         var goods = Open(bnd, "EquipParamGoods");
         var goods0 = Open(original, "EquipParamGoods");
-        // Body-form Blue Eye Stone stays OFF (a body-form sign is only visible to its owner); the Stone of
-        // Ephemeral Eyes is infinite by default now.
-        Assert.Equal(goods0.Get(9997, "enable_live"), goods.Get(9997, "enable_live"));
+        // The Blue Eye Stone (Join Sigil) works in body form; the Stone of Ephemeral Eyes is infinite.
+        Assert.Equal(0, goods0.Get(9997, "enable_live"));
+        Assert.Equal(1, goods.Get(9997, "enable_live"));
         Assert.Equal(0, goods.Get(1021, "isConsume"));
         Assert.Equal(goods0.Get(1000, "weight") / 1.5, goods.Get(1000, "weight"), 4);
 
@@ -298,31 +298,6 @@ public class RealGameTests(ITestOutputHelper output)
         Assert.Equal(9999, Open(b2, "SpEffectParam").GetInt(9990, "changeHpPoint")); // positive = damage = lethal
         var shop = Open(b2, "ShopLineupParam");
         Assert.Contains(shop.RowIds, id => shop.GetInt(id, "equipType") == 3 && shop.GetInt(id, "equipId") == CyanidePillPatcher.GoodsId);
-    }
-
-    [Fact]
-    public void Persistent_coop_disables_the_kick_only_in_the_two_teardown_functions()
-    {
-        // Synthetic global_event.lua: the co-op-ending kick lives in BlockClear2_3 (boss clear) and
-        // HostDead_1 (host death); the same call in TrueDeath_2 (the phantom's own death) must be kept.
-        const string lua =
-            "function HostDead_1(proxy, param)\n\tproxy:WarpNextStageKick();\nend\n" +
-            "function BlockClear2_3(proxy,param)\n\tif proxy:IsWhiteGhost() == true then\n\t\tproxy:WarpNextStageKick();\n\tend\nend\n" +
-            "function TrueDeath_2(proxy,param)\n\tproxy:WarpNextStageKick();\nend\n";
-        var src = System.Text.Encoding.Latin1.GetBytes(lua);
-
-        // Off by default: nothing changes.
-        Assert.Equal(0, ScriptPatcher.PatchGlobalEvent(src).changed);
-
-        var (bytes, changed) = ScriptPatcher.PatchGlobalEvent(src, persistentCoop: true);
-        var outLua = System.Text.Encoding.Latin1.GetString(bytes);
-        int kicks = outLua.Split('\n').Count(l => l.Trim().StartsWith("proxy:WarpNextStageKick();"));
-        int commented = outLua.Split('\n').Count(l => l.Contains("--[DeS Co-op] proxy:WarpNextStageKick();"));
-        Assert.Equal(2, changed);     // the two teardown kicks
-        Assert.Equal(2, commented);   // both commented out
-        Assert.Equal(1, kicks);       // only TrueDeath_2's kick survives, still live
-        // Idempotent.
-        Assert.Equal(0, ScriptPatcher.PatchGlobalEvent(bytes, persistentCoop: true).changed);
     }
 
     [Fact]

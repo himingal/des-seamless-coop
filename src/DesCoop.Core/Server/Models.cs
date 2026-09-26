@@ -37,14 +37,14 @@ public sealed class SosSign
         Port = port,
     };
 
-    public byte[] Serialize(float x, float y, float z, float ax, float ay, float az)
+    public byte[] Serialize(float x, float y, float z, float ax, float ay, float az, uint? id = null, int? type = null)
     {
-        var w = new Payload().U32(SosId).CStr(CharacterId)
+        var w = new Payload().U32(id ?? SosId).CStr(CharacterId)
             .F32(x).F32(y).F32(z).F32(ax).F32(ay).F32(az)
             .I32(MessageId).I32(MainMsgId).I32(AddMsgCateId)
             .I32(0);
         foreach (var r in Ratings) w.I32(r);
-        w.I32(0).I32(TotalSessions).CStr(PlayerInfo).I32(Qwcwb).I32(Qwclr).U8((byte)IsBlack);
+        w.I32(0).I32(TotalSessions).CStr(PlayerInfo).I32(Qwcwb).I32(Qwclr).U8((byte)(type ?? IsBlack));
         return w.ToArray();
     }
 

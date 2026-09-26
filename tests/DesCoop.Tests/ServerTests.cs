@@ -48,7 +48,7 @@ public class ServerTests : IDisposable
     }
 
     /// <summary>Parses a getSosData payload into (knownIds, fresh signs as (id, name, x, y, z)).</summary>
-    static (List<uint> known, List<(uint id, string who, float x, float y, float z)> fresh) ParseSos(byte[] d)
+    static (List<uint> known, List<(uint id, string who, float x, float y, float z, byte type)> fresh) ParseSos(byte[] d)
     {
         int o = 0;
         uint U() { var v = BinaryPrimitives.ReadUInt32LittleEndian(d.AsSpan(o)); o += 4; return v; }
@@ -57,7 +57,7 @@ public class ServerTests : IDisposable
         var known = new List<uint>();
         uint nk = U();
         for (int i = 0; i < nk; i++) known.Add(U());
-        var fresh = new List<(uint, string, float, float, float)>();
+        var fresh = new List<(uint, string, float, float, float, byte)>();
         uint nf = U();
         for (int i = 0; i < nf; i++)
         {
@@ -65,8 +65,8 @@ public class ServerTests : IDisposable
             float x = Fl(), y = Fl(), z = Fl(); Fl(); Fl(); Fl();
             U(); U(); U(); U();
             for (int r = 0; r < 5; r++) U();
-            U(); U(); S(); U(); U(); o += 1;
-            fresh.Add((id, who, x, y, z));
+            U(); U(); S(); U(); U(); byte type = d[o]; o += 1;
+            fresh.Add((id, who, x, y, z, type));
         }
         Assert.Equal(d.Length, o);
         return (known, fresh);
@@ -117,6 +117,78 @@ public class ServerTests : IDisposable
         Assert.Contains(st.Players, p => p.Name == "Host" && p.Area.Contains("Boletarian"));
     }
 
+    (uint id, byte type) SignFor(string host, string ip, int block = 20070)
+    {
+        var res = _server.Dispatch("getSosData.spd", P(("characterID", host), ("blockID", ((uint)block).ToString()), ("sosNum", "10"), ("sosList", "")), ip, 18666)!.Value;
+        var f = Assert.Single(ParseSos(res.data).fresh);
+        return (f.id, f.type);
+    }
+
+    void Host(string name, string ip)
+    {
+        _server.Dispatch("initializeCharacter.spd", P(("characterID", name), ("index", "0")), ip, 18666);
+        var replay = Protocol.EncodeGameBase64(MakeReplay([0, 0, 0, 0, 0, 0], [100f, 20f, -50f, 0f, 0f, 0f]));
+        _server.Dispatch("setWanderingGhost.spd", P(("characterID", name + "0"), ("ghostBlockID", "20070"), ("replayData", replay)), ip, 18666);
+    }
+
+    [Fact]
+    public void Join_sigil_alone_is_enough_the_only_host_summons_the_helper_by_itself()
+    {
+        _server.Options.AutoJoin = true;   // experimental path, off by default (it makes the helper an invader)
+        _server.Dispatch("initializeCharacter.spd", P(("characterID", "Friend"), ("index", "0")), "10.0.0.2", 18667);
+        _server.Dispatch("addSosData.spd", Sign("Friend0", 10079, 1), "10.0.0.2", 18667);
+        Host("Host", "10.0.0.1");
+
+        // The only human host gets the helper's blue sign as an invasion-type sign (3) with a fresh id:
+        // retail games summon those on their own, so nobody has to touch it.
+        var (id, type) = SignFor("Host0", "10.0.0.1");
+        Assert.Equal(3, type);
+        Assert.NotEqual(0u, id & DesServer.AutoJoinIdBit);
+
+        // The host's automatic summon (with that id) reaches the helper as usual.
+        Assert.Equal([1], _server.Dispatch("summonOtherCharacter.spd", P(("ghostID", id.ToString()), ("NPRoomID", "ROOM7")), "10.0.0.1", 18666)!.Value.data);
+        Assert.Equal("ROOM7", Encoding.Latin1.GetString(_server.Dispatch("checkSosData.spd", P(("characterID", "Friend0")), "10.0.0.2", 18667)!.Value.data));
+
+        // While the helper is joining, the host is not offered the same sign again.
+        var after = _server.Dispatch("getSosData.spd", P(("characterID", "Host0"), ("blockID", "20070"), ("sosNum", "10"), ("sosList", "")), "10.0.0.1", 18666)!.Value;
+        Assert.Empty(ParseSos(after.data).fresh);
+    }
+
+    [Fact]
+    public void By_default_the_helper_sign_stays_a_blue_coop_sign()
+    {
+        // Auto-join turned the helper into an invader in real tests; co-op must keep the blue (type 2) sign.
+        _server.Dispatch("initializeCharacter.spd", P(("characterID", "Friend"), ("index", "0")), "10.0.0.2", 18667);
+        _server.Dispatch("addSosData.spd", Sign("Friend0", 20070, 1), "10.0.0.2", 18667);
+        Host("Host", "10.0.0.1");
+        var (id, type) = SignFor("Host0", "10.0.0.1");
+        Assert.Equal(2, type);
+        Assert.Equal(0u, id & DesServer.AutoJoinIdBit);
+    }
+
+    [Fact]
+    public void With_two_hosts_the_helper_only_auto_joins_its_own_host()
+    {
+        _server.Options.AutoJoin = true;   // experimental path, off by default (it makes the helper an invader)
+        _server.Dispatch("initializeCharacter.spd", P(("characterID", "Friend"), ("index", "0")), "10.0.0.2", 18667);
+        _server.Dispatch("addSosData.spd", Sign("Friend0", 20070, 1), "10.0.0.2", 18667);
+        Host("HostA", "10.0.0.1");
+        Host("HostB", "10.0.0.3");
+
+        // Two human hosts and no history: nobody pulls the helper in; both see a normal blue sign to touch.
+        SignFor("HostA0", "10.0.0.1");
+        var b = SignFor("HostB0", "10.0.0.3");
+        Assert.Equal(2, SignFor("HostA0", "10.0.0.1").type);
+        Assert.Equal(2, b.type);
+
+        // HostA touches it once: from then on the helper's sign auto-joins HostA only.
+        _server.Dispatch("summonOtherCharacter.spd", P(("ghostID", b.id.ToString()), ("NPRoomID", "R1")), "10.0.0.1", 18666);
+        _server.Dispatch("checkSosData.spd", P(("characterID", "Friend0")), "10.0.0.2", 18667);
+        _server.Dispatch("addSosData.spd", Sign("Friend0", 20070, 1), "10.0.0.2", 18667);
+        Assert.Equal(3, SignFor("HostA0", "10.0.0.1").type);
+        Assert.Equal(2, SignFor("HostB0", "10.0.0.3").type);
+    }
+
     [Fact]
     public void Login_before_character_is_not_listed_as_a_player()
     {
@@ -126,6 +198,19 @@ public class ServerTests : IDisposable
         Assert.Empty(_server.GetStatus().Players);
         _server.Dispatch("initializeCharacter.spd", P(("characterID", "Real"), ("index", "0")), "10.0.0.9", 18666);
         Assert.Equal("Real", Assert.Single(_server.GetStatus().Players).Name);
+    }
+
+    [Fact]
+    public void Login_motd_teaches_loot_sharing_and_fast_regroup()
+    {
+        var motd = Encoding.Latin1.GetString(_server.Dispatch("login.spd", P(("ver", "100")), "10.0.0.9", 18666)!.Value.data);
+        Assert.Contains("TREASURE and NPCs work for both", motd);
+        Assert.Contains("no need to die first", motd);   // the Join Sigil works in body form
+        Assert.Contains("JOIN SIGIL", motd);   // the seamless item names
+        Assert.Contains("HOST SIGIL", motd);
+        Assert.Contains("BOSSES count for both", motd);
+        Assert.Contains("STAY", motd);
+        Assert.Contains("touch the sign", motd);
     }
 
     [Fact]

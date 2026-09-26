@@ -1,5 +1,6 @@
 -1|Loading Area
 -10079|Nexus
+10079|Nexus
 20070|1-1 Boletarian Palace
 20071|1-1 Boletarian Palace Upper
 20072|1-1 Boletarian Palace Barracks

@@ -11,6 +11,13 @@ namespace DesCoop.Game;
 public static class MsgPatcher
 {
     public const int FirstClassTag = 201001, LastClassTag = 201010;
+    /// <summary>The copyright block (menu FMG entry 30101) renders as a clean multi-line text box on both
+    /// the press-start screen and the main menu, so "SEAMLESS EDITION" is prepended there. The old approach
+    /// (entry 30000 "PRESS START BUTTON") is NOT used: that prompt is a single-line widget that ignores the
+    /// newline and drew both lines on top of each other (garbled). Matched by the copyright text, not id.</summary>
+    public const int CopyrightEntryId = 30101;
+    public const string CopyrightMarker = "Sony Computer Entertainment";
+    public const string BrandLine = "SEAMLESS EDITION";
 
     public static IEnumerable<string> FindMenuBnds(string usrDir)
     {
@@ -20,9 +27,10 @@ public static class MsgPatcher
             .Where(f => !f.EndsWith(GamePatcher.BackupSuffix, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static bool Apply(string usrDir, IReadOnlyDictionary<string, string>? renames, List<string> log)
+    public static bool Apply(string usrDir, IReadOnlyDictionary<string, string>? renames, bool seamlessTitle, List<string> log)
     {
         bool changed = false;
+        bool doPatch = (renames != null && renames.Count > 0) || seamlessTitle;
         foreach (var path in FindMenuBnds(usrDir))
         {
             var backup = path + GamePatcher.BackupSuffix;
@@ -30,7 +38,7 @@ public static class MsgPatcher
             try
             {
                 byte[] fresh;
-                if (renames == null || renames.Count == 0)
+                if (!doPatch)
                 {
                     if (!File.Exists(backup)) continue; // never touched
                     fresh = File.ReadAllBytes(backup);
@@ -39,9 +47,11 @@ public static class MsgPatcher
                 {
                     if (!File.Exists(backup)) File.Copy(path, backup);
                     var bnd = BND3.Read(backup);
-                    int n = RenameIn(bnd, renames);
+                    int n = 0;
+                    if (renames != null && renames.Count > 0) n += RenameIn(bnd, renames);
+                    if (seamlessTitle && BrandTitle(bnd)) { n++; log.Add($"{name}: title screen branded SEAMLESS EDITION"); }
                     if (n == 0) { fresh = File.ReadAllBytes(backup); }
-                    else { fresh = bnd.Write(); log.Add($"{name}: {n} class name(s) replaced"); }
+                    else { fresh = bnd.Write(); }
                 }
                 if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(fresh))
                 {
@@ -51,10 +61,28 @@ public static class MsgPatcher
             }
             catch (Exception ex)
             {
-                log.Add($"{name}: class names not changed ({ex.Message})");
+                log.Add($"{name}: menu text not changed ({ex.Message})");
             }
         }
         return changed;
+    }
+
+    /// <summary>Prepends "SEAMLESS EDITION" as its own line above the copyright block (a multi-line text box
+    /// that renders cleanly on the start screen and main menu); true if changed.</summary>
+    public static bool BrandTitle(BND3 bnd)
+    {
+        bool any = false;
+        foreach (var f in bnd.Files)
+        {
+            FMG fmg;
+            try { fmg = FMG.Read(f.Bytes); } catch { continue; }
+            var e = fmg.Entries.FirstOrDefault(x => x.ID == CopyrightEntryId && x.Text != null && x.Text.Contains(CopyrightMarker));
+            if (e == null || e.Text!.StartsWith(BrandLine)) continue;
+            e.Text = BrandLine + "\n\n" + e.Text;
+            f.Bytes = WriteLikeOriginal(fmg, f.Bytes.Length);
+            any = true;
+        }
+        return any;
     }
 
     /// <summary>Renames matching class tags in every FMG of the binder; returns the number of entries changed.</summary>

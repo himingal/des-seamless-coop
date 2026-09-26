@@ -20,21 +20,21 @@ public class SignEndToEndTests(ITestOutputHelper output) : IDisposable
 
     public void Dispose() { _server?.Dispose(); try { Directory.Delete(_dir, true); } catch { } }
 
-    void Start()
+    void Start(bool localTest = false)
     {
         // High ports so a running app on 18666 doesn't clash.
         int b = 29000 + new Random().Next(0, 400);
-        _server = new DesServer(new DesServerOptions { DataDir = _dir, BootstrapPort = b, PortUS = b + 1, PortEU = b + 2, PortJP = b + 3 });
+        _server = new DesServer(new DesServerOptions { DataDir = _dir, BootstrapPort = b, PortUS = b + 1, PortEU = b + 2, PortJP = b + 3, LocalTest = localTest });
         _server.Log += output.WriteLine;
         _server.Start();
         _port = b + 1; // US
     }
 
-    /// <summary>One encrypted DeS request over TCP; returns the decoded (cmd, data). relayId != null tags it like the friend's forwarder.</summary>
-    (byte cmd, byte[] data) Call(string spd, string form, string? relayId)
+    /// <summary>One encrypted DeS request over TCP; returns the decoded (cmd, data). relayId != null tags it like the friend's forwarder. connectTo picks the loopback address (127.0.0.1 host / 127.0.0.2 helper for local-test mode).</summary>
+    (byte cmd, byte[] data) Call(string spd, string form, string? relayId, System.Net.IPAddress? connectTo = null)
     {
         using var c = new TcpClient();
-        c.Connect(System.Net.IPAddress.Loopback, _port);
+        c.Connect(connectTo ?? System.Net.IPAddress.Loopback, _port);
         var body = Protocol.Encrypt(Protocol.Raw.GetBytes(form));
         var head = new StringBuilder();
         head.Append($"POST /cgi-bin/{spd} HTTP/1.1\r\nHost: localhost\r\n");
@@ -91,5 +91,39 @@ public class SignEndToEndTests(ITestOutputHelper output) : IDisposable
         Assert.Equal("Friend0", who);
         // The sign was moved right next to the host's anchor (10,1.5,20), not left at x=50.
         Assert.True(Math.Abs(x - 10) < 3, $"sign should be next to the host, got x={x}");
+    }
+
+    [Fact]
+    public void Same_machine_two_players_are_distinguished_by_loopback_address()
+    {
+        Start(localTest: true);
+        var host = System.Net.IPAddress.Parse("127.0.0.1");
+        var helper = System.Net.IPAddress.Parse("127.0.0.2");
+
+        // Helper connects on 127.0.0.2 (no relay header) and places a blue sign far away in 1-1.
+        Call("initializeCharacter.spd", "characterID=Helper&index=0", null, helper);
+        Call("addSosData.spd", Sign("Helper0", 10010, 50f), null, helper);
+
+        // Host connects on 127.0.0.1 and uploads its position (the anchor) in the same block.
+        Call("initializeCharacter.spd", "characterID=Host&index=0", null, host);
+        var replay = Protocol.EncodeGameBase64(ServerTests.MakeReplay([10f, 1.5f, 20f, 0f, 0.5f, 0f]));
+        Call("setWanderingGhost.spd", $"characterID=Host0&ghostBlockID=10010&replayData={replay}", null, host);
+
+        // Host reads signs: it must see the helper's sign (proving the two loopback clients are distinct)
+        // relocated next to the host.
+        var (cmd, data) = Call("getSosData.spd", "characterID=Host0&blockID=10010&sosNum=0&sosList=", null, host);
+        Assert.Equal(0x0f, cmd);
+        int o = 0;
+        uint U() { var v = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(o)); o += 4; return v; }
+        float Fl() { var v = BinaryPrimitives.ReadSingleLittleEndian(data.AsSpan(o)); o += 4; return v; }
+        string S() { int st = o; while (data[o] != 0) o++; var r = Encoding.Latin1.GetString(data, st, o - st); o++; return r; }
+        uint known = U();
+        for (int i = 0; i < known; i++) U();
+        uint fresh = U();
+        Assert.True(fresh >= 1, "host must receive the helper's sign in local-test mode");
+        U();                       // sosId
+        Assert.Equal("Helper0", S());
+        float hx = Fl(); Fl(); Fl();
+        Assert.True(Math.Abs(hx - 10) < 3, $"helper sign should be next to the host, got x={hx}");
     }
 }
